@@ -1,0 +1,7 @@
+IOconfiguration.mac
+include/K37Config.hh
+build/
+G4History.macro
+*.root
+CMakeFiles/
+Obsolete/
