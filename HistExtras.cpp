@@ -229,6 +229,7 @@ int hist_type::set_other_parameters()
 		user_xmin = xmin;
 		user_xmax = 6000.5;
 	}
+	/*
 	else if (type==std::string("events_per_time"))
 	{
 		nbins = 60*90;
@@ -237,6 +238,19 @@ int hist_type::set_other_parameters()
 		units = std::string("Time (min?)");
 		user_xmin = xmin;
 		user_xmax = 60*60*30;
+	}
+	*/
+	else if(type==std::string("events_per_time")) 
+	{
+		units = std::string("event time (s) - 1402200000");
+	//	xmin = 1402200000;
+		xmin = 0.0 - 0.5;
+		xmax = xmin + 600000.0 + 0.5;// - 1.0;
+	//	nbins = int(xmax-xmin+1);
+		nbins = int(xmax-xmin);
+		user_xmin = xmin;
+	//	user_xmax = 600*1000;
+		user_xmax = xmax;
 	}
 	else if (type==std::string("x_sumdiff") )
 	{
@@ -283,6 +297,24 @@ int hist_type::set_other_parameters()
 		user_xmin = 700.0;
 		user_xmax = 1600.0;
 	}
+	else if(type==std::string("coarse_imcp_x")) // only for the 2Ds, really.
+	{
+		units = std::string("iMCP x (mm)");
+		xmin = -44.5;
+		xmax = xmin + 90.0;
+		nbins = 300;
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	else if(type==std::string("coarse_imcp_z")) // only for the 2Ds, really.
+	{
+		units = std::string("iMCP z (mm)");
+		xmin = -44.5;
+		xmax = xmin + 90.0;
+		nbins = 300;
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
 	else if(type==std::string("imcp_x")) // only for the 2Ds, really.
 	{
 		units = std::string("iMCP x (mm)");
@@ -306,7 +338,8 @@ int hist_type::set_other_parameters()
 		units = std::string("iMCP x (mm)");
 		xmin = -44.5;
 		xmax = xmin + 90.0;
-		nbins = 1400;
+	//	nbins = 1400;
+		nbins = 1200;
 		user_xmin = xmin;
 		user_xmax = xmax;
 	}
@@ -315,7 +348,8 @@ int hist_type::set_other_parameters()
 		units = std::string("iMCP z (mm)");
 		xmin = -44.5;
 		xmax = xmin + 90.0;
-		nbins = 1400;
+	//	nbins = 1400;
+		nbins = 1200;
 		user_xmin = xmin;
 		user_xmax = xmax;
 	}
@@ -357,7 +391,6 @@ int hist_type::set_other_parameters()
 		user_xmin = xmin;
 		user_xmax = xmax;
 	}
-	
 	/*
 	else if(type==std::string("imcp_x_PI")) 
 	{
