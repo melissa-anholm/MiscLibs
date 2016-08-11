@@ -1,11 +1,53 @@
 #include <TH1D.h>
 #include <TH2D.h>
+#include <TGraph.h>
+#include <TGraphErrors.h>
 
 // Examples:
 // TH1D* OP_Cycle_Events_all = CreateHist(string("Electron Events - All"), string("acmottime"), int(kRed));
 // TH2D* tof_v_iqcd_ac  = CreateHist2d(string("tof_vs_iqdc_ac"),  string("i_qdc"), string("cal_tof"));
 
 double v1192_to_ns = 100.0/1024.0;
+
+/*
+TGraphErrors * make_TGraphErrors_like(TH1D * hist)
+{
+	TGraphErrors * graph = new TGraphErrors(hist);  
+	// above: copies all the parameters and data points, but not the name.  or title.
+	graph -> SetNameTitle(hist->GetName(), hist->GetTitle());
+	graph -> SetMarkerColor(hist->GetLineColor());
+	
+	return graph;
+}
+*/
+
+/*
+TGraphErrors * set_graph_values(TGraphErrors * thisgraph, int n_points, double*x, double*x_err, double*y, double* y_err)
+{
+	// Set new shizzle.
+	for(int i=0; i<n_points; i++)
+	{
+		thisgraph -> SetPoint(i, x[i], y[i]);
+		thisgraph -> SetPointError(i, x_err[i], y_err[i]);
+	}
+	return thisgraph;
+}
+*/
+
+TGraphErrors * set_attributes_like(TGraphErrors * thisgraph, TH1D * hist)
+{
+//	TGraphErrors * graph = new TGraphErrors(hist);  
+	thisgraph -> SetNameTitle( (string("Graph: ")+string(hist->GetName())).c_str(), hist->GetTitle());
+	thisgraph -> SetMarkerColor(hist->GetLineColor());
+	thisgraph -> SetLineColor(hist->GetLineColor());
+	thisgraph -> GetXaxis()->SetTitle(hist->GetXaxis()->GetTitle());
+	thisgraph -> GetYaxis()->SetTitle(hist->GetYaxis()->GetTitle());
+//	thisgraph -> GetXaxis()->SetRangeUser(hist->GetXaxis()->GetRangeUser());  // GetRangeUser isn't a thing.
+//	thisgraph -> GetYaxis()->SetRangeUser(hist->GetYaxis()->GetRangeUser());
+
+	return thisgraph;
+}
+
 
 // ====================================== //
 // Histogram Functions 
@@ -242,14 +284,12 @@ int hist_type::set_other_parameters()
 	*/
 	else if(type==std::string("events_per_time")) 
 	{
-		units = std::string("event time (s) - 1402200000");
+		units = std::string("Unix Time (s) - 1402200000");
 	//	xmin = 1402200000;
 		xmin = 0.0 - 0.5;
 		xmax = xmin + 600000.0 + 0.5;// - 1.0;
-	//	nbins = int(xmax-xmin+1);
 		nbins = int(xmax-xmin);
 		user_xmin = xmin;
-	//	user_xmax = 600*1000;
 		user_xmax = xmax;
 	}
 	else if (type==std::string("x_sumdiff") )
@@ -338,7 +378,6 @@ int hist_type::set_other_parameters()
 		units = std::string("iMCP x (mm)");
 		xmin = -44.5;
 		xmax = xmin + 90.0;
-	//	nbins = 1400;
 		nbins = 1200;
 		user_xmin = xmin;
 		user_xmax = xmax;
@@ -348,7 +387,6 @@ int hist_type::set_other_parameters()
 		units = std::string("iMCP z (mm)");
 		xmin = -44.5;
 		xmax = xmin + 90.0;
-	//	nbins = 1400;
 		nbins = 1200;
 		user_xmin = xmin;
 		user_xmax = xmax;
@@ -390,6 +428,15 @@ int hist_type::set_other_parameters()
 		nbins = 600;
 		user_xmin = xmin;
 		user_xmax = xmax;
+	}
+	else if(type==std::string("runno")) 
+	{
+		units = std::string("Run Number");
+		xmin = 0.0;
+		xmax = 600.0;
+		nbins = 600+1;
+		user_xmin = 300;
+		user_xmax = 520;
 	}
 	/*
 	else if(type==std::string("imcp_x_PI")) 
