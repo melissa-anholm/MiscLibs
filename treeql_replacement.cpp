@@ -91,7 +91,7 @@ public:
 	bool good_electron[n_runs]; // done.
 	int unix_start[n_runs];     // done.
 	int unix_stop[n_runs];      // done.
-	int t_offset = 1402200000;
+	const static int t_offset = 1402200000;
 	// runtime_avg[i] = ((runs.unix_start[i]-t_offset) + (runs.unix_stop[i]-t_offset) )/2.0;
 	int runtime_avg[n_runs];         // in seconds.
 	int runtime_length[n_runs];      // in seconds.
