@@ -56,70 +56,20 @@ public:
 
 	void init_xz_mode();
 	void init_xz_maxcount();
-
 	void init_sumdiff_xmin();
 	void init_sumdiff_zmin();
 	void init_sumdiff_xmax();
 	void init_sumdiff_zmax();
-
-	void init_sumdiffs_2();
-	// --- // 
-	/*
-	double x_all_sumdiff_mode[N_runs];    
-	double z_all_sumdiff_mode[N_runs];    
-	double x_all_sumdiff_maxcount[N_runs];
-	double z_all_sumdiff_maxcount[N_runs];
-	double x_pi_ac_sumdiff_mode[N_runs];    
-	double z_pi_ac_sumdiff_mode[N_runs];    
-	double x_pi_ac_sumdiff_maxcount[N_runs];
-	double z_pi_ac_sumdiff_maxcount[N_runs];
-	double x_r_sumdiff_mode[N_runs];    
-	double z_r_sumdiff_mode[N_runs];    
-	double x_r_sumdiff_maxcount[N_runs];
-	double z_r_sumdiff_maxcount[N_runs];
-	double x_gr_sumdiff_mode[N_runs];    
-	double z_gr_sumdiff_mode[N_runs];    
-	double x_gr_sumdiff_maxcount[N_runs];
-	double z_gr_sumdiff_maxcount[N_runs];
-
-	double x_all_sumdiff_01_min[N_runs];  
-	double x_all_sumdiff_01_max[N_runs];  
-	double x_all_sumdiff_10_min[N_runs];  
-	double x_all_sumdiff_10_max[N_runs];  
-	double z_all_sumdiff_01_min[N_runs];  
-	double z_all_sumdiff_01_max[N_runs];  
-	double z_all_sumdiff_10_min[N_runs];  
-	double z_all_sumdiff_10_max[N_runs];  
-
-	double x_pi_ac_sumdiff_01_min[N_runs];  
-	double x_pi_ac_sumdiff_01_max[N_runs];  
-	double x_pi_ac_sumdiff_10_min[N_runs];  
-	double x_pi_ac_sumdiff_10_max[N_runs];  
-	double z_pi_ac_sumdiff_01_min[N_runs];  
-	double z_pi_ac_sumdiff_01_max[N_runs];  
-	double z_pi_ac_sumdiff_10_min[N_runs];  
-	double z_pi_ac_sumdiff_10_max[N_runs];  
-
-	double x_r_sumdiff_01_min[N_runs];  
-	double x_r_sumdiff_01_max[N_runs];  
-	double x_r_sumdiff_10_min[N_runs];  
-	double x_r_sumdiff_10_max[N_runs];  
-	double z_r_sumdiff_01_min[N_runs];  
-	double z_r_sumdiff_01_max[N_runs];  
-	double z_r_sumdiff_10_min[N_runs];  
-	double z_r_sumdiff_10_max[N_runs];  
-
-	double x_gr_sumdiff_01_min[N_runs];  
-	double x_gr_sumdiff_01_max[N_runs];  
-	double x_gr_sumdiff_10_min[N_runs];  
-	double x_gr_sumdiff_10_max[N_runs];  
-	double z_gr_sumdiff_01_min[N_runs];  
-	double z_gr_sumdiff_01_max[N_runs];  
-	double z_gr_sumdiff_10_min[N_runs];  
-	double z_gr_sumdiff_10_max[N_runs];  
 	
-	void init_sumdiffs();
-	*/
+	void init_sumdiffs_2();
+	
+	// --- // 
+	double PI_mean[N_runs][N_sumcut_levels];
+	double PI_mean_err[N_runs][N_sumcut_levels];
+	double PI_sigma[N_runs][N_sumcut_levels];
+	double PI_sigma_err[N_runs][N_sumcut_levels];
+	
+	
 	double PI_mean_00_x[N_runs];
 	double PI_mean_err_00_x[N_runs];
 	double PI_sigma_00_x[N_runs];
@@ -146,6 +96,7 @@ public:
 	double PI_sigma_err_10_z[N_runs];
 
 	void init_trapposition();   // done?
+	void init_trapposition_2();
 	
 	double tof_pi_ac_mean[N_runs];
 	double tof_pi_ac_mean_err[N_runs];
@@ -201,10 +152,9 @@ public:
 	
 	set_of_runs(); // done.
 	
-	void tmp_consolidate_data();
 };
 
-
+/*
 void set_of_runs::tmp_consolidate_data()
 {
 //	double sumdiff_x_mode[N_runs][N_sumcut_types];
@@ -259,7 +209,7 @@ void set_of_runs::tmp_consolidate_data()
 		//	const int n_pi_ac = 1;
 		//	const int n_r = 2;
 		//	const int n_gr = 3;
-			/*
+			
 			if(i_sumcut_types == n_all)
 			{
 				sumdiff_x_mode[i_runs][i_sumcut_types]     = x_all_sumdiff_mode[i_runs];
@@ -288,9 +238,7 @@ void set_of_runs::tmp_consolidate_data()
 				sumdiff_z_mode[i_runs][i_sumcut_types]     = z_gr_sumdiff_mode[i_runs];
 				sumdiff_z_maxcount[i_runs][i_sumcut_types] = z_gr_sumdiff_maxcount[i_runs];
 			}
-			*/
 			//
-			/*
 			for(int i_sumcut_levels=0; i_sumcut_levels<N_sumcut_levels; i_sumcut_levels++)
 			{
 				if(i_sumcut_types == n_all && i_sumcut_levels == n_01)
@@ -350,12 +298,11 @@ void set_of_runs::tmp_consolidate_data()
 					sumdiff_z_max[i_runs][i_sumcut_types][i_sumcut_levels] = z_gr_sumdiff_10_max[i_runs];
 				}
 			}
-			*/
 		}
 	}
-	
 	return;
 }
+*/
 
 void set_of_runs::init_sumdiffs_2()
 {
@@ -10985,16 +10932,18 @@ set_of_runs::set_of_runs()
 	}
 	//
 	init_ElectricField();
-//	init_sumdiffs();
-//	init_sumdiffs_old();
 	init_goodrecoil();
 	init_goodelectron();
-	init_iqdc();
 	init_usable();
+
+//	init_sumdiffs();
+//	init_sumdiffs_old();
+	init_sumdiffs_2();
+
+	init_iqdc();
 	init_unixtime();
 	init_trapposition();
 	init_tofs();
-	init_sumdiffs_2();
 	
 //	tmp_consolidate_data();
 //	set_sumdiff_threshold(1);  
