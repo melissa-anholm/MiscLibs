@@ -1,3 +1,6 @@
+#include <vector>
+using std::vector;
+
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TGraph.h>
@@ -46,6 +49,33 @@ TGraphErrors * set_attributes_like(TGraphErrors * thisgraph, TH1D * hist)
 //	thisgraph -> GetYaxis()->SetRangeUser(hist->GetYaxis()->GetRangeUser());
 
 	return thisgraph;
+}
+
+TGraphErrors * make_TGraphErrors(int N_points, double * x_avg, double * y_avg, double * delta_x, double * delta_y)
+{
+	TGraphErrors * my_TGraphErrors;
+	my_TGraphErrors = new TGraphErrors(N_points, x_avg, y_avg, delta_x, delta_y);
+	
+	return my_TGraphErrors;
+}
+
+
+TGraphErrors * make_TGraphErrors(vector<double> x_avg, vector<double> y_avg, vector<double> delta_x, vector<double> delta_y)
+{
+	int N_points = std::min( std::min(x_avg.size(), y_avg.size()), std::min(delta_x.size(), delta_y.size()) );
+	
+	if( x_avg.size() != y_avg.size() || delta_x.size() != delta_y.size() || x_avg.size() != delta_x.size() )
+		{ std::cout << "* WARNING:  TGraphErrors input vectors have non-constant sizes.  Creating graph anyway." << std::endl; }
+
+	double * x = &x_avg[0];
+	double * y = &y_avg[0];
+	double * x_err = &delta_x[0];
+	double * y_err = &delta_y[0];
+	
+	TGraphErrors * my_TGraphErrors;
+	my_TGraphErrors = new TGraphErrors(N_points, x, y, x_err, y_err);
+	
+	return my_TGraphErrors;
 }
 
 
@@ -310,6 +340,45 @@ int hist_type::set_other_parameters()
 		user_xmin = -600.0;
 		user_xmax = -150.0;
 	}
+	//
+	else if (type==std::string("danny_sumx") )
+	{
+		nbins = 1000;
+		xmin = 68000.5;
+		xmax = 78000.5-1.0;
+		units = std::string("x1+x2 - 2*(t_imcp-t_photodiode)");
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	else if (type==std::string("danny_sumz") )
+	{
+		nbins = 1000;
+		xmin = 69000.5;
+		xmax = 79000.5-1.0;
+		units = std::string("z1+z2 - 2*(t_imcp-t_photodiode)");
+		user_xmin = xmin;
+		user_xmax = xmax;	
+	}
+	//
+	else if (type==std::string("melsum") )
+	{
+		nbins = 5000;
+		xmin = -4000.5;
+		xmax = 1000.5-1.0;
+		units = std::string("x1+x2 + z1+z2 - 4*t_imcp");
+		user_xmin = -1800;
+		user_xmax = -900;
+	}
+	else if (type==std::string("meldiff") )
+	{
+		nbins = 1000;
+		xmin = -1000.5+1.0;
+		xmax = 0.5;
+		units = std::string("(x1+x2) - (z1+z2)");
+		user_xmin = -750.0;
+		user_xmax = -500.0;
+	}
+	//
 	else if (type==std::string("x_sumdiff_9055") )
 	{
 		nbins = 500;
