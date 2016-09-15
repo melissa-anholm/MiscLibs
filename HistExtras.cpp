@@ -1,82 +1,18 @@
+#ifndef INCLUDE_HISTEXTRAS
+#define INCLUDE_HISTEXTRAS 1
+
+
 #include <vector>
 using std::vector;
 
 #include <TH1D.h>
 #include <TH2D.h>
-#include <TGraph.h>
-#include <TGraphErrors.h>
 
 // Examples:
 // TH1D* OP_Cycle_Events_all = CreateHist(string("Electron Events - All"), string("acmottime"), int(kRed));
 // TH2D* tof_v_iqcd_ac  = CreateHist2d(string("tof_vs_iqdc_ac"),  string("i_qdc"), string("cal_tof"));
 
 double v1192_to_ns = 100.0/1024.0;
-
-/*
-TGraphErrors * make_TGraphErrors_like(TH1D * hist)
-{
-	TGraphErrors * graph = new TGraphErrors(hist);  
-	// above: copies all the parameters and data points, but not the name.  or title.
-	graph -> SetNameTitle(hist->GetName(), hist->GetTitle());
-	graph -> SetMarkerColor(hist->GetLineColor());
-	
-	return graph;
-}
-*/
-
-/*
-TGraphErrors * set_graph_values(TGraphErrors * thisgraph, int n_points, double*x, double*x_err, double*y, double* y_err)
-{
-	// Set new shizzle.
-	for(int i=0; i<n_points; i++)
-	{
-		thisgraph -> SetPoint(i, x[i], y[i]);
-		thisgraph -> SetPointError(i, x_err[i], y_err[i]);
-	}
-	return thisgraph;
-}
-*/
-
-TGraphErrors * set_attributes_like(TGraphErrors * thisgraph, TH1D * hist)
-{
-//	TGraphErrors * graph = new TGraphErrors(hist);  
-	thisgraph -> SetNameTitle( (string("Graph: ")+string(hist->GetName())).c_str(), hist->GetTitle());
-	thisgraph -> SetMarkerColor(hist->GetLineColor());
-	thisgraph -> SetLineColor(hist->GetLineColor());
-	thisgraph -> GetXaxis()->SetTitle(hist->GetXaxis()->GetTitle());
-	thisgraph -> GetYaxis()->SetTitle(hist->GetYaxis()->GetTitle());
-//	thisgraph -> GetXaxis()->SetRangeUser(hist->GetXaxis()->GetRangeUser());  // GetRangeUser isn't a thing.
-//	thisgraph -> GetYaxis()->SetRangeUser(hist->GetYaxis()->GetRangeUser());
-
-	return thisgraph;
-}
-
-TGraphErrors * make_TGraphErrors(int N_points, double * x_avg, double * y_avg, double * delta_x, double * delta_y)
-{
-	TGraphErrors * my_TGraphErrors;
-	my_TGraphErrors = new TGraphErrors(N_points, x_avg, y_avg, delta_x, delta_y);
-	
-	return my_TGraphErrors;
-}
-
-
-TGraphErrors * make_TGraphErrors(vector<double> x_avg, vector<double> y_avg, vector<double> delta_x, vector<double> delta_y)
-{
-	int N_points = std::min( std::min(x_avg.size(), y_avg.size()), std::min(delta_x.size(), delta_y.size()) );
-	
-	if( x_avg.size() != y_avg.size() || delta_x.size() != delta_y.size() || x_avg.size() != delta_x.size() )
-		{ std::cout << "* WARNING:  TGraphErrors input vectors have non-constant sizes.  Creating graph anyway." << std::endl; }
-
-	double * x = &x_avg[0];
-	double * y = &y_avg[0];
-	double * x_err = &delta_x[0];
-	double * y_err = &delta_y[0];
-	
-	TGraphErrors * my_TGraphErrors;
-	my_TGraphErrors = new TGraphErrors(N_points, x, y, x_err, y_err);
-	
-	return my_TGraphErrors;
-}
 
 
 // ====================================== //
@@ -575,13 +511,14 @@ int hist_type::set_other_parameters()
 	return 0;
 }
 
-TH1D * CreateHist(std::string title, std::string type, int color=1)
+TH1D * CreateHist(std::string title, std::string type, int color, int rebin_factor=1)
 {
 	hist_type my_hist_type = hist_type(type);
 	TH1D * this_hist = new TH1D(title.c_str(), title.c_str(), my_hist_type.nbins, my_hist_type.xmin, my_hist_type.xmax);
 	this_hist -> SetLineColor(color);
 	this_hist -> GetXaxis() -> SetTitle(my_hist_type.units.c_str());
 	this_hist -> GetXaxis() -> SetRangeUser(my_hist_type.user_xmin, my_hist_type.user_xmax);
+	this_hist -> Rebin(rebin_factor);
 	
 	return this_hist;
 }
@@ -654,7 +591,7 @@ void hist_type_2d::set_other_parameters()
 	}
 }
 
-TH2D * CreateHist2d(std::string title, std::string x_type, std::string y_type, int rebin_x=1, int rebin_y=1)
+TH2D * CreateHist2d(std::string title, std::string x_type, std::string y_type, int rebin_x, int rebin_y)
 {
 	hist_type_2d my_hist_type_2d = hist_type_2d(x_type, y_type, rebin_x, rebin_y);
 	
@@ -675,3 +612,12 @@ TH2D * CreateHist2d(std::string title, std::string x_type, std::string y_type, i
 	
 	return this_hist_2d;
 }
+
+TH2D * CreateHist2d(std::string title, std::string x_type, std::string y_type)
+{
+	int rebin_x = 1;
+	int rebin_y = 1;
+	return CreateHist2d(title, x_type, y_type, rebin_x, rebin_y);
+}
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef INCLUDE_PYTHONIC
+#define INCLUDE_PYTHONIC 1
+
 #include <vector>
 
 vector<double> zeros(int N)
@@ -78,3 +81,7 @@ vector<int> ones_like(vector<int> in_vec)
 	}
 	return out_vec;
 }
+
+
+
+#endif

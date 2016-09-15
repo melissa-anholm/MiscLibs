@@ -19,6 +19,9 @@
 
 //	using set_of_runs::n_00;
 
+#ifndef INCLUDE_TREEQL
+#define INCLUDE_TREEQL 1
+
 
 class set_of_runs
 {
@@ -15416,6 +15419,8 @@ set_of_runs::set_of_runs()
 
 
 
+
+#endif
 
 
 
