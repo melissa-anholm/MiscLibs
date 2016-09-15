@@ -335,25 +335,29 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
 
   }
   // Check for double hits
-  if (nx >= 2 && ny >= 2) {
+  if (nx >= 2 && ny >= 2) 
+  {
     //    cout << "Both >= 2!" << endl;
     BB1Strip xs[2] = {xDet.GetStripByStripN(xstrips_sorted[0]),
                       xDet.GetStripByStripN(xstrips_sorted[1])};
     BB1Strip ys[2] = {yDet.GetStripByStripN(ystrips_sorted[0]),
                       yDet.GetStripByStripN(ystrips_sorted[1])};
     bool pass = true;
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 2; i++) 
+    {
       double r = sqrt(pow(xs[i].GetResolution(), 2) +
                       pow(ys[i].GetResolution(), 2));
       double d = fabs(xs[i].GetEnergy() - ys[i].GetEnergy());
-      double e = 0.5*(xs[1].GetEnergy() + ys[i].GetEnergy());
+      double e = 0.5*(xs[i].GetEnergy() + ys[i].GetEnergy());  // bug??????  fixed ...
       double t = fabs(static_cast<double>(xs[i].GetMaxT()) -
                       static_cast<double>(ys[i].GetMaxT()));
-      pass = pass && (d < n_cut*r) && (t < n_cut*xDet.tdiff_sig) && e > 40.0;
+      pass = pass && (d < n_cut*r) && (t < n_cut*xDet.tdiff_sig) && e > 40.0;  // threshold ?!??
     }
     
-    if (pass) {
-      if (verbose) {
+    if (pass) 
+    {
+      if (verbose) 
+      {
         cout << "Event satisfies multi-hit criteria" << endl;
       }
       r.twoHits = true;
