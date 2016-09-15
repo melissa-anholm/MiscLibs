@@ -253,9 +253,6 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
         // cout << "Above threshold for n#: " << i << " ie s# "
         //      << x.GetStripNumber() << " E = " << x.GetEnergy()
         //      << " > " << x.GetThresholdAtIndex(t_index) << endl;
-        
-        
-        
       }
       if (x.GetEnergy() > maxx) {
         maxx = x.GetEnergy();
@@ -317,7 +314,8 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
     cout << endl;
     cout << "X-strips above individual thresholds:" << endl;
     cout << "ntuple#, strip#, energy, resolution" << endl;
-    for (unsigned int ii = 0; ii < xstrips_sorted.size(); ii++) {
+    for (unsigned int ii = 0; ii < xstrips_sorted.size(); ii++) 
+    {
       BB1Strip x = xDet.GetStripByStripN(xstrips_sorted[ii]);
       cout << x.GetNtupleNumber() << "\t"
            << x.GetStripNumber() << "\t"
@@ -326,7 +324,8 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
     }
     cout << "Y-strips above individual thresholds:" << endl;
     cout << "ntuple#, strip#, energy, resolution" << endl;
-    for (unsigned int ii = 0; ii < ystrips_sorted.size(); ii++) {
+    for (unsigned int ii = 0; ii < ystrips_sorted.size(); ii++) 
+    {
       BB1Strip y = yDet.GetStripByStripN(ystrips_sorted[ii]);
       cout << y.GetNtupleNumber() << "\t"
            << y.GetStripNumber() << "\t"
@@ -506,10 +505,12 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
   // double d = (1.0 /(resx*resx)) + (1.0 /(resy*resy));
 
   bool finalPass = false;
-  if (verbose > 1) {
+  if (verbose > 1) 
+  {
     cout << "Comparing energies for A: " << enex << " and " << eney << endl;
   }
-  if (CompareXY(enex, resx, xT, eney, resy, yT, n_cut, xDet.tdiff_sig)) {
+  if (CompareXY(enex, resx, xT, eney, resy, yT, n_cut, xDet.tdiff_sig)) 
+  {
     double n = (enex/(resx*resx)) + (eney/(resy*resy));
     double d = (1.0 /(resx*resx)) + (1.0 /(resy*resy));
     h.energy = n / d;
@@ -521,14 +522,17 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
     if (verbose > 0) cout << "Passed A (all adjacent strips, if any)" << endl;
   }
 
-  if (!finalPass) {
+  if (!finalPass) 
+  {
     double xE = xDet.GetStripByStripN(smaxx).GetEnergy();
     double xR = xDet.GetStripByStripN(smaxx).GetResolution();
     double xT_try = static_cast<double>(xDet.GetStripByStripN(smaxx).GetMaxT());
-    if (verbose > 1) {
+    if (verbose > 1) 
+    {
       cout << "Comparing energies for B: " << xE << " and " << eney << endl;
     }
-    if (CompareXY(xE, xR, xT_try, eney, resy, yT, n_cut, xDet.tdiff_sig)) {
+    if (CompareXY(xE, xR, xT_try, eney, resy, yT, n_cut, xDet.tdiff_sig)) 
+    {
       double n = (xE/(xR*xR)) + (eney/(resy*resy));
       double d = (1.0 /(xR*xR)) + (1.0 /(resy*resy));
       h.energy = n / d;
@@ -537,8 +541,7 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
       finalPass = true;
       h.passE = true;
       h.passT = true;
-      if (verbose > 0) cout << "Passed B (only y-adjacent strips, if any)"
-                            << endl;
+      if (verbose > 0) cout << "Passed B (only y-adjacent strips, if any)" << endl;
     }
   }
 
