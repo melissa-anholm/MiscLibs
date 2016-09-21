@@ -8,6 +8,8 @@ using std::vector;
 #include <TH1D.h>
 #include <TH2D.h>
 
+#include <TColor.h>
+
 // Examples:
 // TH1D* OP_Cycle_Events_all = CreateHist(string("Electron Events - All"), string("acmottime"), int(kRed));
 // TH2D* tof_v_iqcd_ac  = CreateHist2d(string("tof_vs_iqdc_ac"),  string("i_qdc"), string("cal_tof"));
@@ -184,7 +186,7 @@ int hist_type::set_other_parameters()
 	*/
 	else if (type == std::string("e_qdc") )
 	{
-		nbins = 500;
+		nbins = 500;  // Note:  500 bins is as finely as (-0.5 <-> 499.5) can be binned up.
 		xmin = -0.5;
 		xmax = 500.5-1.0;
 		units = std::string("raw e- qdc");
@@ -216,6 +218,15 @@ int hist_type::set_other_parameters()
 		xmin = -0.5;
 		xmax = 6000.5-1.0;
 		units = std::string("Scint. Energy (keV)");
+		user_xmin = xmin;
+		user_xmax = 5500.0;
+	}
+	else if (type == std::string("E_beta") )
+	{
+		nbins = 600;
+		xmin = -0.5;
+		xmax = 6000.5-1.0;
+		units = std::string("Beta Energy (keV)");
 		user_xmin = xmin;
 		user_xmax = 5500.0;
 	}
@@ -522,6 +533,27 @@ TH1D * CreateHist(std::string title, std::string type, int color, int rebin_fact
 	
 	return this_hist;
 }
+
+
+TH1D * CreateHist(std::string title, std::string type, TColor my_color, int rebin_factor=1)
+{
+//	TColor *this_color;
+//	Int_t color = this_color -> GetFreeColorIndex(); // nope.  only in root 6.
+//	Int_t color = TColor::GetFreeColorIndex();
+//	TColor *this_color = new TColor(color, my_color.GetRed(), my_color.GetGreen(), my_color.GetBlue());
+	Int_t color = TColor::GetColor(my_color.GetRed(), my_color.GetGreen(), my_color.GetBlue());
+//	this_color = new TColor(color, my_color.GetRed(), my_color.GetGreen(), my_color.GetBlue());
+
+	hist_type my_hist_type = hist_type(type);
+	TH1D * this_hist = new TH1D(title.c_str(), title.c_str(), my_hist_type.nbins, my_hist_type.xmin, my_hist_type.xmax);
+	this_hist -> SetLineColor(color);
+	this_hist -> GetXaxis() -> SetTitle(my_hist_type.units.c_str());
+	this_hist -> GetXaxis() -> SetRangeUser(my_hist_type.user_xmin, my_hist_type.user_xmax);
+	this_hist -> Rebin(rebin_factor);
+	
+	return this_hist;
+}
+
 
 class hist_type_2d
 {
