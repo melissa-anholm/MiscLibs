@@ -718,34 +718,36 @@ void use_hq_palette(int palettenumber, bool invert=false)
 	return;
 }
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+int mBlack       = int(kBlack);
 
-int mBabyPink = int(kPink+1);
-int mPink     = int(kPink+6);
+int mBabyPink    = int(kPink+1);
+int mPink        = int(kPink+6);
 
-int mLightOrange = int(kOrange-3);
-int mOrange      = int(kOrange+7);
+int mDarkRed     = int(kRed+2);
+
 int mDarkOrange  = int(kOrange+3);
+int mOrange      = int(kOrange+7);
+int mLightOrange = int(kOrange-3);
 
-int mYellow    = int(kOrange);
+int mYellow      = int(kOrange);
 
-int mGreen     = int(kGreen+2);
-int mDarkGreen = int(kSpring-7);
+int mSpring      = int(kSpring+10);
+int mCyan        = int(kAzure+10);
 
-int mLavender   = int(kViolet+6);
-int mPurple     = int(kViolet+2);
-int mDarkPurple = int(kViolet+3);
+int mGreen       = int(kGreen+2);
+int mDarkGreen   = int(kSpring-7);
 
-int mDarkBlue   = int(kBlue+2);
-int mSkyBlue    = int(kAzure+1);
-int mPeriwinkle = int(kBlue-7);
-int mCyan       = int(kAzure+10);
+int mTeal        = int(kAzure+4);
+int mDarkTeal    = int(kCyan+4);
 
-int mTeal     = int(kAzure+4);
-int mDarkTeal = int(kCyan+4);
+int mDarkBlue    = int(kBlue+2);
+int mSkyBlue     = int(kAzure+1);
+int mPeriwinkle  = int(kBlue-7);
 
-int mSpring = int(kSpring+10);
+int mLavender    = int(kViolet+6);
+int mPurple      = int(kViolet+2);
+int mDarkPurple  = int(kViolet+3);
 
-int mDarkRed = int(kRed+2);
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 

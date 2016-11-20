@@ -52,6 +52,24 @@ int hist_type::set_other_parameters()
 		user_xmin = xmin;
 		user_xmax = xmax;
 	}
+	else if (type == std::string("rescaled_tof"))
+	{
+		nbins = 1500*2;
+		xmin = (-150000.5+1.0)*v1192_to_ns;
+		xmax =  (150000.5)*v1192_to_ns;
+		units = std::string("ns");
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	else if (type == std::string("rescaled_toa"))
+	{
+		nbins = 800*2;
+		xmin = (-20000.5+1.0)*v1192_to_ns;
+		xmax = (140000.5)*v1192_to_ns;
+		units = std::string("ns");
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
 	else if (type == std::string("cal_tof"))
 	{
 		nbins =   1400;
@@ -78,6 +96,15 @@ int hist_type::set_other_parameters()
 		units = std::string("ion tof (ns)");
 		user_xmin = -400;
 		user_xmax = 2000;
+	}
+	else if (type == std::string("finer_cal_tof_zoom"))
+	{
+		nbins =  20000;
+		xmin = ( 5000.5)*v1192_to_ns;
+		xmax = (25000.5-1.0)*v1192_to_ns;
+		units = std::string("ion tof (ns)");
+		user_xmin = 1000;
+		user_xmax = 1600;
 	}
 	else if (type == std::string("sim_PI_535"))
 	{
