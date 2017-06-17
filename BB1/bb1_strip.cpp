@@ -27,7 +27,7 @@ BB1Strip::BB1Strip() {
   energy = 0.;
   denergy = 0.;
   maxT = 0;
-  for (int i = 0; i < 5; i++) t[i] = 0.;
+  for (int i = 0; i < 6; i++) t[i] = 0.;
 }
 
 BB1Strip::BB1Strip(int nn_, int sn_, double cal_, double dcal_, double res_,
@@ -40,7 +40,7 @@ BB1Strip::BB1Strip(int nn_, int sn_, double cal_, double dcal_, double res_,
   dres = dres_;
   maxT = 0;
   pos = pos_;
-  for (int i = 0; i < 5; i++) t[i] = 0.5*t_[i];
+  for (int i = 0; i < 6; i++) t[i] = 0.5*t_[i]; // srsly?!  ...but the one place where this happens in this code, it also corrects it immediately.
 }
 
 double BB1Strip::CalcEnergy(double adc) {
@@ -56,15 +56,15 @@ void BB1Strip::Print() {
   cout << "Calibration: " << cal << " +/- " << dcal << " ch/keV" << endl;
   cout << "Resolution: " << res << " +/- " << dres << " keV" << endl;
   cout << "Thresholds for S/N: ";
-  for (int i = 0; i < 4; i++) cout << t[i] << "   ";
+  for (int i = 0; i < 6; i++) cout << t[i] << "   ";
   cout << " keV" << endl;
 }
 
 double BB1Strip::GetThresholdAtIndex(int i) {
-  if (i > 4 || i < 0) {
-    cout << "WARNING: Must supply index 0->4" << endl;
-    cout << "Assuming you meant i = 4" << endl;
-    i = 4;
+  if (i > 5 || i < 0) {
+    cout << "WARNING: Must supply index 0->5" << endl;
+    cout << "Assuming you meant i = 5" << endl;
+    i = 5;
   }
   return t[i];
   //  return 30.0;                          // keV
@@ -72,16 +72,17 @@ double BB1Strip::GetThresholdAtIndex(int i) {
 
 
 BB1Detector::BB1Detector() {
-  double t[5] = {0, 0, 0, 0, 0};
+  double t[6] = {0, 0, 0, 0, 0, 0};
   strip = vector<BB1Strip>(40, BB1Strip());
   det = D_undef;
   pl = P_undef;
   tdiff_sig = 0.0;
 }
 
-BB1Detector::BB1Detector(string fname) : det(D_undef), pl(P_undef) {
+BB1Detector::BB1Detector(string fname) : det(D_undef), pl(P_undef) 
+{
 //  cout << "Reading file " << fname << endl;
-  double t[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
+  double t[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
   strip = vector<BB1Strip>(40, BB1Strip());
   for (unsigned int i = 0; i < 40; i++) strip[i].SetNtupleNumber(i);
   std::ifstream ifs(fname.c_str(), std::ifstream::in);
@@ -99,17 +100,16 @@ BB1Detector::BB1Detector(string fname) : det(D_undef), pl(P_undef) {
   double pos;
   int count = 0;
   while (ifs >> nn >> sn >> pos >> cal >> dcal >> res >> dres >> t[0] >> t[1] >> t[2] >>
-         t[3] >> t[4] && !ifs.eof() && ifs.good() && count < 40) {
+         t[3] >> t[4] >> t[5] && !ifs.eof() && ifs.good() && count < 40) {
     count++;
-    strip[nn] = BB1Strip(nn, sn, cal, dcal, res, dres, t, pos);
-    for (int i = 0; i < 5; i++) 
+    strip[nn] = BB1Strip(nn, sn, cal, dcal, res, dres, t, pos);  // this initialization is defined stupidly.  therefore, t[i] gets re-initialized immediately after.  
+    for (int i = 0; i < 6; i++) 
       {
         strip[nn].t[i] = t[i];
 
       }
     //    cout << "Strip " << nn << " cal = " << cal << endl;
     //    cout << t[2] << "\t" << strip[nn].t[2] << endl;
-    
     //    strip[nn].Print();
   }
   cout << "Read " << count << " strips from " << fname << endl;
@@ -130,7 +130,8 @@ void BB1Detector::SetTDiffSigWithFile(string fname) {
   ifs.close();  
 }
 
-vector<double> BB1Detector::ApplyResolution(vector<double> adc, TRandom *r) {
+vector<double> BB1Detector::ApplyResolution(vector<double> adc, TRandom *r) 
+{
   vector<double> adc_with_res(adc.size(), 0.0);
 
   for (unsigned int i = 0; i < adc.size(); i++) {
@@ -183,7 +184,8 @@ vector<double> BB1Detector::GetResolution() {
   return res;
 }
 
-double BB1Detector::GetPositionForStrip(int sn) {
+double BB1Detector::GetPositionForStrip(int sn) 
+{
   return GetStripByStripN(sn).GetPos();
   // double pos = 0.0;
   // if (det == upper && pl == Y) {

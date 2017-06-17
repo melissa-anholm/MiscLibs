@@ -23,7 +23,7 @@ class BB1Strip {
   BB1Strip();
   BB1Strip(int nn_, int sn_, double cal_, double dcal_, double res_,
            double dres_, double* t_, double pos);
-  double t[5];                  /* threshold for SN .25, .5, .75, 1, 2 */
+  double t[6];                  /* threshold for SN .25, .5, .75, 1, 2, 0.17 */
   double CalcEnergy(double adc);
   double GetResolution() {return res;};
   double GetEnergy() {return energy;};
@@ -64,9 +64,9 @@ class BB1Detector {
 class BB1Hit {
 public :
   double xpos, ypos, energy;
-  int nx, ny, smaxx, smaxy;
+  int nx, ny, smaxx, smaxy;  
+  // smaxx, smaxy:  strip with max in x plane, strip with max in y plane.
   bool passE, passT, pass;
-
   BB1Hit();
 };
 
