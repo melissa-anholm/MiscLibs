@@ -23,7 +23,7 @@ using std::string;
 string r_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_2014/";
 string e_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
 string f_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Friends_2014/";
-string s_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
+string g4_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 
@@ -53,6 +53,7 @@ string get_datafriendname(string path, int runno)
 	
 	return fname;
 }
+
 TChain * get_single_datatree(int runno)
 {
 	TFile * file;
@@ -88,7 +89,7 @@ TChain * get_single_datatree(int runno)
 }
 TChain * get_chain_from_Efield(double Efield, bool use_shitty=false)
 {
-	TFile * file;
+//	TFile * file;
 	string filename;
 	string friendname;
 	
@@ -153,6 +154,152 @@ TChain * get_chain_from_Efield(double Efield, bool use_shitty=false)
 	return tree_chain;
 }
 
+TChain * get_electron_chain_from_letter(string runset_letter) // case sensitive.
+{
+	set_of_runs runs;
+	
+	string filename;
+	string friendname;
+	TChain * tree_chain = new TChain("ntuple");
+	TChain * friend_chain = new TChain("friendtuple");
+	
+//	if( !strcmp(runset_letter, "A")==0 )
+	if( !( runset_letter.compare(string("A"))==0 || runset_letter.compare(string("B"))==0 || runset_letter.compare(string("C"))==0 || runset_letter.compare(string("D"))==0 ) )
+	{
+		cout << "Nope.  \"" << runset_letter << "\" is not a recognized electron runset."  << endl;
+		return tree_chain;
+	}
+	else
+	{
+		cout << "Using electron runset " << runset_letter << endl;
+	}
+	
+	for(int i=302; i<runs.N_runs; i++)
+	{
+		if(runs.good_electron[i] == true)
+		{
+			if( runset_letter.compare( runs.runset_letter[i] )==0 )
+			{
+				cout << "Using run " << i;// << endl;
+				cout << ":  runset_letter[i] = " << runs.runset_letter[i] << endl;
+				filename = get_datafilename(e_path, i);
+				tree_chain -> Add(filename.c_str());
+			
+				friendname = get_datafriendname(f_path, i);
+				friend_chain -> Add(friendname.c_str());
+			}
+		//	else
+		//	{
+		//		cout << "Run " << i << ":  runs.runset_letter[i] = " << runs.runset_letter[i] << endl;
+		//	}
+			
+		}
+	}
+	
+//	cout << endl;
+//	cout << "*****************************************" << endl;
+//	cout << "This doesn't work yet;  fuck you Melissa!" << endl;
+//	cout << "*****************************************" << endl;
+//	cout << endl;
+	
+	tree_chain -> AddFriend(friend_chain);
+	return tree_chain;
+}
+
+TChain * get_recoil_chain_from_letter(string runset_letter)  // case sensitive.
+{
+	set_of_runs runs;
+	
+	string filename;
+	string friendname;
+	TChain * tree_chain = new TChain("ntuple");
+	TChain * friend_chain = new TChain("friendtuple");
+	
+	if( !(runset_letter.compare(string("A"))==0 || runset_letter.compare(string("B"))==0 || runset_letter.compare(string("C"))==0 || runset_letter.compare(string("D"))==0 || runset_letter.compare(string("E"))==0 ) )
+	{
+		cout << "Nope.  \"" << runset_letter << "\" is not a recognized recoil runset."  << endl;
+		return tree_chain;
+	}
+	else
+	{
+		cout << "Using recoil runset " << runset_letter << endl;
+	}
+
+	for(int i=302; i<runs.N_runs; i++)
+	{
+		if(runs.good_recoil[i] == true)
+		{
+			if( runset_letter.compare( runs.runset_letter[i] )==0 )
+			{
+				cout << "Using run " << i;// << endl;
+				cout << ":  runset_letter[i] = " << runs.runset_letter[i] << endl;
+				
+				filename = get_datafilename(r_path, i);
+				tree_chain -> Add(filename.c_str());
+			
+				friendname = get_datafriendname(f_path, i);
+				friend_chain -> Add(friendname.c_str());
+			}
+		//	else
+		//	{
+		//		cout << "Run " << i << ":  runs.runset_letter[i] = " << runs.runset_letter[i] << endl;
+		//	}
+		}
+	}
+	
+//	cout << endl;
+//	cout << "*****************************************" << endl;
+//	cout << "This doesn't work yet;  fuck you Melissa!" << endl;
+//	cout << "*****************************************" << endl;
+//	cout << endl;
+	
+	tree_chain -> AddFriend(friend_chain);
+	return tree_chain;
+}
+
+TChain * get_electron_chain_from_runnos(vector<int> use_these_runs)
+{
+	string filename;
+	string friendname;
+
+	TChain * tree_chain = new TChain("ntuple");
+	TChain * friend_chain = new TChain("friendtuple");
+	
+	set_of_runs runs;
+	int N_runs_to_use = use_these_runs.size();
+	
+	for(int i=302; i<runs.N_runs; i++)
+	{
+		for(int j=0; j<N_runs_to_use; j++)
+		{
+			if( use_these_runs[j] == i )
+			{
+				if(runs.good_electron[i] == true)
+				{
+					cout << "Using run " << i << endl;
+					filename = get_datafilename(e_path, i);
+					tree_chain -> Add(filename.c_str());
+					
+					friendname = get_datafriendname(f_path, i);
+					friend_chain -> Add(friendname.c_str());
+					
+					filename = string();
+					filename.clear();
+					friendname = string();
+					friendname.clear();
+				}
+				else
+				{
+					cout << "Can't use run " << i << endl;
+				}
+			}
+		}
+	}	
+	tree_chain -> AddFriend(friend_chain);
+	return tree_chain;
+}
+
+
 // ====================================== //
 // TChains for Simulations:
 string make_simfilename(string namestub, int runno)
@@ -162,13 +309,13 @@ string make_simfilename(string namestub, int runno)
 	ss.str( std::string() );
 	ss.clear();
 	
-	ss << s_path << namestub << runno << ".root";
+	ss << g4_path << namestub << runno << ".root";
 	fname = ss.str();
 	
 	return fname;
 }
 
-TChain * make_simchain(vector<int> use_these_runs, string namestub=s_path+string("output_") )
+TChain * make_simchain(vector<int> use_these_runs, string namestub=g4_path+string("output_") )
 {
 	int nruns = use_these_runs.size();
 	cout << "nruns = " << nruns << endl;
@@ -194,10 +341,14 @@ public:
 //	vector<int> use_these_runs;
 	
 	MetaTuple();
-	MetaTuple(string metadatafilename=s_path+string("MetaData.txt"));
+	MetaTuple(string metadatafilename); //=g4_path+string("MetaData.txt")
 	void set_allthe_branch_addresses();
 //	TTree * LoadMetaData();
 	void SetBools();
+	
+	TChain * LoadNewChain(MetaTuple CompTuple);
+	TChain * AddToChain(TChain* this_chain, MetaTuple CompTuple);
+
 	bool Compare(MetaTuple CompTuple);
 
 	bool run_compare;
@@ -227,7 +378,7 @@ public:
 	bool sailvelocity_z_compare;
 	
 	void set_run(int run_) {run=run_; run_compare=true;}
-	void set_filename(string filename_) {filename=filename_.c_str(); filename_compare=true;}
+	void set_filename(string filename_) {filename=(char*)filename_.c_str(); filename_compare=true;}
 	void set_Efield(double Efield_) {Efield=Efield_; Efield_compare=true;}
 	void set_Efield_Uniformity(bool Efield_Uniformity_) 
 	{
@@ -238,8 +389,8 @@ public:
 	void set_StepperType(int StepperType_) {StepperType = StepperType_; StepperType_compare=true;}
 	void set_StepperName(string StepperName_) 
 	{
-		StepperName = StepperName_.c_str(); 
-		Steppername_compare=true; 
+		StepperName = (char*)StepperName_.c_str(); 
+		StepperName_compare=true; 
 	}
 	void set_StepMax_mm(double StepMax_mm_) {StepMax_mm = StepMax_mm_; StepMax_mm_compare=true;}
 	void set_EventsGenerated(int EventsGenerated_) 
@@ -250,7 +401,7 @@ public:
 	void set_EventsSaved(int EventsSaved_) {EventsSaved=EventsSaved_; EventsSaved_compare=true;}
 	void set_SaveEventTypes(string SaveEventTypes_) 
 	{
-		SaveEventTypes = SaveEventTypes_.c_str();  
+		SaveEventTypes = (char*)SaveEventTypes_.c_str();  
 		SaveEventTypes_compare = true;
 	}
 	void set_trap_x(double trap_x_) {trap_x=trap_x_; trap_x_compare=true;}
@@ -275,6 +426,11 @@ public:
 	{
 		Temperature=Temperature_; 
 		Temperature_compare=true;
+	}
+	void set_Polarization(double Polarization_) 
+	{
+		Polarization=Polarization_; 
+		Polarization_compare=true;
 	}
 	void set_Alignment(double Alignment_) {Alignment=Alignment_; Alignment_compare=true;}
 	void set_ExpandBeforePolarized_s(double ExpandBeforePolarized_s_)
@@ -331,6 +487,51 @@ public:
 	double sailvelocity_y;
 	double sailvelocity_z;
 };
+
+TChain * MetaTuple::LoadNewChain(MetaTuple CompTuple)
+{
+//	TFile * file;
+//	string filename;
+	TChain * tree_chain = new TChain("ntuple");
+	
+//	const char* fname;
+	
+	for(int i=0; i<nentries; i++)
+	{
+		MetaTree -> GetEntry(i);
+		if( Compare(CompTuple) )
+		{
+		//	fname = filename
+			tree_chain -> Add( (g4_path+string(filename)).c_str() ); // filename is already associated with the correct thing...
+			cout << "Adding " << filename << " to chain." << endl;
+		}
+	}
+	
+	return tree_chain;
+}
+
+TChain * MetaTuple::AddToChain(TChain* this_chain, MetaTuple CompTuple)
+{
+//	TFile * file;
+//	string filename;
+//	TChain * tree_chain = new TChain("ntuple");	
+//	const char* fname;
+	
+	for(int i=0; i<nentries; i++)
+	{
+		MetaTree -> GetEntry(i);
+		if( Compare(CompTuple) )
+		{
+		//	fname = filename
+			this_chain -> Add( (g4_path+string(filename)).c_str() ); // filename is already associated with the correct thing...
+			cout << "Adding " << filename << " to chain." << endl;
+		}
+	}
+	
+	return this_chain;
+}
+
+
 
 void MetaTuple::set_allthe_branch_addresses()
 {
@@ -422,130 +623,130 @@ void MetaTuple::SetBools()
 }
 
 bool MetaTuple::Compare(MetaTuple CompTuple)
-{ // Use the set of bools in the current MetaTuple.
+{ // Use the true-est of *either* set of bools.
 	bool match = true;
 	
-	if(run_compare==true)
+	if(run_compare==true||CompTuple.run_compare==true)
 	{
 		if(run!=CompTuple.run)
 			{ match=false; return match; }
 	}
-//	if(filename_compare==true)
+//	if(filename_compare==true||CompTuple.filename_compare==true)
 //	{
 //		if(filename!=CompTuple.filename)
 //			{ match=false; return match; }
 //	}
-	if(Efield_compare==true)
+	if(Efield_compare==true||CompTuple.Efield_compare==true)
 	{
 		if(Efield!=CompTuple.Efield)
 			{ match=false; return match; }
 	}
-	if(Efield_Uniformity_compare==true)
+	if(Efield_Uniformity_compare==true||CompTuple.Efield_Uniformity_compare==true)
 	{
 		if(Efield_Uniformity!=CompTuple.Efield_Uniformity)
 			{ match=false; return match; }
 	}
-	if(PI_Energy_compare==true)
+	if(PI_Energy_compare==true||CompTuple.PI_Energy_compare==true)
 	{
 		if(PI_Energy!=CompTuple.PI_Energy)
 			{ match=false; return match; }
 	}
-	if(StepperType_compare==true)
+	if(StepperType_compare==true||CompTuple.StepperType_compare==true)
 	{
 		if(StepperType!=CompTuple.StepperType)
 			{ match=false; return match; }
 	}
-//	if(StepperName_compare==true)
+//	if(StepperName_compare==true||CompTuple.StepperName_compare==true)
 //	{
 //		if(StepperName!=CompTuple.StepperName)
 //			{ match=false; return match; }
 //	}
-	if(StepMax_mm_compare==true)
+	if(StepMax_mm_compare==true||CompTuple.StepMax_mm_compare==true)
 	{
 		if(StepMax_mm!=CompTuple.StepMax_mm)
 			{ match=false; return match; }
 	}
-	if(EventsGenerated_compare==true)
+	if(EventsGenerated_compare==true||CompTuple.EventsGenerated_compare==true)
 	{
 		if(EventsGenerated!=CompTuple.EventsGenerated)
 			{ match=false; return match; }
 	}
-	if(EventsSaved_compare==true)
+	if(EventsSaved_compare==true||CompTuple.EventsSaved_compare==true)
 	{
 		if(EventsSaved!=CompTuple.EventsSaved)
 			{ match=false; return match; }
 	}
-//	if(SaveEventTypes_compare==true)
+//	if(SaveEventTypes_compare==true||CompTuple.SaveEventTypes_compare==true)
 //	{
 //		if(SaveEventTypes!=CompTuple.SaveEventTypes)
 //			{ match=false; return match; }
 //	}
-	if(trap_x_compare==true)
+	if(trap_x_compare==true||CompTuple.trap_x_compare==true)
 	{
 		if(trap_x!=CompTuple.trap_x)
 			{ match=false; return match; }
 	}
-	if(trap_y_compare==true)
+	if(trap_y_compare==true||CompTuple.trap_y_compare==true)
 	{
 		if(trap_y!=CompTuple.trap_y)
 			{ match=false; return match; }
 	}
-	if(trap_z_compare==true)
+	if(trap_z_compare==true||CompTuple.trap_z_compare==true)
 	{
 		if(trap_z!=CompTuple.trap_z)
 			{ match=false; return match; }
 	}
-	if(trap_sigma_x_compare==true)
+	if(trap_sigma_x_compare==true||CompTuple.trap_sigma_x_compare==true)
 	{
 		if(trap_sigma_x!=CompTuple.trap_sigma_x)
 			{ match=false; return match; }
 	}
-	if(trap_sigma_y_compare==true)
+	if(trap_sigma_y_compare==true||CompTuple.trap_sigma_y_compare==true)
 	{
 		if(trap_sigma_y!=CompTuple.trap_sigma_y)
 			{ match=false; return match; }
 	}
-	if(trap_sigma_z_compare==true)
+	if(trap_sigma_z_compare==true||CompTuple.trap_sigma_z_compare==true)
 	{
 		if(trap_sigma_z!=CompTuple.trap_sigma_z)
 			{ match=false; return match; }
 	}
-	if(Temperature_compare==true)
+	if(Temperature_compare==true||CompTuple.Temperature_compare==true)
 	{
 		if(Temperature!=CompTuple.Temperature)
 			{ match=false; return match; }
 	}
-	if(Polarization_compare==true)
+	if(Polarization_compare==true||CompTuple.Polarization_compare==true)
 	{
 		if(Polarization!=CompTuple.Polarization)
 			{ match=false; return match; }
 	}
-	if(Alignment_compare==true)
+	if(Alignment_compare==true||CompTuple.Alignment_compare==true)
 	{
 		if(Alignment!=CompTuple.Alignment)
 			{ match=false; return match; }
 	}
-	if(ExpandBeforePolarized_s_compare==true)
+	if(ExpandBeforePolarized_s_compare==true||CompTuple.ExpandBeforePolarized_s_compare==true)
 	{
 		if(ExpandBeforePolarized_s!=CompTuple.ExpandBeforePolarized_s)
 			{ match=false; return match; }
 	}
-	if(OP_CycleTime_s_compare==true)
+	if(OP_CycleTime_s_compare==true||CompTuple.OP_CycleTime_s_compare==true)
 	{
 		if(OP_CycleTime_s!=CompTuple.OP_CycleTime_s)
 			{ match=false; return match; }
 	}
-	if(sailvelocity_x_compare==true)
+	if(sailvelocity_x_compare==true||CompTuple.sailvelocity_x_compare==true)
 	{
 		if(sailvelocity_x!=CompTuple.sailvelocity_x)
 			{ match=false; return match; }
 	}
-	if(sailvelocity_y_compare==true)
+	if(sailvelocity_y_compare==true||CompTuple.sailvelocity_y_compare==true)
 	{
 		if(sailvelocity_y!=CompTuple.sailvelocity_y)
 			{ match=false; return match; }
 	}
-	if(sailvelocity_z_compare==true)
+	if(sailvelocity_z_compare==true||CompTuple.sailvelocity_z_compare==true)
 	{
 		if(sailvelocity_z!=CompTuple.sailvelocity_z)
 			{ match=false; return match; }
@@ -556,6 +757,7 @@ bool MetaTuple::Compare(MetaTuple CompTuple)
 
 MetaTuple::MetaTuple()
 {
+	nentries=0;
 	cout << "Created a MetaTuple without an associated TTree." << endl;
 	SetBools();
 }
@@ -623,6 +825,10 @@ TChain * get_single_datatree_fromfile(string filename)
 */
 // ====================================== //
 
+void test_load_chain()
+{
+	
+}
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 

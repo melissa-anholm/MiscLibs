@@ -205,6 +205,7 @@ public:
 	bool good_electron[N_runs]; // done.
 	void init_goodrecoil();        
 	void init_goodelectron();   // done.
+	void update_goodruns();
 	
 	double iqdc_min[N_runs];
 	double iqdc_max[N_runs];
@@ -216,6 +217,10 @@ public:
 	
 	double ElectricField[N_runs];
 	void init_ElectricField();
+	
+//	char * runset_letter[N_runs];
+	string runset_letter[N_runs];
+	void init_runsetletter();
 	
 	set_of_runs(); // done.
 	
@@ -326,6 +331,7 @@ void set_of_runs::init_dannycuts_2()
 	danny_z_max[497][n_10] = 73255.075;
 	*/
 }
+
 void set_of_runs::init_dannycuts()
 {
 //	double danny_x_mode[N_runs];
@@ -15362,6 +15368,72 @@ void set_of_runs::init_prompt()
 	
 }
 
+void set_of_runs::update_goodruns()
+{
+	for(int i=0; i<N_runs; i++)
+	{
+		if(good_electron[i] == true || good_recoil[i] == true)
+		{
+			if(compton_edge_ok[i] == false)
+			{
+				good_electron[i] = false;
+				good_recoil[i] = false;
+			}
+		}
+	}
+}
+
+void set_of_runs::init_runsetletter()
+{
+	for(int i=0; i<N_runs; i++)
+	{
+		runset_letter[i] = string("0");
+		if(good_electron[i]==true)
+		{
+			if(i <= 420)
+			{
+				runset_letter[i] = string("A");
+			}
+			else if(i <= 435)
+			{
+				runset_letter[i] = string("B");
+			}
+			else if(i <= 477)
+			{
+				runset_letter[i] = string("C");
+			}
+			else
+			{
+				runset_letter[i] = string("D");
+			}
+		}
+		else if(good_recoil[i]==true)
+		{
+			if(i <= 402)
+			{
+				runset_letter[i] = string("A");
+			}
+			else if(i <= 449)
+			{
+				runset_letter[i] = string("B");
+			}
+			else if(i <= 455)
+			{
+				runset_letter[i] = string("C");
+			}
+			else if(i <= 474)
+			{
+				runset_letter[i] = string("D");
+			}
+			else 
+			{
+				runset_letter[i] = string("E");
+			}
+		}
+	}
+
+}
+
 set_of_runs::set_of_runs()
 {
 	// Compton Edge.
@@ -15392,7 +15464,9 @@ set_of_runs::set_of_runs()
 	init_goodrecoil();
 	init_goodelectron();
 	init_usable();
-
+	update_goodruns();  // just veto anything where the compton edge isn't there.
+	init_runsetletter();
+	
 //	init_sumdiffs();
 //	init_sumdiffs_old();
 	init_sumdiffs_2();
