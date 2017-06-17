@@ -79,6 +79,15 @@ int hist_type::set_other_parameters()
 		user_xmin = -500;
 		user_xmax = 5500;
 	}
+	else if (type == std::string("cal_tof_zoom"))
+	{
+		nbins =   400;
+		xmin = (-5000.5+1.0)*v1192_to_ns;
+		xmax = (35000.5)*v1192_to_ns;
+		units = std::string("ion tof (ns)");
+		user_xmin = 800;
+		user_xmax = 1800;
+	}
 	else if (type == std::string("fine_cal_tof"))
 	{
 		nbins =  14000;
@@ -94,7 +103,7 @@ int hist_type::set_other_parameters()
 		xmin = (-5000.5)*v1192_to_ns;
 		xmax = (25000.5-1.0)*v1192_to_ns;
 		units = std::string("ion tof (ns)");
-		user_xmin = -400;
+		user_xmin =  800;
 		user_xmax = 2000;
 	}
 	else if (type == std::string("finer_cal_tof_zoom"))
@@ -173,14 +182,14 @@ int hist_type::set_other_parameters()
 		user_xmin = 50;
 		user_xmax = 150;
 	}
-	else if (type == std::string("cal_e_scint_tof")) // electron tof w.r.t. scint time.
+	else if (type == std::string("cal_e_scint_tof")) // electron tof w.r.t. scint time + offset.
 	{
 		nbins = 4000;
 		xmin = (-2000.5+1.0)*v1192_to_ns;
 		xmax = (2000.5)*v1192_to_ns;
 		units = std::string("ns");
-		user_xmin = -100;
-		user_xmax = -40;
+		user_xmin = -20;
+		user_xmax = 60;
 	}
 	else if (type == std::string("cal_scint_tof"))  // for eg: scint_t - scint_b.
 	{
@@ -200,17 +209,6 @@ int hist_type::set_other_parameters()
 		user_xmin = xmin;
 		user_xmax = xmax;
 	}
-	/*
-	if (type == std::string("cal_tof_mus"))
-	{
-		nbins = 350;
-		xmin = (-80000.5+1.0)*v1192_to_ns;
-		xmax = (60000.5)*v1192_to_ns;
-		units = std::string("microsec");
-		user_xmin = -500;
-		user_xmax = 5500;
-	}
-	*/
 	else if (type == std::string("e_qdc") )
 	{
 		nbins = 500;  // Note:  500 bins is as finely as (-0.5 <-> 499.5) can be binned up.
@@ -257,15 +255,6 @@ int hist_type::set_other_parameters()
 		user_xmin = xmin;
 		user_xmax = 5500.0;
 	}
-	else if (type == std::string("acmottime"))
-	{
-		nbins = 1000;
-		xmin = -0.5;
-		xmax = 5000.5-1.0;
-		units = std::string("Time Since AC-MOT Start (microseconds)");
-		user_xmin = xmin;
-		user_xmax = xmax;
-	}
 	else if (type==std::string("beta_energy"))
 	{
 		nbins = 300;
@@ -274,6 +263,15 @@ int hist_type::set_other_parameters()
 		units = std::string("beta energy (keV)");
 		user_xmin = xmin;
 		user_xmax = 6000.5;
+	}
+	else if (type == std::string("acmottime"))
+	{
+		nbins = 1000;
+		xmin = -0.5;
+		xmax = 5000.5-1.0;
+		units = std::string("Time Since AC-MOT Start (microseconds)");
+		user_xmin = xmin;
+		user_xmax = xmax;
 	}
 	/*
 	else if (type==std::string("events_per_time"))
@@ -472,6 +470,24 @@ int hist_type::set_other_parameters()
 		user_xmin = xmin;
 		user_xmax = xmax;
 	}
+	else if(type==std::string("bb1_x")) 
+	{
+		units = std::string("bb1 x (mm)");
+		xmin = -20.5;
+		xmax = 20.5;
+		nbins = 82;
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	else if(type==std::string("bb1_y")) 
+	{
+		units = std::string("bb1 y (mm)");
+		xmin = -20.5;
+		xmax = 20.5;
+		nbins = 82;
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
 	else if(type==std::string("runno")) 
 	{
 		units = std::string("Run Number");
@@ -539,6 +555,34 @@ int hist_type::set_other_parameters()
 		user_xmax = 5500;
 	}
 	*/
+	else if(type==std::string("WSA_Sum"))
+	{
+		units = std::string("Wedge+Strip+Z");
+		xmin = -99.5;
+		xmax = xmin + 12500.0;
+		nbins = 625;
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	else if(type==std::string("QDC_single"))
+	{
+		units = std::string("QDC (arb)");
+		xmin = -99.5;
+		xmax = xmin + 4400.0;
+		nbins = 4400;
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	else if(type==std::string("WSA_Position"))
+	{
+		units = std::string("WSA_Position (uncalibrated)");
+		xmin = -0.5;
+		xmax = xmin + 2.0;
+		nbins = 600;
+		user_xmin = 0.0;
+		user_xmax = 2.0;
+	}
+	
 	else
 	{
 		cout << endl;
@@ -555,8 +599,9 @@ TH1D * CreateHist(std::string title, std::string type, int color, int rebin_fact
 	TH1D * this_hist = new TH1D(title.c_str(), title.c_str(), my_hist_type.nbins, my_hist_type.xmin, my_hist_type.xmax);
 	this_hist -> SetLineColor(color);
 	this_hist -> GetXaxis() -> SetTitle(my_hist_type.units.c_str());
-	this_hist -> GetXaxis() -> SetRangeUser(my_hist_type.user_xmin, my_hist_type.user_xmax);
+
 	this_hist -> Rebin(rebin_factor);
+	this_hist -> GetXaxis() -> SetRangeUser(my_hist_type.user_xmin, my_hist_type.user_xmax);
 	
 	return this_hist;
 }
@@ -575,9 +620,10 @@ TH1D * CreateHist(std::string title, std::string type, TColor my_color, int rebi
 	TH1D * this_hist = new TH1D(title.c_str(), title.c_str(), my_hist_type.nbins, my_hist_type.xmin, my_hist_type.xmax);
 	this_hist -> SetLineColor(color);
 	this_hist -> GetXaxis() -> SetTitle(my_hist_type.units.c_str());
-	this_hist -> GetXaxis() -> SetRangeUser(my_hist_type.user_xmin, my_hist_type.user_xmax);
+
 	this_hist -> Rebin(rebin_factor);
-	
+	this_hist -> GetXaxis() -> SetRangeUser(my_hist_type.user_xmin, my_hist_type.user_xmax);
+
 	return this_hist;
 }
 
