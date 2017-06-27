@@ -46,7 +46,7 @@ public:
 	const static int n_3sx_3sz = 1;   
 	//
 	
-	bool compton_edge_ok[N_runs];
+//	bool compton_edge_ok[N_runs];
 	double OP_Delay[N_runs];
 	int sumdiff_set[N_runs];
 	
@@ -69,7 +69,7 @@ public:
 	void init_sumdiff_zmax();
 	
 	void init_sumdiffs_2();
-	
+	/*
 	double danny_x_mode[N_runs];
 	double danny_z_mode[N_runs];
 	int danny_x_maxcount[N_runs];
@@ -99,7 +99,7 @@ public:
 	double meldiff_min[N_runs][N_sumcut_levels];
 	double meldiff_max[N_runs][N_sumcut_levels];
 	void init_melcuts();
-	
+	*/
 	// --- // 
 	double      PI_mean_x[N_runs][N_sumcut_levels];
 	double  PI_mean_err_x[N_runs][N_sumcut_levels];
@@ -197,8 +197,8 @@ public:
 	int unix_stop[N_runs];      // done.
 	const static int t_offset = 1402200000;
 	// runtime_avg[i] = ((runs.unix_start[i]-t_offset) + (runs.unix_stop[i]-t_offset) )/2.0;
-	int runtime_avg[N_runs];         // in seconds.
-	int runtime_length[N_runs];      // in seconds.
+	int runtime_avg[N_runs];    // in seconds.
+	int runtime_length[N_runs]; // in seconds.
 	void init_unixtime();       // done.
 
 	bool good_recoil[N_runs];      
@@ -211,8 +211,8 @@ public:
 	double iqdc_max[N_runs];
 	void init_iqdc();
 	
-	bool usable[N_runs];
-	void init_usable();
+//	bool usable[N_runs];
+//	void init_usable();
 	void set_sumdiff_threshold(int);
 	
 	double ElectricField[N_runs];
@@ -227,6 +227,7 @@ public:
 //	int printconstants();
 };
 
+/*
 void set_of_runs::init_melcuts()
 {
 //	double melsum_mode[N_runs];
@@ -292,10 +293,11 @@ void set_of_runs::init_melcuts()
 	meldiff_min[497][n_10] = -655;
 	meldiff_max[497][n_10] = -592;
 }
+*/
 
+/*
 void set_of_runs::init_dannycuts_2()
 {
-	/*
 	double danny_mean_x[N_runs];
 	double danny_mean_err_x[N_runs];
 	double danny_sigma_x[N_runs];
@@ -329,9 +331,11 @@ void set_of_runs::init_dannycuts_2()
 	danny_z_max[497][n_01] = 73415.058;
 	danny_z_min[497][n_10] = 72245.176;
 	danny_z_max[497][n_10] = 73255.075;
-	*/
+	
 }
+*/
 
+/*
 void set_of_runs::init_dannycuts()
 {
 //	double danny_x_mode[N_runs];
@@ -1150,8 +1154,8 @@ void set_of_runs::init_dannycuts()
 	danny_z_max[509][n_01] = 74894.91;
 	danny_z_min[509][n_10] = 72175.183;
 	danny_z_max[509][n_10] = 73285.072;
-
 }
+*/
 
 /*
 void set_of_runs::tmp_consolidate_data()
@@ -15312,18 +15316,21 @@ void set_of_runs::init_ElectricField()
 	}
 }
 
+/*
 void set_of_runs::init_usable()
 {
+	// "usable" should only apply to recoil runs.
 	for(int i=0; i<N_runs; i++)
 	{
 		usable[i] = true;
-		if(/*i==361 || i==368 || i==370 || i==371*/ i<=371 || i==497 \
+		if( i<=371 || i==497 \
 		|| (good_recoil[i]==false && good_electron[i] == false))
 		{
 			usable[i] = false;
 		}
 	}
 }
+*/
 
 void set_of_runs::init_iqdc()
 {
@@ -15365,20 +15372,23 @@ void set_of_runs::init_prompt()
 	prompt_visible[497] = true;
 	prompt_visible[498] = true;
 	prompt_visible[499] = true;
-	
 }
 
 void set_of_runs::update_goodruns()
 {
 	for(int i=0; i<N_runs; i++)
 	{
-		if(good_electron[i] == true || good_recoil[i] == true)
+		if( i<361 )
 		{
-			if(compton_edge_ok[i] == false)
-			{
-				good_electron[i] = false;
-				good_recoil[i] = false;
-			}
+			// Compton edges.
+			good_electron[i] = false;
+			good_recoil[i] = false;
+		}
+		if( i<=371 || i==497 )
+		{
+			// "usable".
+		//	good_electron[i] = false;
+			good_recoil[i] = false;
 		}
 	}
 }
@@ -15436,6 +15446,8 @@ void set_of_runs::init_runsetletter()
 
 set_of_runs::set_of_runs()
 {
+	/*
+	// compton edge stuff just goes into "update_goodruns" now.
 	// Compton Edge.
 	for(int i=0; i<361; i++)
 	{
@@ -15445,6 +15457,7 @@ set_of_runs::set_of_runs()
 	{
 		compton_edge_ok[i] = true;
 	}
+	*/
 	
 	// OP Delay.
 	for(int i=0; i<=449; i++)
@@ -15461,10 +15474,11 @@ set_of_runs::set_of_runs()
 	}
 	//
 	init_ElectricField();
+	
 	init_goodrecoil();
 	init_goodelectron();
-	init_usable();
-	update_goodruns();  // just veto anything where the compton edge isn't there.
+//	init_usable();
+	update_goodruns();  // just veto anything where the compton edge isn't there.  also, where it's "unusable."
 	init_runsetletter();
 	
 //	init_sumdiffs();
@@ -15479,9 +15493,9 @@ set_of_runs::set_of_runs()
 	init_tofs_2();
 	
 	init_prompt();
-	init_dannycuts();
-	init_melcuts();
-	init_dannycuts_2();
+//	init_dannycuts();
+//	init_melcuts();
+//	init_dannycuts_2();
 	
 //	tmp_consolidate_data();
 //	set_sumdiff_threshold(1);  

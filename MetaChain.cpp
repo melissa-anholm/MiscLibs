@@ -190,10 +190,10 @@ TChain * get_chain_from_Efield(double Efield, bool use_blinded=true)
 		for(int i=302; i<runs.N_runs; i++)
 		{
 			if( runs.ElectricField[i] == Efield 
-			 && runs.compton_edge_ok[i] == true 
+			 /* && runs.compton_edge_ok[i] == true */
 			 && (runs.good_electron[i] == true || runs.good_recoil[i] == true) )
 			{
-				if( runs.good_electron[i] == true || (runs.good_recoil[i] == true && runs.usable[i]==true) )
+				if( runs.good_electron[i] == true || (runs.good_recoil[i] == true /* && runs.usable[i]==true*/ ) )
 				{
 					cout << "Using run " << i << endl;
 					filename = get_datafilename(path, i, use_blinded);
