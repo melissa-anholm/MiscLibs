@@ -52,6 +52,39 @@ string get_datafilename(string path, int runno, bool use_blinded=true)
 	
 	return fname;
 }
+
+string get_simfilename(string path, int runno)
+{	
+	string fname;
+	std::stringstream ss;
+	ss.str( std::string() );
+	ss.clear();
+	
+	ss << path << "output_" << runno;
+	ss << ".root";
+	
+	fname = ss.str();
+	
+	return fname;
+}
+
+/*
+string get_simfilename(string path, const char* )
+{	
+	string fname;
+	std::stringstream ss;
+	ss.str( std::string() );
+	ss.clear();
+	
+	ss << path << "output_" << runno;
+	ss << ".root";
+	
+	fname = ss.str();
+	
+	return fname;
+}
+*/
+
 string get_datafriendname(string path, int runno, bool use_blinded=true)
 {	
 	string fname;
@@ -418,9 +451,77 @@ TChain * get_electron_chain_from_runnos(vector<int> use_these_runs, bool use_bli
 	return tree_chain;
 }
 
+// ====================================== //
+// Newer TChains for Simulations:
+
+TTree * load_metadata_tree(string metadatafilename)
+{
+	TTree *MetaTree = new TTree();
+//	int nrows = toftree -> ReadFile(metadatafilename.c_str());
+	int nentries = MetaTree -> ReadFile(metadatafilename.c_str());
+	return MetaTree;
+}
+
+vector<int> get_runlist_from_rho(TTree * MetaTree, double rho)
+{
+	vector<int> set_of_runs;
+	
+	int nentries = MetaTree -> GetEntries();
+	int run = 0;
+	MetaTree -> SetBranchAddress("Run", &run);
+	char*  filename = new char[256];
+	MetaTree -> SetBranchAddress("Filename", filename);
+	
+	double this_rho = 0.0;
+	MetaTree -> SetBranchAddress("Rho", &this_rho);
+	
+	TChain * tree_chain = new TChain("ntuple");
+	for(int i=0; i<nentries; i++)
+	{
+		MetaTree -> GetEntry(i);
+		if(this_rho == rho)
+		{
+		//	cout << "Using run " << run << "  (i=" << i << ")" << endl;
+		//	filename = get_datafilename(g4_path, run);
+		//	tree_chain -> Add(filename.c_str());
+			set_of_runs.push_back(run);
+		}
+	}
+
+	return set_of_runs;
+}
+
+TChain * get_chain_from_rho(TTree * MetaTree, double rho)
+{
+	cout << "rho = " << rho << endl;
+	
+	int nentries = MetaTree -> GetEntries();
+	
+	int run = 0;
+	MetaTree -> SetBranchAddress("Run", &run);
+//	char*  filename = new char[256];
+//	MetaTree -> SetBranchAddress("Filename", filename);
+	double this_rho = 0.0;
+	MetaTree -> SetBranchAddress("Rho", &this_rho);
+	
+	TChain * tree_chain = new TChain("ntuple");
+	for(int i=0; i<nentries; i++)
+	{
+		MetaTree -> GetEntry(i);
+		if(this_rho == rho)
+		{
+			cout << "Using run " << run << "  (i=" << i << ")" << endl;
+			string new_filename = get_simfilename(g4_path, run);
+			tree_chain -> Add(new_filename.c_str());
+		}
+	}
+	
+	return tree_chain;
+}
+
 
 // ====================================== //
-// TChains for Simulations:
+// TChains for Simulations (do I ever even use these?):
 string make_simfilename(string namestub, int runno)
 {
 	string fname;
@@ -650,8 +751,6 @@ TChain * MetaTuple::AddToChain(TChain* this_chain, MetaTuple CompTuple)
 	return this_chain;
 }
 
-
-
 void MetaTuple::set_allthe_branch_addresses()
 {
 	run = 0;
@@ -709,7 +808,6 @@ void MetaTuple::set_allthe_branch_addresses()
 	MetaTree -> SetBranchAddress("SailVelocity_y_mm_per_ms", &sailvelocity_y);
 	sailvelocity_z=0.0;
 	MetaTree -> SetBranchAddress("SailVelocity_z_mm_per_ms", &sailvelocity_z);
-	
 }
 
 void MetaTuple::SetBools()
@@ -943,12 +1041,12 @@ TChain * get_single_datatree_fromfile(string filename)
 }
 */
 // ====================================== //
-
+/*
 void test_load_chain()
 {
 	
 }
-
+*/
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 
 #endif

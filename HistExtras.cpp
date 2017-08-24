@@ -255,6 +255,15 @@ int hist_type::set_other_parameters()
 		user_xmin = xmin;
 		user_xmax = 5500.0;
 	}
+	else if (type == std::string("Ben_Ebeta") )
+	{
+		nbins = 600;
+		xmin = 0.0;
+		xmax = 6000.0;
+		units = std::string("Scintillator Energy [keV]");
+		user_xmin = xmin;
+		user_xmax = 5100.0;
+	}
 	else if (type==std::string("beta_energy"))
 	{
 		nbins = 300;
@@ -598,6 +607,7 @@ TH1D * CreateHist(std::string title, std::string type, int color, int rebin_fact
 	hist_type my_hist_type = hist_type(type);
 	TH1D * this_hist = new TH1D(title.c_str(), title.c_str(), my_hist_type.nbins, my_hist_type.xmin, my_hist_type.xmax);
 	this_hist -> SetLineColor(color);
+	this_hist -> SetMarkerColor(color);
 	this_hist -> GetXaxis() -> SetTitle(my_hist_type.units.c_str());
 
 	this_hist -> Rebin(rebin_factor);
@@ -619,6 +629,7 @@ TH1D * CreateHist(std::string title, std::string type, TColor my_color, int rebi
 	hist_type my_hist_type = hist_type(type);
 	TH1D * this_hist = new TH1D(title.c_str(), title.c_str(), my_hist_type.nbins, my_hist_type.xmin, my_hist_type.xmax);
 	this_hist -> SetLineColor(color);
+	this_hist -> SetMarkerColor(color);
 	this_hist -> GetXaxis() -> SetTitle(my_hist_type.units.c_str());
 
 	this_hist -> Rebin(rebin_factor);
