@@ -591,7 +591,24 @@ int hist_type::set_other_parameters()
 		user_xmin = 0.0;
 		user_xmax = 2.0;
 	}
-	
+	else if(type==std::string("stupid_tof"))
+	{
+		nbins =   4000;
+		xmin = (-100000.5+1.0)*v1192_to_ns;
+		xmax = ( 100000.5)*v1192_to_ns;
+		units = std::string("TOF [ns]");
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	else if(type==std::string("hitcounter"))
+	{
+		nbins = 51;
+		xmin = -0.5;
+		xmax = 50.5;
+		units = std::string("Number of TDC Hits");
+		user_xmin = 0.5;
+		user_xmax = 8.5;
+	}
 	else
 	{
 		cout << endl;

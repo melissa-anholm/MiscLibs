@@ -272,7 +272,6 @@ TH1D* get_residuals(TH1D* h1, TH1D* h2)
 //	r = (exp - sim) / sqrt(sim);
 //	residuals -> SetBinContent(i, r);
 //	residuals -> SetBinError(i, 0.);
-
 	
 	TH1D * new_hist = (TH1D*)h1 -> Clone( "Residuals" );
 	new_hist -> SetTitle("Residuals");

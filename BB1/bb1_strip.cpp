@@ -420,7 +420,7 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
     unsigned int s1 = 0, s2 = 1;
     for (s1 = 0; s1 < xstrips_sorted.size() && !xadjacent; s1++) {
       for (s2 = s1 + 1; s2 < xstrips_sorted.size() && !xadjacent; s2++) {
-        if (abs(xstrips_sorted[s1] - xstrips_sorted[s2]) == 1) {
+        if (fabs(xstrips_sorted[s1] - xstrips_sorted[s2]) == 1) {
           xadjacent = true;
         }
       }
@@ -466,7 +466,7 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
     unsigned int s1 = 0, s2 = 1;
     for (s1 = 0; s1 < ystrips_sorted.size() && !yadjacent; s1++) {
       for (s2 = s1 + 1; s2 < ystrips_sorted.size() && !yadjacent; s2++) {
-        if (abs(ystrips_sorted[s1] - ystrips_sorted[s2]) == 1) {
+        if (fabs(ystrips_sorted[s1] - ystrips_sorted[s2]) == 1) {
           yadjacent = true;
         }
       }

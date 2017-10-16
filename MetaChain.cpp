@@ -28,7 +28,8 @@ string ur_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Recoils_2014/";
 string ue_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons_2014/";
 string uf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
 
-string g4_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
+string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
+string g4f_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 
@@ -68,22 +69,20 @@ string get_simfilename(string path, int runno)
 	return fname;
 }
 
-/*
-string get_simfilename(string path, const char* )
+string get_simfriendname(string path, int runno)
 {	
 	string fname;
 	std::stringstream ss;
 	ss.str( std::string() );
 	ss.clear();
 	
-	ss << path << "output_" << runno;
+	ss << path << "friend_" << runno;
 	ss << ".root";
-	
+
 	fname = ss.str();
 	
 	return fname;
 }
-*/
 
 string get_datafriendname(string path, int runno, bool use_blinded=true)
 {	
@@ -462,20 +461,24 @@ TTree * load_metadata_tree(string metadatafilename)
 	return MetaTree;
 }
 
-vector<int> get_runlist_from_rho(TTree * MetaTree, double rho)
+vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 {
 	vector<int> set_of_runs;
 	
-	int nentries = MetaTree -> GetEntries();
 	int run = 0;
 	MetaTree -> SetBranchAddress("Run", &run);
-	char*  filename = new char[256];
-	MetaTree -> SetBranchAddress("Filename", filename);
-	
+//	char*  filename = new char[256];
+//	MetaTree -> SetBranchAddress("Filename", filename);
 	double this_rho = 0.0;
 	MetaTree -> SetBranchAddress("Rho", &this_rho);
 	
 	TChain * tree_chain = new TChain("ntuple");
+
+	int nentries = MetaTree -> GetEntries();
+	if(maxrun != 0)
+	{ 
+		nentries = maxrun+1; 
+	}
 	for(int i=0; i<nentries; i++)
 	{
 		MetaTree -> GetEntry(i);
@@ -491,11 +494,17 @@ vector<int> get_runlist_from_rho(TTree * MetaTree, double rho)
 	return set_of_runs;
 }
 
-TChain * get_chain_from_rho(TTree * MetaTree, double rho)
+TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 {
 	cout << "rho = " << rho << endl;
+	string path       = g4_path;
+	string friendpath = g4f_path;
 	
 	int nentries = MetaTree -> GetEntries();
+	if(maxrun != 0)
+	{ 
+		nentries = maxrun+1; 
+	}
 	
 	int run = 0;
 	MetaTree -> SetBranchAddress("Run", &run);
@@ -504,20 +513,32 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho)
 	double this_rho = 0.0;
 	MetaTree -> SetBranchAddress("Rho", &this_rho);
 	
-	TChain * tree_chain = new TChain("ntuple");
+	TChain * tree_chain   = new TChain("ntuple");
+	TChain * friend_chain = new TChain("friendtuple");
+	string filename;// = get_simfilename(path, run);
+	string friendname = get_simfilename(path, run);
 	for(int i=0; i<nentries; i++)
 	{
 		MetaTree -> GetEntry(i);
 		if(this_rho == rho)
 		{
 			cout << "Using run " << run << "  (i=" << i << ")" << endl;
-			string new_filename = get_simfilename(g4_path, run);
-			tree_chain -> Add(new_filename.c_str());
+			filename   = get_simfilename(path, run);
+			friendname = get_simfriendname(friendpath, run);
+			tree_chain -> Add(filename.c_str());
+			friend_chain -> Add(friendname.c_str());
+		
+			filename = string();
+			filename.clear();
+			friendname = string();
+			friendname.clear();
 		}
 	}
 	
+	tree_chain -> AddFriend(friend_chain);
 	return tree_chain;
 }
+
 
 
 // ====================================== //
