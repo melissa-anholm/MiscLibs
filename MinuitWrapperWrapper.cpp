@@ -1,7 +1,7 @@
 // ==================================================================== //
 // Code by Melissa Anholm
 // 28.9.2017
-// This one is *not* imported from hello_fit.cpp
+// 
 // ==================================================================== //
 
 // Standard includes:
@@ -21,6 +21,66 @@ using std::vector;
 #include <TString.h>
 
 
+struct FitResult
+{
+public:
+	FitResult();
+	void Load(double fit_min_, double fedm_, double errdef_, int npar_varied_, int npar_defined_, int errmatrix_quality_);
+	void Load(TMinuit a_minuit);
+	void Load(TMinuit * a_minuit);
+	
+//	this -> mnstat(fmin_val, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
+
+	TString fit_type;
+	double  fit_min;
+	double  fedm;
+	double  errdef;
+	int     npar_varied;
+	int     npar_defined;
+	int     errmatrix_quality;
+
+//	for errmatrix_quality:  
+//		0 = Not calculated at all
+//		1 = Diagonal approximation only, not accurate
+//		2 = Full matrix, but forced positive-definite
+//		3 = Full accurate covariance matrix (After MIGRAD, this is the indication of normal convergence.)
+	
+};
+
+FitResult::FitResult() 
+{
+	fit_type          = "";
+	fit_min           = 0.0;
+	fedm              = 0.0;
+	errdef            = 0.0;
+	npar_varied       = 0;
+	npar_defined      = 0;
+	errmatrix_quality = 0;
+}
+
+void FitResult::Load(double fit_min_, double fedm_, double errdef_, int npar_varied_, int npar_defined_, int errmatrix_quality_)
+{
+//	fit_type          = fit_type_;
+	fit_min           = fit_min_;
+	fedm              = fedm_;
+	errdef            = errdef_;
+	npar_varied       = npar_varied_;
+	npar_defined      = npar_defined_;
+	errmatrix_quality = errmatrix_quality_;
+}
+void FitResult::Load(TMinuit a_minuit)
+{
+	fit_type = "";
+	a_minuit.mnstat(fit_min, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
+}
+void FitResult::Load(TMinuit * a_minuit)
+{
+	fit_type = "";
+	a_minuit -> mnstat(fit_min, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
+}
+
+
+//
 struct FitParameter
 {
 public:
@@ -38,12 +98,11 @@ public:
 	double fit_err;
 	
 	Double_t xlo, xup; // ??
-	Int_t iint;        // ??
+	Int_t f_pnum;  // f_pnum = fortran_paramnumber
 	
 	TString GetName() {return name; };
 	void SetName(TString newname) { name = TString(newname); };
 	TString name;
-//private:
 };
 
 FitParameter::FitParameter()
@@ -120,7 +179,6 @@ void GetChi2(Int_t &n_parameters, Double_t *gin, Double_t &result_to_minimize, D
 	
 	result_to_minimize = 0.0;
 }
-
 */
 
 // A Class to deal with fitting histograms using TMinuit:
@@ -273,8 +331,10 @@ public:
 	int execute_minos(int maxcalls, double err_est);
 	
 	double get_fmin_best();
-	int get_errorest_best();
+	double get_fedm_best();
+	double get_errdef_best();
 	int get_npar_varied_best();
+	int get_npar_defined_best();
 	int get_errmatrix_quality_best();
 	
 
@@ -286,156 +346,156 @@ public:
 		n_params = this->GetNumPars();
 		return n_params;
 	};
+	
 	void init();
 	void Setup_FitStopParams(bool);
 	void Setup_FitStopParams(int, double);
 	void SetMaxCalls(int maxcalls);
 	void SetAcceptableErr(double err_est);
 	
-//	void * TheFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize, Double_t *parameters_, Int_t iflag_);
-	void TheFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize, Double_t *parameters_, Int_t iflag_);
+	static void TheFitFunction(Int_t &n_params_, Double_t *gin, Double_t &result_to_minimize, Double_t *parameters, Int_t iflag_);
 	
-	/*
-	void SetFCN_() 
+	void SetFCN() 
 	{ 
-	//	this -> TMinuit::SetFCN( TheFitFunction(this->n_params, this->gin, this->result_to_minimize, this->parameters, this->ierflg) ); 
-	//	// this works as long as it's a void*.
-		this -> TMinuit::SetFCN( SuperMinuit::TheFitFunction(this->n_params, this->gin, this->result_to_minimize, this->parameters, this->ierflg) ); 
+		this -> TMinuit::SetFCN( this -> TheFitFunction ); 
 	};  // bake the fcn into the class.
-	*/
+//	this_minuit -> SetFCN(TheFitFunction_);              
+//	this_minuit -> SetFCN(this_minuit -> TheFitFunction);
 	
-// Below:  this doesn't work unless you still supply all the params from the call.	
-//	void SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &, Double_t *, Int_t) ) 
-//		{ this -> TMinuit::SetFCN(fcn); };  // set your own fcn.
-	
-//	vector<FitParameter*> fit_parameters;
 	vector<FitParameter> fit_parameters;
-	void DumpFitParams();
+	void DumpBestFitParams();
+	void DumpCurrentFitParams();
 	
+	void SetupOutput(string, string, int);
+	void DumpToOutput();
+
 private:
 	histfitter * this_histfitter;
 	
-	// best fit params:
-	double fmin_val;  
-	double fedm_val;
-	double errdef_val;    // for memory space only?
-	int npari_val;        // for memory space only?
-	int nparx_val;
-	int istat_val;
-//	bool params_used[25];
+//	this -> mnstat(fmin_val, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
+	double fmin_val;        //
+	double fedm;            // Huh?  some sort of fit error.
+	double errdef;          // Huh?  some sort of fit error.
+	int npar_varied;        // 
+	int npar_defined;       //
+	int errmatrix_quality;  //
 	
-	int n_params;                // mostly for memory space, but also returnable by get_n_params().
-	Double_t * gin;              // mem space???  am I doing this right??
-	Double_t result_to_minimize; // memspace?
-	Double_t * parameters;       // memspace?
-	Int_t ierflg;                // for memory space only?
+	int n_params;          // used.
+	Int_t ierflg;          // for memory space only?
 	
 	Double_t arglist[10];  // for memory space only?
 
 	int length_of_arglist;
 	Int_t n_maxcalls;
 	Double_t est_distance_to_min;
+	
+	int n_fits;
+	
+	TString output_type;
+	TString output_fname;
+	int     output_verbosity;
+	int     output_type_int;
 };
 
-// Fit function.
-//void * SuperMinuit::TheFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize, Double_t *parameters_, Int_t iflag_)
-void SuperMinuit::TheFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize, Double_t *parameters_, Int_t iflag_)
+void SuperMinuit::SetupOutput(string o_type, string o_fname=string("fitoutput.txt"), int o_verbosity=1)
 {
-//	void * thisthing;
+	output_type      = o_type;
+	output_fname     = o_fname;
+	output_verbosity = o_verbosity;
 	
-//	n_params = these_n_parameters;
-//	gin = this_gin;
-//	result_to_minimize = this_result_to_minimize;
-//	parameters = these_parameters;
-//	ierflg = this_iflag;
-	
-//	double asym = parameters[0];
-//	double bg   = parameters[1];
-//	result_to_minimize = chi2;  // "result" is the thing that gets not-returned.
-
-	double result = 0.0;
-	cout << "n_params_ = " << n_params_ << endl;
-	double asym = parameters_[0];
-	double bg   = parameters_[1];
-//	cout << "ok?" << endl;
-	
-	if(n_params >= 2)
-	{
-	//	cout << "ok!" << endl;
-	//	result_to_minimize = (parameters_[0] - 0.5)*(parameters_[1] - 0.4);
-		result = (asym - 0.5)*(bg - 0.4);
-	//	cout << "So... yeah?" << endl;
-		cout << "result_to_minimize = " <<  result << ";\tparameters_[0] = " << parameters_[0] << ";\tparameters_[1] = " << parameters_[1] << endl;
-	}
-	
-	result_to_minimize = result;
-//	result_to_minimize = result_to_minimize_;
-//	return thisthing;
-	return;
+	// 
+	output_type_int  = 0;
+	// Possible types:  
+	//		none
+	//		cout
+	//		file
+}
+void SuperMinuit::DumpToOutput()
+{
+	cout << "SuperMinuit::DumpToOutput() doesn't work yet." << endl;
 }
 
-void TheFitFunction_(Int_t &n_params, Double_t *gin, Double_t &result_to_minimize, Double_t *parameters, Int_t iflag)
+void SuperMinuit::init()
+{
+	fit_parameters = vector<FitParameter>(25);
+	
+	length_of_arglist = 0;
+	n_maxcalls = 500;
+	est_distance_to_min = 100.0;  // what does this even mean?!
+	
+	n_fits = 0;
+}
+
+
+// Fit function.
+void SuperMinuit::TheFitFunction(Int_t &n_params_, Double_t *gin, Double_t &result_to_minimize, Double_t *parameters, Int_t iflag_)
 {
 	double result = 0.0;
-	cout << "n_params = " << n_params << endl;
+	cout << "n_params_ = " << n_params_ << endl;
 	double asym = parameters[0];
 	double bg   = parameters[1];
 	
-	if(n_params >= 2)
+	if(n_params_ >= 2)
 	{
-		result = (asym - 0.5)*(bg - 0.4);
+		result = fabs( (asym - 0.5)*(bg - 0.4) + (asym - 0.5) + (bg - 0.4) );
 		cout << "result_to_minimize = " <<  result << ";\tparameters[0] = " << parameters[0] << ";\tparameters[1] = " << parameters[1] << endl;
 	}
 	
 	result_to_minimize = result;
+	// dump param (etc) values from fit to ... something.
 	return;
 }
 
-
-void SuperMinuit::DumpFitParams()
+void SuperMinuit::DumpBestFitParams()
 {
+	// For the overall fit;
 	n_params = this->GetNumPars();  // gets the number of params that were *varied*.
+	
+	this -> mnstat(fmin_val, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
+	// error est ?
+	
+	// For the individual parameters:
+	TString paramname = "";
+	Double_t val, err, xlo, xup;
+	Int_t f_pnum;  // f_pnum = fortran param number.
+	
+	for(int i=0; i<n_params; i++)
+	{
+		this -> mnpout(i, paramname, val, err, xlo, xup, f_pnum);
+		this->fit_parameters[i].name    = paramname;
+		this->fit_parameters[i].fit_val = val;
+		this->fit_parameters[i].fit_err = err;
+		this->fit_parameters[i].xlo     = xlo;
+		this->fit_parameters[i].xup     = xup;
+		this->fit_parameters[i].f_pnum  = f_pnum;
+	}
+	return;
+}
+
+void SuperMinuit::DumpCurrentFitParams()
+{
+	/*
+	// For the overall fit;
+	n_params = this->GetNumPars();  // gets the number of params that were *varied*.
+	// error est ?
+	
+	// For the individual parameters:
 	TString paramname = "";
 	Double_t val, err, xlo, xup;
 	Int_t iint;
 	
-//	fit_parameters = vector<FitParameter>(n_params);
 	for(int i=0; i<n_params; i++)
 	{
 		this -> mnpout(i, paramname, val, err, xlo, xup, iint);
-		this->fit_parameters[i].name = paramname;
-		fit_parameters.at(i).fit_val = val;
+		this->fit_parameters[i].name    = paramname;
+		this->fit_parameters[i].fit_val = val;
 		this->fit_parameters[i].fit_err = err;
 		this->fit_parameters[i].xlo     = xlo;
 		this->fit_parameters[i].xup     = xup;
 		this->fit_parameters[i].iint    = iint;
 	}
-}
-
-/*
-void * TheFitFunction(Int_t &n_parameters, Double_t *this_gin, Double_t &result_to_minimize, Double_t *parameters, Int_t iflag) 
-{
-	void * thisthing;
-//	double asym = parameters[0];
-//	double bg   = parameters[1];
-
-//	result_to_minimize = chi2;  // "result" is the thing that gets not-returned.
-	gin = this_gin;
-	result_to_minimize = 0.0;
-	
-	return thisthing;
-}
-*/
-
-void SuperMinuit::init()
-{
-	parameters = new Double_t[25];
-	gin = new Double_t[25];
-	fit_parameters = vector<FitParameter>(25);
-
-	length_of_arglist = 0;
-	n_maxcalls = 500;
-	est_distance_to_min = 100.0;  // what does this even mean?!
+	*/
+	return;
 }
 
 int SuperMinuit::SetupParam(int c_paramnumber, FitParameter fitpar)
@@ -457,34 +517,6 @@ int SuperMinuit::SetupParam(int c_paramnumber, FitParameter * fitpar)
 	return ierflg;
 }
 
-/*
-int SuperMinuit::SetupParam(FitParameter fitpar,   int c_paramnumber)
-	{ return SetupParam(c_paramnumber, fitpar); }
-int SuperMinuit::SetupParam(FitParameter * fitpar, int c_paramnumber)
-	{ return SetupParam(c_paramnumber, fitpar); }
-*/
-
-/*
-//minuit->GetNumPars()
-int SuperMinuit::CountParams()
-{
-	int n = 0;
-	for(int i=0; i<25; i++)
-	{
-		if(params_used[i] == true)
-		{
-			n++;
-		}
-		else
-		{
-			break;
-		}
-	}
-	n_params = n;
-	return n_params;
-}
-*/
-
 void SuperMinuit::SetMaxCalls(int maxcalls)
 {
 	n_maxcalls = maxcalls;
@@ -505,7 +537,6 @@ void SuperMinuit::SetAcceptableErr(double err_est)
 		length_of_arglist=2;
 	}
 }
-
 
 void SuperMinuit::Setup_FitStopParams(bool use_them)
 {
@@ -530,6 +561,9 @@ void SuperMinuit::Setup_FitStopParams(int maxcalls, double err_est)
 
 int SuperMinuit::execute_simplex() 
 {
+	n_fits++;
+	// set each parameter's "fit_completed" to "false" ??
+	
 	this -> mnexcm("SIMPLEX", arglist, length_of_arglist, ierflg);  // err:  0
 	return ierflg;
 }
@@ -541,6 +575,7 @@ int SuperMinuit::execute_simplex(int maxcalls, double err_est)
 
 int SuperMinuit::execute_migrad() 
 {
+	n_fits++;
 	this -> mnexcm("MIGRAD", arglist, length_of_arglist, ierflg);  // err:  0
 	return ierflg;
 }
@@ -552,6 +587,10 @@ int SuperMinuit::execute_migrad(int maxcalls, double err_est)
 
 int SuperMinuit::execute_hesse() 
 {
+	// Hesse doesn't update the best fit parameters?  
+	// It does vary them though.
+	
+	n_fits++;
 	this -> mnexcm("HESSE", arglist, length_of_arglist, ierflg);  // err:  0
 	return ierflg;
 }
@@ -563,7 +602,8 @@ int SuperMinuit::execute_hesse(int maxcalls, double err_est)
 
 int SuperMinuit::execute_minos() 
 {
-	this -> mnexcm("HESSE", arglist, length_of_arglist, ierflg);  // err:  0
+	n_fits++;
+	this -> mnexcm("MINOS", arglist, length_of_arglist, ierflg);  // err:  0
 	return ierflg;
 }
 int SuperMinuit::execute_minos(int maxcalls, double err_est) 
@@ -571,27 +611,36 @@ int SuperMinuit::execute_minos(int maxcalls, double err_est)
 	Setup_FitStopParams(maxcalls, err_est);
 	return execute_minos();
 }
-
-
+//
 double SuperMinuit::get_fmin_best()
 {
-	this -> mnstat(fmin_val, fedm_val, errdef_val, npari_val, nparx_val, istat_val);
+	this -> mnstat(fmin_val, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
 	return fmin_val;
 }
-int SuperMinuit::get_errorest_best()
+double SuperMinuit::get_fedm_best()
 {
-	this -> mnstat(fmin_val, fedm_val, errdef_val, npari_val, nparx_val, istat_val);
-	return fedm_val;
+	this -> mnstat(fmin_val, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
+	return fedm;
+}
+double SuperMinuit::get_errdef_best()
+{
+	this -> mnstat(fmin_val, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
+	return errdef;
 }
 int SuperMinuit::get_npar_varied_best()
 {
-	this -> mnstat(fmin_val, fedm_val, errdef_val, npari_val, nparx_val, istat_val);
-	return nparx_val;
+	this -> mnstat(fmin_val, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
+	return npar_varied;
+}
+int SuperMinuit::get_npar_defined_best()
+{
+	this -> mnstat(fmin_val, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
+	return npar_defined;
 }
 int SuperMinuit::get_errmatrix_quality_best()
 {
-	this -> mnstat(fmin_val, fedm_val, errdef_val, npari_val, nparx_val, istat_val);
-	return istat_val;
+	this -> mnstat(fmin_val, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
+	return errmatrix_quality;
 }
 
 
