@@ -7,12 +7,16 @@
 // Standard includes:
 #include <iostream>  // cout, endl;
 #include <string>
+#include <fstream>   // I think this probably helps...
+#include <iomanip>   // setw
 
 using std::cout;
 using std::endl;
 using std::cin;
 using std::string;
 using std::vector;
+using std::ofstream;
+using std::setw;
 
 // ROOT includes:
 #include <TFile.h>
@@ -369,6 +373,8 @@ public:
 	void SetupOutput(string, string, int);
 	void DumpToOutput();
 
+	void ClosedownOutput() { logfilestream.close(); };
+	
 private:
 	histfitter * this_histfitter;
 	
@@ -390,29 +396,156 @@ private:
 	Double_t est_distance_to_min;
 	
 	int n_fits;
+	int n_calls;
+	bool is_finished;
 	
-	TString output_type;
-	TString output_fname;
+	string output_type;
+	string output_fname;
+	string current_fittype;
+	
 	int     output_verbosity;
-	int     output_type_int;
+	bool    output_type_to_file;
+	bool    output_type_to_cout;
+	
+	ofstream         logfilestream;
+	const static int orig_columnwidth = 12;
+	int              current_columnwidth;
 };
 
 void SuperMinuit::SetupOutput(string o_type, string o_fname=string("fitoutput.txt"), int o_verbosity=1)
 {
 	output_type      = o_type;
-	output_fname     = o_fname;
-	output_verbosity = o_verbosity;
-	
-	// 
-	output_type_int  = 0;
 	// Possible types:  
 	//		none
 	//		cout
 	//		file
+	//		both
+	output_fname     = o_fname;
+	output_verbosity = o_verbosity;
+	
+	// 
+	output_type_to_file = false;
+	output_type_to_cout = false;
+	if( output_type == string("none") )
+	{
+		cout << " ... none." << endl;
+	//	output_type_to_file = false;
+	//	output_type_to_cout = false;
+	}
+	else if( output_type == string("cout") )
+	{
+		cout << " ... cout." << endl;
+	//	output_type_to_file = false;
+		output_type_to_cout = true;
+	}
+	else if( output_type == string("file") )
+	{
+		output_type_to_file = true;
+	//	output_type_to_cout = false;
+	}
+	else if( output_type == string("both") )
+	{
+		output_type_to_file = true;
+		output_type_to_cout = true;
+	}
+	else
+	{
+		cout << "Output type not recognized:  " << o_type << endl;
+		cout << "Setting output type to none."  << endl;
+	}
+	
+	if(output_type_to_file==true)
+	{
+		cout << "output_fname set to:  " << output_fname << endl;
+		if(logfilestream.is_open())
+		{
+			// close it.
+			cout << "logfilestream is already open.  Closing it..." << endl;
+			logfilestream.close();
+			// open it.
+			logfilestream.open( output_fname.c_str(), std::ios::out);
+			cout << "Opening logfilestream for output." << endl;
+		}
+		else
+		{
+			// open it.
+			logfilestream.open( output_fname.c_str(), std::ios::out);
+			cout << "Opening logfilestream for output." << endl;
+			// Clear it.
+		}
+	}
 }
 void SuperMinuit::DumpToOutput()
 {
 	cout << "SuperMinuit::DumpToOutput() doesn't work yet." << endl;
+	DumpCurrentFitParams();
+	/*
+	this -> mnpout(i, paramname, val, err, xlo, xup, iint);
+	this->fit_parameters[i].name    = paramname;
+	this->fit_parameters[i].fit_val = val;
+	this->fit_parameters[i].fit_err = err;
+	this->fit_parameters[i].xlo     = xlo;
+	this->fit_parameters[i].xup     = xup;
+	this->fit_parameters[i].iint    = iint;
+	*/
+	if(output_type_to_file)
+	{
+		if(n_calls == 0)
+		{
+			for (int i = 0; i < n_params; i++) 
+			{
+				// First dump the param summary for all params.
+				logfilestream << "Parameter " << setw(2) << i << ":\t";
+				logfilestream << fit_parameters[i].name << "\t" << endl ;
+				logfilestream << "\tRange     = (";
+				logfilestream << fit_parameters[i].xlo << ", ";
+				logfilestream << fit_parameters[i].xup << ")." << endl;
+				logfilestream << "\tGuess     = " << fit_parameters[i].fit_val << endl;
+				logfilestream << "\tPrecision = " << fit_parameters[i].fit_err << endl;
+			}
+			logfilestream << "Fit type:  " << current_fittype << endl;
+			logfilestream << "Verbosity: " << output_verbosity << endl;
+			logfilestream << "n_fits:    " << n_fits << endl;
+		//	logfilestream << "n_calls:   " << n_calls << endl;
+			logfilestream << endl;
+			// 
+			logfilestream << setw(7) << "n_calls" << "\t";
+			for (int i = 0; i < n_params; i++) 
+			{
+				// param value.
+				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+1);
+				logfilestream << setw(current_columnwidth) << fit_parameters[i].name << "\t";
+				
+				// param err.
+				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+4+1);
+				logfilestream << setw(current_columnwidth) << fit_parameters[i].name << "_err\t";
+			}
+			logfilestream << setw(20) << "chi2" << endl;
+		}
+		else
+		{
+			logfilestream << setw(7) << n_calls << "\t";
+			for (int i = 0; i < n_params; i++) 
+			{
+				// how wide do we make this column ?
+				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+1);
+				logfilestream << setw(current_columnwidth) << fit_parameters[i].fit_val << "\t";
+			}
+			logfilestream << setw(20) << "chi2" << endl;
+			
+		}
+		if(is_finished==true)
+		{
+			// Output the final result.
+		}
+	}
+	if(output_type_to_cout)
+	{
+		//
+		cout << "Output to cout does not work yet." << endl;
+	}
+//	cout << "SuperMinuit::DumpToOutput() doesn't work yet." << endl;
+	n_calls++;  // 
 }
 
 void SuperMinuit::init()
@@ -424,6 +557,13 @@ void SuperMinuit::init()
 	est_distance_to_min = 100.0;  // what does this even mean?!
 	
 	n_fits = 0;
+	n_calls = 0;
+	
+	output_type_to_file = false;
+	output_type_to_cout = true;
+	current_fittype = string("");
+
+//	this -> TMinuit::SetFCN( this -> TheFitFunction ); 
 }
 
 
@@ -448,6 +588,8 @@ void SuperMinuit::TheFitFunction(Int_t &n_params_, Double_t *gin, Double_t &resu
 
 void SuperMinuit::DumpBestFitParams()
 {
+	// Below:  this actually gets you the *current* values of the parameters.
+	/*
 	// For the overall fit;
 	n_params = this->GetNumPars();  // gets the number of params that were *varied*.
 	
@@ -469,32 +611,33 @@ void SuperMinuit::DumpBestFitParams()
 		this->fit_parameters[i].xup     = xup;
 		this->fit_parameters[i].f_pnum  = f_pnum;
 	}
+	*/
 	return;
 }
 
 void SuperMinuit::DumpCurrentFitParams()
 {
-	/*
 	// For the overall fit;
 	n_params = this->GetNumPars();  // gets the number of params that were *varied*.
+	
+	this -> mnstat(fmin_val, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
 	// error est ?
 	
 	// For the individual parameters:
 	TString paramname = "";
 	Double_t val, err, xlo, xup;
-	Int_t iint;
+	Int_t f_pnum;  // f_pnum = fortran param number.
 	
 	for(int i=0; i<n_params; i++)
 	{
-		this -> mnpout(i, paramname, val, err, xlo, xup, iint);
+		this -> mnpout(i, paramname, val, err, xlo, xup, f_pnum);
 		this->fit_parameters[i].name    = paramname;
 		this->fit_parameters[i].fit_val = val;
 		this->fit_parameters[i].fit_err = err;
 		this->fit_parameters[i].xlo     = xlo;
 		this->fit_parameters[i].xup     = xup;
-		this->fit_parameters[i].iint    = iint;
+		this->fit_parameters[i].f_pnum  = f_pnum;
 	}
-	*/
 	return;
 }
 
@@ -561,50 +704,66 @@ void SuperMinuit::Setup_FitStopParams(int maxcalls, double err_est)
 
 int SuperMinuit::execute_simplex() 
 {
-	n_fits++;
-	// set each parameter's "fit_completed" to "false" ??
+	is_finished = false;
 	
+	n_fits++;
+	n_calls = 0;
+	// set each parameter's "fit_completed" to "false" ??
+	current_fittype = string("SIMPLEX");	
 	this -> mnexcm("SIMPLEX", arglist, length_of_arglist, ierflg);  // err:  0
+	is_finished = true;
 	return ierflg;
 }
+int SuperMinuit::execute_migrad() 
+{
+	is_finished = false;
+	
+	n_fits++;
+	n_calls = 0;
+	current_fittype = string("MIGRAD");
+	this -> mnexcm("MIGRAD", arglist, length_of_arglist, ierflg);  // err:  0
+	is_finished = true;
+	return ierflg;
+}
+int SuperMinuit::execute_hesse() 
+{
+	// Hesse doesn't update the best fit parameters?  
+	// It does vary them though.
+	is_finished = false;
+	
+	n_fits++;
+	n_calls = 0;
+	current_fittype = string("HESSE");
+	this -> mnexcm("HESSE", arglist, length_of_arglist, ierflg);  // err:  0
+	is_finished = true;
+	return ierflg;
+}
+int SuperMinuit::execute_minos() 
+{
+	is_finished = false;
+	
+	n_fits++;
+	n_calls = 0;
+	current_fittype = string("MINOS");
+	this -> mnexcm("MINOS", arglist, length_of_arglist, ierflg);  // err:  0
+	is_finished = true;
+	return ierflg;
+}
+
 int SuperMinuit::execute_simplex(int maxcalls, double err_est) 
 {
 	Setup_FitStopParams(maxcalls, err_est);
 	return execute_simplex();
-}
-
-int SuperMinuit::execute_migrad() 
-{
-	n_fits++;
-	this -> mnexcm("MIGRAD", arglist, length_of_arglist, ierflg);  // err:  0
-	return ierflg;
 }
 int SuperMinuit::execute_migrad(int maxcalls, double err_est) 
 {
 	Setup_FitStopParams(maxcalls, err_est);
 	return execute_migrad();
 }
-
-int SuperMinuit::execute_hesse() 
-{
-	// Hesse doesn't update the best fit parameters?  
-	// It does vary them though.
-	
-	n_fits++;
-	this -> mnexcm("HESSE", arglist, length_of_arglist, ierflg);  // err:  0
-	return ierflg;
-}
 int SuperMinuit::execute_hesse(int maxcalls, double err_est) 
 {
 	Setup_FitStopParams(maxcalls, err_est);
 	return execute_hesse();
-}
-
-int SuperMinuit::execute_minos() 
-{
-	n_fits++;
-	this -> mnexcm("MINOS", arglist, length_of_arglist, ierflg);  // err:  0
-	return ierflg;
 }
 int SuperMinuit::execute_minos(int maxcalls, double err_est) 
 {
