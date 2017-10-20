@@ -359,10 +359,11 @@ public:
 	
 	static void TheFitFunction(Int_t &n_params_, Double_t *gin, Double_t &result_to_minimize, Double_t *parameters, Int_t iflag_);
 	
-	void SetFCN() 
-	{ 
-		this -> TMinuit::SetFCN( this -> TheFitFunction ); 
-	};  // bake the fcn into the class.
+//	void SetFCN() 
+//	{ 
+//		this -> TMinuit::SetFCN( this -> TheFitFunction ); 
+//	};  // bake the fcn into the class.
+
 //	this_minuit -> SetFCN(TheFitFunction_);              
 //	this_minuit -> SetFCN(this_minuit -> TheFitFunction);
 	
@@ -477,7 +478,7 @@ void SuperMinuit::SetupOutput(string o_type, string o_fname=string("fitoutput.tx
 }
 void SuperMinuit::DumpToOutput()
 {
-	cout << "SuperMinuit::DumpToOutput() doesn't work yet." << endl;
+//	cout << "SuperMinuit::DumpToOutput() doesn't work yet." << endl;
 	DumpCurrentFitParams();
 	/*
 	this -> mnpout(i, paramname, val, err, xlo, xup, iint);
@@ -563,13 +564,17 @@ void SuperMinuit::init()
 	output_type_to_cout = true;
 	current_fittype = string("");
 
-//	this -> TMinuit::SetFCN( this -> TheFitFunction ); 
+	this -> TMinuit::SetFCN( this -> TheFitFunction ); 
 }
 
 
 // Fit function.
 void SuperMinuit::TheFitFunction(Int_t &n_params_, Double_t *gin, Double_t &result_to_minimize, Double_t *parameters, Int_t iflag_)
 {
+//	DumpToOutput();
+//	this->DumpToOutput();
+//	SuperMinuit::DumpToOutput();
+	
 	double result = 0.0;
 	cout << "n_params_ = " << n_params_ << endl;
 	double asym = parameters[0];
