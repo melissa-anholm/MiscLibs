@@ -357,13 +357,15 @@ public:
 	void SetMaxCalls(int maxcalls);
 	void SetAcceptableErr(double err_est);
 	
-	static void TheFitFunction(Int_t &n_params_, Double_t *gin, Double_t &result_to_minimize, Double_t *parameters, Int_t iflag_);
+//	static void TheFitFunction(Int_t &n_params_, Double_t *gin, Double_t &result_to_minimize, Double_t *parameters, Int_t iflag_);
+//	void TheFitFunction(Int_t &n_params_, Double_t *gin, Double_t &result_to_minimize, Double_t *parameters, Int_t iflag_);
+//	void MemberFitFunction();
+//	void MemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t iflag_);
 	
 //	void SetFCN() 
 //	{ 
 //		this -> TMinuit::SetFCN( this -> TheFitFunction ); 
 //	};  // bake the fcn into the class.
-
 //	this_minuit -> SetFCN(TheFitFunction_);              
 //	this_minuit -> SetFCN(this_minuit -> TheFitFunction);
 	
@@ -375,6 +377,8 @@ public:
 	void DumpToOutput();
 
 	void ClosedownOutput() { logfilestream.close(); };
+	
+	void AssignPrivateFitParamsAndShit(Int_t &n_params_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t iflag_);
 	
 private:
 	histfitter * this_histfitter;
@@ -411,7 +415,78 @@ private:
 	ofstream         logfilestream;
 	const static int orig_columnwidth = 12;
 	int              current_columnwidth;
+	
+//
+//	Different memory bullshit.
+//	Double_t *gin;
+	Double_t result_to_minimize;
+	Double_t *parameters;
+//	Int_t iflag;
+	
+	/*
+//	Memory bullshit.
+	Int_t n_params_;
+	Double_t *gin_;
+	Double_t result_to_minimize_;
+	Double_t *parameters_;
+	Int_t iflag_;
+	*/
 };
+SuperMinuit * this_minuit = new SuperMinuit();
+
+
+void NonMemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
+{
+//	cout << "Called non-member fit function. This happens first." << endl;
+	// can I call the member fit function now?  Not without having an instance of the class somewhere.  
+//	this_minuit->MemberFitFunction(n_params_, gin_, result_to_minimize_, parameters_, iflag_);
+	
+	double asym = parameters_[0];
+	double bg   = parameters_[1];
+	result_to_minimize_ = fabs( (asym - 0.5)*(bg - 0.4) + (asym - 0.5) + (bg - 0.4) );
+
+	
+	// Do this at the end...
+	this_minuit -> AssignPrivateFitParamsAndShit(n_params_, result_to_minimize_, parameters_, ierflg_);
+	
+	return;
+}
+
+void SuperMinuit::AssignPrivateFitParamsAndShit(Int_t &n_params_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
+{
+	// Put the fit parameters back in.
+	n_params           = n_params_;
+//	gin                = gin_;
+	result_to_minimize = result_to_minimize_;
+	parameters         = parameters_;
+	ierflg             = ierflg_;
+	
+	n_calls++;
+	DumpToOutput();
+	
+//	cout << "n_params_ = " << n_params << endl;
+//	cout << "result_to_minimize_ = " << result_to_minimize << endl;
+//	cout << "iflag = " << iflag << endl;
+	
+	// output the output.
+}
+
+/*
+void SuperMinuit::MemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t iflag_)
+{
+	n_calls++;
+	cout << "Called Member fit function.  This happens second.  n_calls = " << this_minuit->n_calls << endl;
+	// Now do things to all those arguments...
+	double asym = parameters_[0];
+	double bg   = parameters_[1];
+
+	result_to_minimize_ = fabs( (asym - 0.5)*(bg - 0.4) + (asym - 0.5) + (bg - 0.4) );
+
+//	NonMemberFitFunction(this_minuit->n_params_, this_minuit->gin_, this_minuit->result_to_minimize_, this_minuit->parameters_, this_minuit->iflag_);
+//	// ok, now what?
+	return;
+}
+*/
 
 void SuperMinuit::SetupOutput(string o_type, string o_fname=string("fitoutput.txt"), int o_verbosity=1)
 {
@@ -507,19 +582,19 @@ void SuperMinuit::DumpToOutput()
 			logfilestream << "Fit type:  " << current_fittype << endl;
 			logfilestream << "Verbosity: " << output_verbosity << endl;
 			logfilestream << "n_fits:    " << n_fits << endl;
-		//	logfilestream << "n_calls:   " << n_calls << endl;
+			logfilestream << "n_calls:   " << n_calls << endl;
 			logfilestream << endl;
 			// 
 			logfilestream << setw(7) << "n_calls" << "\t";
 			for (int i = 0; i < n_params; i++) 
 			{
 				// param value.
-				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+1);
+				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+3);
 				logfilestream << setw(current_columnwidth) << fit_parameters[i].name << "\t";
 				
 				// param err.
 				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+4+1);
-				logfilestream << setw(current_columnwidth) << fit_parameters[i].name << "_err\t";
+				logfilestream << setw(current_columnwidth) << fit_parameters[i].name+"_err" << "\t";
 			}
 			logfilestream << setw(20) << "chi2" << endl;
 		}
@@ -528,9 +603,12 @@ void SuperMinuit::DumpToOutput()
 			logfilestream << setw(7) << n_calls << "\t";
 			for (int i = 0; i < n_params; i++) 
 			{
-				// how wide do we make this column ?
-				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+1);
+				// param value.
+				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+3);
 				logfilestream << setw(current_columnwidth) << fit_parameters[i].fit_val << "\t";
+				// param err.
+				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+4+1);
+				logfilestream << setw(current_columnwidth) << fit_parameters[i].fit_err << "\t";
 			}
 			logfilestream << setw(20) << "chi2" << endl;
 			
@@ -563,14 +641,25 @@ void SuperMinuit::init()
 	output_type_to_file = false;
 	output_type_to_cout = true;
 	current_fittype = string("");
+	
+	parameters = new Double_t(25);  // possibly not necessary? idk.
+	
+//	Memory bullshit.
+//	Int_t &n_params_ = 25;
+//	Double_t *gin_ = new Double_t(25);
+//	Double_t &result_to_minimize_;
+//	Double_t *parameters_;
+//	Int_t iflag_;
 
-	this -> TMinuit::SetFCN( this -> TheFitFunction ); 
+	this -> TMinuit::SetFCN( NonMemberFitFunction ); // this line only works if it's a *static* void...
+	
 }
 
-
+/*
 // Fit function.
 void SuperMinuit::TheFitFunction(Int_t &n_params_, Double_t *gin, Double_t &result_to_minimize, Double_t *parameters, Int_t iflag_)
 {
+	n_calls++;
 //	DumpToOutput();
 //	this->DumpToOutput();
 //	SuperMinuit::DumpToOutput();
@@ -590,11 +679,13 @@ void SuperMinuit::TheFitFunction(Int_t &n_params_, Double_t *gin, Double_t &resu
 	// dump param (etc) values from fit to ... something.
 	return;
 }
+*/
+
 
 void SuperMinuit::DumpBestFitParams()
 {
 	// Below:  this actually gets you the *current* values of the parameters.
-	/*
+	
 	// For the overall fit;
 	n_params = this->GetNumPars();  // gets the number of params that were *varied*.
 	
@@ -616,7 +707,7 @@ void SuperMinuit::DumpBestFitParams()
 		this->fit_parameters[i].xup     = xup;
 		this->fit_parameters[i].f_pnum  = f_pnum;
 	}
-	*/
+	
 	return;
 }
 
@@ -644,6 +735,7 @@ void SuperMinuit::DumpCurrentFitParams()
 		this->fit_parameters[i].f_pnum  = f_pnum;
 	}
 	return;
+//	fit_min
 }
 
 int SuperMinuit::SetupParam(int c_paramnumber, FitParameter fitpar)
