@@ -1,6 +1,6 @@
 // ==================================================================== //
 // Code by Melissa Anholm
-// 28.9.2017 - 23.10.2017
+// 28.9.2017 - 24.10.2017
 // 
 // ==================================================================== //
 
@@ -24,7 +24,7 @@ using std::setw;
 #include <TMinuit.h>
 #include <TString.h>
 
-
+/*
 struct FitResult
 {
 public:
@@ -82,7 +82,7 @@ void FitResult::Load(TMinuit * a_minuit)
 	fit_type = "";
 	a_minuit -> mnstat(fit_min, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
 }
-
+*/
 
 //
 struct FitParameter
@@ -524,13 +524,11 @@ void SuperMinuit::SetupOutput(string o_type, string o_fname=string("fitoutput.tx
 	output_type_to_cout = false;
 	if( output_type == string("none") )
 	{
-		cout << " ... none." << endl;
 	//	output_type_to_file = false;
 	//	output_type_to_cout = false;
 	}
 	else if( output_type == string("cout") )
 	{
-		cout << " ... cout." << endl;
 	//	output_type_to_file = false;
 		output_type_to_cout = true;
 	}
@@ -571,10 +569,13 @@ void SuperMinuit::SetupOutput(string o_type, string o_fname=string("fitoutput.tx
 		}
 	}
 }
+
 void SuperMinuit::DumpToOutput()
 {
 	DumpCurrentFitParams();
 	int extra = 0;
+	cout << "n_calls = " << n_calls << "\tis_finished = " << is_finished << endl;
+	
 	if(output_type_to_file)
 	{
 	//	if(n_calls == 0)
@@ -889,6 +890,7 @@ int SuperMinuit::execute_simplex()
 	n_calls = 0;
 	current_fittype = string("SIMPLEX");
 	this -> mnexcm("SIMPLEX", arglist, length_of_arglist, ierflg);  // err:  0
+	
 	is_finished = true;
 	DumpToOutput();
 	return ierflg;
@@ -901,6 +903,7 @@ int SuperMinuit::execute_migrad()
 	n_calls = 0;
 	current_fittype = string("MIGRAD");
 	this -> mnexcm("MIGRAD", arglist, length_of_arglist, ierflg);  // err:  0
+	
 	is_finished = true;
 	DumpToOutput();
 	return ierflg;
@@ -915,6 +918,7 @@ int SuperMinuit::execute_hesse()
 	n_calls = 0;
 	current_fittype = string("HESSE");
 	this -> mnexcm("HESSE", arglist, length_of_arglist, ierflg);  // err:  0
+	
 	is_finished = true;
 	DumpToOutput();
 	return ierflg;
