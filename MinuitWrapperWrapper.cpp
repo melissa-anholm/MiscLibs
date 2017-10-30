@@ -394,8 +394,8 @@ public:
 	void DumpCurrentFitParams();
 	
 //	void SetupOutput(string, string, int);
-	
 	void SetupOutput(string o_type, string o_fname=string("fitoutput.txt"), int o_verbosity=1);
+//	void SetupOutput(string o_type, string o_fname, int o_verbosity);
 	void SetOutputVerbosity(int o_verbosity=1)
 	{ 
 		output_verbosity = o_verbosity; 
@@ -586,7 +586,8 @@ void SuperMinuit::MemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &
 }
 */
 
-void SuperMinuit::SetupOutput(string o_type, string o_fname=string("fitoutput.txt"), int o_verbosity=1)
+//void SuperMinuit::SetupOutput(string o_type, string o_fname=string("fitoutput.txt"), int o_verbosity=1)
+void SuperMinuit::SetupOutput(string o_type, string o_fname, int o_verbosity)
 {
 	cout << "Setting output_type:  " << o_type << endl;
 	
