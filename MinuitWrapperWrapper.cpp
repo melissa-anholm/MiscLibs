@@ -358,12 +358,19 @@ public:
 	
 //	void SetFitFunction(void (*fcn)(Int_t &, Double_t *, Double_t &, Double_t *, Int_t)) 
 //		{ this -> SetFCN(fcn); }; 
-	int get_n_params() 
-	{
-		n_params = this->GetNumPars();
-		return n_params;
-	};
-	
+
+//	int get_n_params() 
+//	{
+//		n_params = this->GetNumPars();
+//		return n_params;
+//	};
+
+	Int_t Get_n_params() {return n_params; };
+	Double_t * Get_gin() {return gin; }; 
+	Double_t Get_result_to_minimize() {return result_to_minimize; };
+	Double_t * Get_parameters() {return parameters; };
+	Int_t Get_ierflg() {return ierflg; };
+
 	void init();
 	void Setup_FitStopParams(bool);
 	void Setup_FitStopParams(int, double);
@@ -386,7 +393,9 @@ public:
 	void DumpBestFitParams();
 	void DumpCurrentFitParams();
 	
-	void SetupOutput(string, string, int);
+//	void SetupOutput(string, string, int);
+	
+	void SetupOutput(string o_type, string o_fname=string("fitoutput.txt"), int o_verbosity=1);
 	void SetOutputVerbosity(int o_verbosity=1)
 	{ 
 		output_verbosity = o_verbosity; 
@@ -396,7 +405,12 @@ public:
 
 	void ClosedownOutput() { logfilestream.close(); };
 	
-	void AssignPrivateFitParamsAndShit(Int_t &n_params_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t iflag_);
+//	void AssignPrivateFitParamsAndShit(Int_t &n_params_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t iflag_);
+	
+	int DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_);
+//	int which_thing = 1;
+	int which_thing;
+//	void PutTheParamsBack(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_);
 	
 private:
 	histfitter * this_histfitter;
@@ -408,9 +422,6 @@ private:
 	int npar_varied;        // 
 	int npar_defined;       //
 	int errmatrix_quality;  //
-	
-	int n_params;          // used.
-	Int_t ierflg;          // for memory space only?
 	
 	Double_t arglist[10];  // for memory space only?
 
@@ -434,12 +445,16 @@ private:
 	const static int orig_columnwidth = 12;
 	int              current_columnwidth;
 	
+	
 //
 //	Different memory bullshit.
-//	Double_t *gin;
-	Double_t result_to_minimize;
-	Double_t *parameters;
-//	Int_t iflag;
+//	Int_t ierflg;          // for memory space only?
+	
+	Int_t n_params;           // used, for something real.
+	Double_t *gin;
+	Double_t result_to_minimize;  // don't need it?
+	Double_t *parameters;  // don't need it?
+	Int_t ierflg;
 	
 	/*
 //	Memory bullshit.
@@ -450,26 +465,90 @@ private:
 	Int_t iflag_;
 	*/
 };
-SuperMinuit * this_minuit = new SuperMinuit();
-
+SuperMinuit * global_minuit = new SuperMinuit();  // Create a global instance.
+//SuperMinuit * global_minuit = 0;  // Create a global instance.
 
 void NonMemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
 {
-//	cout << "Called non-member fit function. This happens first." << endl;
-	// can I call the member fit function now?  Not without having an instance of the class somewhere.  
-//	this_minuit->MemberFitFunction(n_params_, gin_, result_to_minimize_, parameters_, iflag_);
-	
 	double asym = parameters_[0];
 	double bg   = parameters_[1];
 	result_to_minimize_ = fabs( (asym - 0.5)*(bg - 0.4) + (asym - 0.5) + (bg - 0.4) );
-
+	global_minuit -> DoTheThing(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
 	
-	// Do this at the end...
-	this_minuit -> AssignPrivateFitParamsAndShit(n_params_, result_to_minimize_, parameters_, ierflg_);
+	n_params_           = global_minuit -> Get_n_params();
+	gin_                = global_minuit -> Get_gin();
+	result_to_minimize_ = global_minuit -> Get_result_to_minimize();
+	parameters_         = global_minuit -> Get_parameters();
+	ierflg_             = global_minuit -> Get_ierflg();
 	
 	return;
 }
+int SuperMinuit::DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
+{
+	n_params           = n_params_;
+	gin                = gin_;
+	result_to_minimize = result_to_minimize_;
+	parameters         = parameters_;
+	ierflg             = ierflg_;
+	
+	// Which thing?
+	if(which_thing==1)
+	{
+		if(n_params >= 2)
+		{
+			double asym = parameters[0];
+			double bg   = parameters[1];
+			result_to_minimize = fabs( (asym - 0.5)*(bg - 0.4) + (asym - 0.5) + (bg - 0.4) );
+		}
+	}
+	else
+	{
+		cout << "ERROR:  which_thing = " << which_thing << endl;
+		return 0;
+	}
+	n_calls++;
+	DumpToOutput();
+	
+	return 1;
+}
 
+void SuperMinuit::init()
+{
+	fit_parameters = vector<FitParameter>(25);
+	
+	length_of_arglist = 0;
+	n_maxcalls = 500;
+	est_distance_to_min = 100.0;  // what does this even mean?!
+	
+	n_fits = 0;
+	n_calls = 0;
+	which_thing = 1;
+
+	SetupOutput("file");
+	
+	current_fittype = string("");
+	
+	Int_t n_params = 25;
+	Double_t *gin  = new Double_t(25);
+//	Double_t result_to_minimize;
+	Double_t *parameters = new Double_t(25);  
+//	Int_t ierflg;
+
+	this -> TMinuit::SetFCN( NonMemberFitFunction ); // this line only works if it's a *static* void...
+	
+}
+
+/*
+void SuperMinuit::PutTheParamsBack(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
+{
+	n_params           = n_params_;
+	gin                = gin_;
+	result_to_minimize = result_to_minimize_;
+	parameters         = parameters_;
+	ierflg             = ierflg_;
+}
+*/
+/*
 void SuperMinuit::AssignPrivateFitParamsAndShit(Int_t &n_params_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
 {
 	// Put the fit parameters back in.
@@ -488,6 +567,7 @@ void SuperMinuit::AssignPrivateFitParamsAndShit(Int_t &n_params_, Double_t &resu
 	
 	// output the output.
 }
+*/
 
 /*
 void SuperMinuit::MemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t iflag_)
@@ -698,35 +778,6 @@ void SuperMinuit::DumpToOutput()
 	n_calls++;  // 
 }
 
-void SuperMinuit::init()
-{
-	fit_parameters = vector<FitParameter>(25);
-	
-	length_of_arglist = 0;
-	n_maxcalls = 500;
-	est_distance_to_min = 100.0;  // what does this even mean?!
-	
-	n_fits = 0;
-	n_calls = 0;
-	
-//	output_type_to_file = false;
-//	output_type_to_cout = true;
-	SetupOutput("file");
-	
-	current_fittype = string("");
-	
-	parameters = new Double_t(25);  // possibly not necessary? idk.
-	
-//	Memory bullshit.
-//	Int_t &n_params_ = 25;
-//	Double_t *gin_ = new Double_t(25);
-//	Double_t &result_to_minimize_;
-//	Double_t *parameters_;
-//	Int_t iflag_;
-
-	this -> TMinuit::SetFCN( NonMemberFitFunction ); // this line only works if it's a *static* void...
-	
-}
 
 /*
 // Fit function.
@@ -991,8 +1042,38 @@ int SuperMinuit::get_errmatrix_quality_best()
 
 // 
 
+/*
+struct OAS // OverArchingStructure
+{
+	OAS(SuperMinuit*);
+	SuperMinuit * instance_of_superminuit;
+	void this_fcn(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_);
+	void set_the_goddamn_fitfunction();
+};
 
+OAS::OAS(SuperMinuit *this_instance_of_minuit)
+{
+	instance_of_superminuit = new SuperMinuit();
+	instance_of_superminuit = this_instance_of_minuit;
+}
 
+void OAS::set_the_goddamn_fitfunction()
+{
+// this -> TMinuit::SetFCN( NonMemberFitFunction );
+	instance_of_superminuit -> TMinuit::SetFCN(this_fcn);
+}
 
-
+void OAS::this_fcn(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
+{
+	double asym = parameters_[0];
+	double bg   = parameters_[1];
+	result_to_minimize_ = fabs( (asym - 0.5)*(bg - 0.4) + (asym - 0.5) + (bg - 0.4) );
+	
+	
+	// Do this at the end...
+//	this_minuit -> AssignPrivateFitParamsAndShit(n_params_, result_to_minimize_, parameters_, ierflg_);
+	
+	return;
+}
+*/
 
