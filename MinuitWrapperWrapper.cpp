@@ -82,10 +82,11 @@ void FitResult::Load(TMinuit * a_minuit)
 */
 
 //
-struct FitParameter
+class FitParameter
 {
 public:
 	FitParameter();
+	FitParameter(TString name_, double start_, double step_);
 	FitParameter(TString name_, double start_, double step_, double min_, double max_, bool is_fixed_);
 	
 	double initial_val;
@@ -93,6 +94,7 @@ public:
 	double min_val;
 	double max_val;
 	bool is_fixed;
+//	bool is_bounded;
 	
 	bool   fit_completed;
 	double fit_val;
@@ -102,8 +104,18 @@ public:
 	double eminus;
 	double eparab;
 	double globcc;
-
-
+	
+	void Unbound()
+	{
+		min_val = 0.0;
+		max_val = 0.0;
+	};
+	void SetLimits(double min_val_, double max_val_)
+	{
+		min_val = min_val_;
+		max_val = max_val_;
+	};
+	
 	Double_t xlo, xup; // ??
 	Int_t f_pnum;  // f_pnum = fortran_paramnumber
 	
@@ -120,8 +132,10 @@ FitParameter::FitParameter()
 	double min_         = 0.0;
 	double max_         = 0.0;
 	bool is_fixed_      = false;
-	FitParameter(name_, initial_val_, step_, min_, max_, is_fixed_);
+//	FitParameter(name_, initial_val_, step_, min_, max_, is_fixed_);
+	FitParameter(TString(""), 0.0, 0.1, 0.0, 0.0, false);
 }
+
 FitParameter::FitParameter(TString name_, double initial_val_, double step_, double min_, double max_, bool is_fixed_=false)
 {
 	name         = name_;
@@ -139,6 +153,29 @@ FitParameter::FitParameter(TString name_, double initial_val_, double step_, dou
 	eminus = 0;
 	eparab = 0;
 	globcc = 0;
+//	cout << "Original FitParameter is called for param:  " << name_ << endl;
+}
+
+FitParameter::FitParameter(TString name_, double initial_val_, double step_)
+{
+	name         = name_;
+	initial_val  = initial_val_;
+	stepsize     = step_;
+	min_val      = 0.0;
+	max_val      = 0.0;
+	is_fixed     = false;
+	
+	fit_completed = false;
+	fit_val = 0;
+	fit_err = 0;
+	
+	eplus  = 0;
+	eminus = 0;
+	eparab = 0;
+	globcc = 0;
+	
+//	cout << "calling FitParameter from inside FitParameter for " << name_ << "..." << endl;
+// 	FitParameter(name_, initial_val_, step_, 0.0, 0.0, false);  // BAD!  This DOES NOT WORK!
 }
 
 
@@ -347,7 +384,27 @@ public:
 	int get_npar_defined_best();
 	int get_errmatrix_quality_best();
 	
-	Int_t Get_n_params() {return n_params; };
+	Int_t Get_n_params() 
+	{
+		n_params = this->GetNumPars();  // gets the number of params that were *varied*.
+		return n_params; 
+	};
+	Int_t Get_n_fixed_params() 
+	{
+		n_fixed_params = this->GetNumFixedPars();  //
+		return n_fixed_params; 
+	};
+	Int_t Get_n_free_params() 
+	{
+		n_free_params = this->GetNumFreePars();  //
+		return n_free_params; 
+	};
+	
+//	int FixParameter(int internal_paramnumber) // must be an int to match the original..
+//		{ return this -> TMinuit::FixParameter(internal_paramnumber); };
+	void FreeParameter(int internal_paramnumber) 
+		{ this -> TMinuit::mnfree(-1*internal_paramnumber); };
+	
 	Double_t * Get_gin() {return gin; }; 
 	Double_t Get_result_to_minimize() {return result_to_minimize; };
 	Double_t * Get_parameters() {return parameters; };
@@ -364,7 +421,6 @@ public:
 	void DumpCurrentFitParams();
 	
 	void SetupOutput(string o_type, string o_fname=string("fitoutput.txt"), int o_verbosity=1);
-//	void OpenOutput();
 
 	void SetOutputVerbosity(int o_verbosity=1)
 	{ 
@@ -416,8 +472,14 @@ private:
 	ofstream         logfilestream;
 	const static int orig_columnwidth = 12;
 	int              current_columnwidth;
-		
-	Int_t n_params;           // used, for something real.
+	
+	Int_t n_fixed_params;
+	Int_t n_free_params;
+	Int_t n_params;        // used for something real.
+	
+public:
+//	Int_t n_params;           // used, for something real.  but also for something fake.
+	Int_t n_params_i;  // used for something fake.
 	Double_t *gin;
 	Double_t result_to_minimize;  // don't need it?
 	Double_t *parameters;  // don't need it?
@@ -429,45 +491,74 @@ SuperMinuit * global_minuit = new SuperMinuit();  // Create a global instance.
 
 void NonMemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
 {
-	double asym = parameters_[0];
-	double bg   = parameters_[1];
-	result_to_minimize_ = fabs( (asym - 0.5)*(bg - 0.4) + (asym - 0.5) + (bg - 0.4) );
-	global_minuit -> DoTheThing(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
+//	double asym = parameters_[0];
+//	double bg   = parameters_[1];
+//	result_to_minimize_ = fabs( (asym - 0.5)*(bg - 0.4) + (asym - 0.5) + (bg - 0.4) );
 	
+	global_minuit -> DoTheThing(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
+
+//	double val0 = 0.5;
+//	double val1 = 0.4;
+//	result_to_minimize_ = pow((parameters_[0] - val0), 2) + pow((parameters_[1] - val1), 2);
+	
+	/*
 	n_params_           = global_minuit -> Get_n_params();
 	gin_                = global_minuit -> Get_gin();
 	result_to_minimize_ = global_minuit -> Get_result_to_minimize();
 	parameters_         = global_minuit -> Get_parameters();
 	ierflg_             = global_minuit -> Get_ierflg();
+	*/
+	
+//	global_minuit -> DumpToOutput();
+	global_minuit -> n_params_i         = n_params_;
+	global_minuit -> gin                = gin_;
+	global_minuit -> result_to_minimize = result_to_minimize_;
+	global_minuit -> parameters         = parameters_;
+	global_minuit -> ierflg             = ierflg_;
 	
 	return;
 }
 
 int SuperMinuit::DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
 {
-//	cout << "Called:  DoTheThing(...)" << endl;
-	
+	/*
 	n_params           = n_params_;
 	gin                = gin_;
 	result_to_minimize = result_to_minimize_;
 	parameters         = parameters_;
 	ierflg             = ierflg_;
+	*/
+	
+	double val0 = 0.5;
+	double val1 = 0.4;
 	
 	// Which thing?
-	if(which_thing==1)
-	{
-		if(n_params >= 2)
-		{
-			double asym = parameters[0];
-			double bg   = parameters[1];
-			result_to_minimize = fabs( (asym - 0.5)*(bg - 0.4) + (asym - 0.5) + (bg - 0.4) );
-		}
-	}
-	else
+	if( !(which_thing==1) )
 	{
 		cout << "ERROR:  which_thing = " << which_thing << endl;
 		return 0;
 	}
+	if(n_params_ >= 2)
+	{
+	//	double asym = parameters[0];
+	//	double bg   = parameters[1];
+	//	result_to_minimize = fabs( (asym - 0.5)*(bg - 0.4) + (asym - 0.5) + (bg - 0.4) );
+	//	result_to_minimize = pow( (asym - 0.5)*(bg - 0.4) + (asym - 0.5) + (bg - 0.4), 2);
+	//	result_to_minimize = pow( (asym - 0.5)*(bg - 0.4), 2);
+	//	result_to_minimize = pow( (asym - 0.5), 2) + pow( (bg - 0.4), 2);
+	//	result_to_minimize = pow((parameters_[0] - val0), 2) + pow((parameters_[1] - val1), 2);
+	//	result_to_minimize = fabs( (asym - 0.5)*(bg - 0.4) );
+		
+		result_to_minimize_ = pow((parameters_[0] - val0), 2) + pow((parameters_[1] - val1), 2);
+	//	result_to_minimize_ = pow((parameters_[0] - val0)/parameters_[0], 2) + pow((parameters_[1] - val1)/parameters_[1], 2);
+	}
+	
+	n_params_i         = n_params_;  // really? 
+	gin                = gin_;
+	result_to_minimize = result_to_minimize_;
+	parameters         = parameters_;
+	ierflg             = ierflg_;
+	
 	this -> DumpToOutput();
 	n_calls++;
 	
@@ -560,28 +651,6 @@ void SuperMinuit::SetupOutput(string o_type, string o_fname, int o_verbosity)
 	cout << "output_verbosity set to:  " << output_verbosity << endl;
 }
 
-/*
-//void SuperMinuit::OpenOutput(string o_type, string o_fname, int o_verbosity)
-void SuperMinuit::OpenOutput()
-{
-	if(output_type_to_file==true)
-	{
-	//	cout << "output_fname set to:  " << output_fname << endl;
-	//	if(logfilestream.is_open())
-	//	{
-	//		// close it.
-	//		cout << "logfilestream is already open.  Closing it..." << endl;
-	//		logfilestream.close();
-	//	}
-	//	// open it.
-		if(!logfilestream.is_open())
-		{
-			logfilestream.open( output_fname.c_str(), std::ios::out);
-	//		cout << "Opening logfilestream (filename = " << output_fname << ") for output." << endl;
-		}
-	}
-}
-*/
 
 void SuperMinuit::OutputHeader()
 {
@@ -599,12 +668,15 @@ void SuperMinuit::OutputHeader1()
 			logfilestream.open( output_fname.c_str(), std::ios::out);
 		} // it's open now.
 	
-		// do I need to do this?
+		// do I need to do this?  .. yes, n_params (etc) probably aren't set yet.
 		DumpCurrentFitParams();
 		
-		logfilestream << "Fit type:  " << current_fittype << endl;
-		logfilestream << "Verbosity: " << output_verbosity << endl;
-		logfilestream << "n_fits:    " << n_fits << endl;
+		logfilestream << "Fit type:       " << current_fittype << endl;
+		logfilestream << "Verbosity:      " << output_verbosity << endl;
+		logfilestream << "n_fits:         " << n_fits << endl;
+		logfilestream << "n_params:       " << n_params << endl;
+		logfilestream << "n_fixed_params: " << n_fixed_params << endl;
+		logfilestream << "n_free_params:  " << n_free_params << endl;
 		for (int i = 0; i < n_params; i++) 
 		{
 			// First dump the param summary for all params.
@@ -625,6 +697,7 @@ void SuperMinuit::OutputHeader1()
 }
 void SuperMinuit::OutputHeader2()
 {
+//	logfilestream << "n_params = " << n_params << endl;
 	if(output_type_to_file==true)
 	{
 		// 
@@ -678,8 +751,9 @@ void SuperMinuit::OutputHeader2()
 
 void SuperMinuit::DumpToOutput()
 {
+//	logfilestream << "n_params = " << n_params << ", \t";
 	DumpCurrentFitParams();
-	
+//	logfilestream << "n_params = " << n_params << endl;
 	if(output_type_to_file)
 	{
 		logfilestream << setw(7) << std::right << n_calls;// << "\t";
@@ -744,73 +818,34 @@ void SuperMinuit::DumpFitResults()
 {
 	logfilestream << endl;
 	logfilestream << "Final results from " << current_fittype << endl;
+//	logfilestream << "n_params = " << n_params << endl;
 	OutputHeader2();
+//	logfilestream << "n_params = " << n_params << endl;
 	DumpToOutput();
+//	logfilestream << "n_params = " << n_params << endl;
+	
+	int this_paramnumber = 0;
+	this_paramnumber = 0;
+	for(int this_paramnumber = 0; this_paramnumber < n_params; this_paramnumber++)
+	{
+		logfilestream << "param:  " << this_paramnumber << "  " << (fit_parameters.at(this_paramnumber) ).GetName() << ":  ";
+		logfilestream << fit_parameters[this_paramnumber].fit_val << " +/- " << fit_parameters[this_paramnumber].fit_err << ", f_pnum = " << fit_parameters[this_paramnumber].f_pnum << endl;
+	}
+	
+	logfilestream << "fmin_best    = " << global_minuit -> get_fmin_best() << endl;
+	logfilestream << "fedm_best    = " << global_minuit -> get_fedm_best() << endl;
+	logfilestream << "errdef_best  = " << global_minuit -> get_errdef_best() << endl;
+
 	logfilestream << endl;
 	logfilestream << endl;
 }
-
-/*
-// Fit function.
-void SuperMinuit::TheFitFunction(Int_t &n_params_, Double_t *gin, Double_t &result_to_minimize, Double_t *parameters, Int_t iflag_)
-{
-	n_calls++;
-//	DumpToOutput();
-//	this->DumpToOutput();
-//	SuperMinuit::DumpToOutput();
-	
-	double result = 0.0;
-	cout << "n_params_ = " << n_params_ << endl;
-	double asym = parameters[0];
-	double bg   = parameters[1];
-	
-	if(n_params_ >= 2)
-	{
-		result = fabs( (asym - 0.5)*(bg - 0.4) + (asym - 0.5) + (bg - 0.4) );
-		cout << "result_to_minimize = " <<  result << ";\tparameters[0] = " << parameters[0] << ";\tparameters[1] = " << parameters[1] << endl;
-	}
-	
-	result_to_minimize = result;
-	// dump param (etc) values from fit to ... something.
-	return;
-}
-*/
-
-/*
-void SuperMinuit::DumpBestFitParams()
-{
-	// Below:  this actually gets you the *current* values of the parameters.
-	
-	// For the overall fit;
-	n_params = this->GetNumPars();  // gets the number of params that were *varied*.
-	
-	this -> mnstat(fmin_val, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
-	// error est ?
-	
-	// For the individual parameters:
-	TString paramname = "";
-	Double_t val, err, xlo, xup;
-	Int_t f_pnum;  // f_pnum = fortran param number.
-	
-	for(int i=0; i<n_params; i++)
-	{
-		this -> mnpout(i, paramname, val, err, xlo, xup, f_pnum);
-		this->fit_parameters[i].name    = paramname;
-		this->fit_parameters[i].fit_val = val;
-		this->fit_parameters[i].fit_err = err;
-		this->fit_parameters[i].xlo     = xlo;
-		this->fit_parameters[i].xup     = xup;
-		this->fit_parameters[i].f_pnum  = f_pnum;
-	}
-	
-	return;
-}
-*/
 
 void SuperMinuit::DumpCurrentFitParams()
 {
 	// For the overall fit;
 	n_params = this->GetNumPars();  // gets the number of params that were *varied*.
+	n_fixed_params = this->GetNumFixedPars();  // 
+	n_free_params = this->GetNumFreePars();  // 
 	
 	this -> mnstat(fmin_val, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
 	// error est ?
@@ -845,20 +880,40 @@ void SuperMinuit::DumpCurrentFitParams()
 
 int SuperMinuit::SetupParam(int c_paramnumber, FitParameter fitpar)
 {
+	cout << "Setting up parameter:  " << c_paramnumber << endl;
+	cout << "\t" << fitpar.name << endl;
+	cout << "\t" << fitpar.initial_val << endl;
+	cout << "\t" << fitpar.stepsize << endl;
+	cout << "\t" << fitpar.min_val << endl;
+	cout << "\t" << fitpar.max_val << endl;
+	cout << "\t" << "ierflg = " << ierflg << endl;
+	
 	this -> mnparm(c_paramnumber, fitpar.name, fitpar.initial_val, fitpar.stepsize, fitpar.min_val, fitpar.max_val, ierflg);
 	if(fitpar.is_fixed)
 	{
+		cout << "Fixing param:  " << fitpar.name << endl;
 		this -> FixParameter(c_paramnumber);
 	}
+	cout << "\t" << "ierflg = " << ierflg << endl;
 	return ierflg;
 }
 int SuperMinuit::SetupParam(int c_paramnumber, FitParameter * fitpar)
 {
+	cout << "Setting up parameter:  " << c_paramnumber << endl;
+	cout << "\t" << fitpar->name << endl;
+	cout << "\t" << fitpar->initial_val << endl;
+	cout << "\t" << fitpar->stepsize << endl;
+	cout << "\t" << fitpar->min_val << endl;
+	cout << "\t" << fitpar->max_val << endl;
+	cout << "\t" << "ierflg = " << ierflg << endl;
+
 	this -> mnparm(c_paramnumber, fitpar->name, fitpar->initial_val, fitpar->stepsize, fitpar->min_val, fitpar->max_val, ierflg);
 	if(fitpar->is_fixed)
 	{
+		cout << "Fixing param:  " << fitpar->name << endl;
 		this -> FixParameter(c_paramnumber);
 	}
+	cout << "\t" << "ierflg = " << ierflg << endl;
 	return ierflg;
 }
 
@@ -917,6 +972,7 @@ int SuperMinuit::execute_simplex()
 	this -> mnexcm("SIMPLEX", arglist, length_of_arglist, ierflg);  // err:  0
 	
 	is_finished = true;
+//	logfilestream << "n_params = " << n_params << endl;
 	DumpFitResults();
 	return ierflg;
 }
@@ -933,6 +989,7 @@ int SuperMinuit::execute_migrad()
 	this -> mnexcm("MIGRAD", arglist, length_of_arglist, ierflg);  // err:  0
 	
 	is_finished = true;
+//	logfilestream << "n_params = " << n_params << endl;
 	DumpFitResults();
 	return ierflg;
 }
@@ -951,6 +1008,7 @@ int SuperMinuit::execute_hesse()
 	this -> mnexcm("HESSE", arglist, length_of_arglist, ierflg);  // err:  0
 	
 	is_finished = true;
+//	logfilestream << "n_params = " << n_params << endl;
 	DumpFitResults();
 	return ierflg;
 }
@@ -965,7 +1023,9 @@ int SuperMinuit::execute_minos()
 	OutputHeader();
 	
 	this -> mnexcm("MINOS", arglist, length_of_arglist, ierflg);  // err:  0
+
 	is_finished = true;
+//	logfilestream << "n_params = " << n_params << endl;
 	DumpFitResults();
 	return ierflg;
 }
