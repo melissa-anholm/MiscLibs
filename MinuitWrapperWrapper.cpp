@@ -580,7 +580,6 @@ void SuperMinuit::OpenOutput()
 	//		cout << "Opening logfilestream (filename = " << output_fname << ") for output." << endl;
 		}
 	}
-
 }
 */
 
@@ -603,19 +602,17 @@ void SuperMinuit::OutputHeader1()
 		// do I need to do this?
 		DumpCurrentFitParams();
 		
-		logfilestream << endl;
 		logfilestream << "Fit type:  " << current_fittype << endl;
 		logfilestream << "Verbosity: " << output_verbosity << endl;
 		logfilestream << "n_fits:    " << n_fits << endl;
-	//	logfilestream << "n_calls:   " << n_calls << endl;
 		for (int i = 0; i < n_params; i++) 
 		{
 			// First dump the param summary for all params.
-			logfilestream << "Parameter " << setw(2) << i << ":\t";
-			logfilestream << fit_parameters[i].name << "\t" << endl ;
+			logfilestream << "Parameter " << setw(2) << i << ":  ";
+			logfilestream << fit_parameters[i].name << endl;
 			logfilestream << "\tRange = (";
 			logfilestream << fit_parameters[i].xlo << ", ";
-			logfilestream << fit_parameters[i].xup << ")." << endl;
+			logfilestream << fit_parameters[i].xup << ")" << endl;
 			logfilestream << "\tGuess = " << fit_parameters[i].fit_val << endl;
 			logfilestream << "\tStep  = " << fit_parameters[i].stepsize << endl;
 		}
@@ -633,98 +630,103 @@ void SuperMinuit::OutputHeader2()
 		// 
 		logfilestream << setw(7) << std::right << "n_calls";
 		logfilestream << setw(4) << std::left << "\t";
+		logfilestream << setw(orig_columnwidth) << std::left << "chi2" << "\t";
 		for (int i = 0; i < n_params; i++) 
 		{
 			// param value.
 			current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length());
 			logfilestream << setw(current_columnwidth) << std::left << fit_parameters[i].name;
 			logfilestream << "\t";
+		}
+		for (int i = 0; i < n_params; i++) 
+		{
 			if(output_verbosity>=2)
 			{
 				// param err.
 				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+4);
 				logfilestream << setw(current_columnwidth) << std::left << fit_parameters[i].name+"_err";
 				logfilestream << "\t";
-				// param eparab.
-				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+6);
-				logfilestream << setw(current_columnwidth) << std::left << fit_parameters[i].name+"eparab";
-				logfilestream << "\t";
-				if(output_verbosity>=3)
-				{
-					// param err_p.
-					current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+6);
-					logfilestream << setw(current_columnwidth) << std::left << fit_parameters[i].name+"_err_p";
-					logfilestream << "\t";
-					// param err_m.
-					current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+6);
-					logfilestream << setw(current_columnwidth) << std::left << fit_parameters[i].name+"_err_m";
-					logfilestream << "\t";
-				}
 			}
 		}
-		logfilestream << /*setw(orig_columnwidth) << */std::left << "chi2" << endl;
+		for (int i = 0; i < n_params; i++) 
+		{
+			if(output_verbosity>=3)
+			{
+				// param eparab.
+				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+7);
+				logfilestream << setw(current_columnwidth) << std::left << fit_parameters[i].name+"_eparab";
+				logfilestream << "\t";
+			}
+		}
+		for (int i = 0; i < n_params; i++) 
+		{
+			if(output_verbosity>=4)
+			{
+				// param err_p.
+				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+6);
+				logfilestream << setw(current_columnwidth) << std::left << fit_parameters[i].name+"_err_p";
+				logfilestream << "\t";
+				// param err_m.
+				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+6);
+				logfilestream << setw(current_columnwidth) << std::left << fit_parameters[i].name+"_err_m";
+				logfilestream << "\t";
+			}
+		}
+		logfilestream << endl;
 	}
 }
 
 void SuperMinuit::DumpToOutput()
 {
 	DumpCurrentFitParams();
-//	OpenOutput();
-//	OutputHeader();
-	
-	int extra = 0;
-	cout << "n_calls = " << n_calls << "\tis_finished = " << is_finished << endl;
 	
 	if(output_type_to_file)
 	{
 		logfilestream << setw(7) << std::right << n_calls;// << "\t";
 		logfilestream << setw(4) << std::left << "\t";
+		logfilestream << setw(orig_columnwidth) << std::left << result_to_minimize << "\t";
 		for (int i = 0; i < n_params; i++) 
 		{
 			// param value.
 			current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length());
-			extra = fit_parameters[i].name.Length() - orig_columnwidth;
-			for(int j = 0; j<extra; j++)
-				{ logfilestream << " "; }
 			logfilestream << setw(orig_columnwidth) << std::left << fit_parameters[i].fit_val;
 			logfilestream << "\t";
-			
+		}
+		for (int i = 0; i < n_params; i++) 
+		{
 			if(output_verbosity>=2)
 			{
 				// param err.
 				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+4);
-				extra = fit_parameters[i].name.Length()+4 - orig_columnwidth;
-				for(int j = 0; j<extra; j++)
-					{ logfilestream << " "; }
 				logfilestream << setw(orig_columnwidth) << std::left << fit_parameters[i].fit_err;
 				logfilestream << "\t";
-				// param eparab.
-				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+6);
-				extra = fit_parameters[i].name.Length()+6 - orig_columnwidth;
-				for(int j = 0; j<extra; j++)
-					{ logfilestream << " "; }
-				logfilestream << setw(orig_columnwidth) << std::left << fit_parameters[i].eparab;
-				logfilestream << "\t";
-				if(output_verbosity>=3)
-				{
-					// param err_p.
-					current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+6);
-					extra = fit_parameters[i].name.Length()+6 - orig_columnwidth;
-					for(int j = 0; j<extra; j++)
-						{ logfilestream << " "; }
-					logfilestream << setw(orig_columnwidth) << std::left << fit_parameters[i].eplus;
-					logfilestream << "\t";
-					// param err_m.
-					current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+6);
-					extra = fit_parameters[i].name.Length()+6 - orig_columnwidth;
-					for(int j = 0; j<extra; j++)
-						{ logfilestream << " "; }
-					logfilestream << setw(orig_columnwidth) << std::left << fit_parameters[i].eminus;
-					logfilestream << "\t";
-				}
 			}
 		}
-		logfilestream << result_to_minimize << endl;
+		for (int i = 0; i < n_params; i++) 
+		{
+			if(output_verbosity>=3)
+			{
+				// param eparab.
+				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+7);
+				logfilestream << setw(current_columnwidth) << std::left << fit_parameters[i].eparab;
+				logfilestream << "\t";
+			}
+		}
+		for (int i = 0; i < n_params; i++) 
+		{
+			if(output_verbosity>=4)
+			{
+				// param err_p.
+				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+6);
+				logfilestream << setw(current_columnwidth) << std::left << fit_parameters[i].eplus;
+				logfilestream << "\t";
+				// param err_m.
+				current_columnwidth = fmax(orig_columnwidth, fit_parameters[i].name.Length()+6);
+				logfilestream << setw(current_columnwidth) << std::left << fit_parameters[i].eminus;
+				logfilestream << "\t";
+			}
+		}
+		logfilestream << endl;
 		
 		if(is_finished==true)
 		{
@@ -736,14 +738,15 @@ void SuperMinuit::DumpToOutput()
 		//
 		cout << "Output to cout does not work yet." << endl;
 	}
-//	n_calls++;  // 
 }
 
 void SuperMinuit::DumpFitResults()
 {
+	logfilestream << endl;
 	logfilestream << "Final results from " << current_fittype << endl;
 	OutputHeader2();
 	DumpToOutput();
+	logfilestream << endl;
 	logfilestream << endl;
 }
 
@@ -908,13 +911,12 @@ int SuperMinuit::execute_simplex()
 	n_fits++;
 	n_calls = 0;
 	current_fittype = string("SIMPLEX");
-	DumpCurrentFitParams();
+//	DumpCurrentFitParams();
 	OutputHeader();
 
 	this -> mnexcm("SIMPLEX", arglist, length_of_arglist, ierflg);  // err:  0
 	
 	is_finished = true;
-//	DumpToOutput();
 	DumpFitResults();
 	return ierflg;
 }
@@ -925,13 +927,12 @@ int SuperMinuit::execute_migrad()
 	n_fits++;
 	n_calls = 0;
 	current_fittype = string("MIGRAD");
-	DumpCurrentFitParams();
+//	DumpCurrentFitParams();
 	OutputHeader();
 	
 	this -> mnexcm("MIGRAD", arglist, length_of_arglist, ierflg);  // err:  0
 	
 	is_finished = true;
-//	DumpToOutput();
 	DumpFitResults();
 	return ierflg;
 }
@@ -944,13 +945,12 @@ int SuperMinuit::execute_hesse()
 	n_fits++;
 	n_calls = 0;
 	current_fittype = string("HESSE");
-	DumpCurrentFitParams();
+//	DumpCurrentFitParams();
 	OutputHeader();
 	
 	this -> mnexcm("HESSE", arglist, length_of_arglist, ierflg);  // err:  0
 	
 	is_finished = true;
-//	DumpToOutput();
 	DumpFitResults();
 	return ierflg;
 }
@@ -961,12 +961,11 @@ int SuperMinuit::execute_minos()
 	n_fits++;
 	n_calls = 0;
 	current_fittype = string("MINOS");
-	DumpCurrentFitParams();
+//	DumpCurrentFitParams();
 	OutputHeader();
 	
 	this -> mnexcm("MINOS", arglist, length_of_arglist, ierflg);  // err:  0
 	is_finished = true;
-//	DumpToOutput();
 	DumpFitResults();
 	return ierflg;
 }
