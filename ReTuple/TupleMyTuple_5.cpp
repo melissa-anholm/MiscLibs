@@ -80,11 +80,12 @@ int version = 5;
 	string unblind_e_path = "/home/trinat/online/analyzedFiles_2014/";
 	string unblind_o_path = "/home/trinat/anholm/Friends/";
 
-	string g4_tree_path     = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/"
-	string g4_friend_path   = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/"
-	string metadatafilename = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/MetaData.txt"
+	string g4_tree_path     = "/home/trinat/anholm/Trinat_Geant/build/Output/"
+	string g4_friend_path   = "/home/trinat/anholm/Trinat_Geant/build/Output/Friends/"
+	string metadatafilename = "/home/trinat/anholm/Trinat_Geant/build/Output/MetaData.txt"
 
-	string bb1_prefix = "/home/trinat/anholm/ReTuple/BB1/"
+//	string bb1_prefix = "/home/trinat/anholm/ReTuple/BB1/"
+	string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/"
 
 //
 #else  // NOT on trinatdaq.
@@ -93,7 +94,8 @@ int version = 5;
 
 	#include STR(path_to_libs/MetaChain.cpp)
 	#include STR(path_to_libs/treeql_replacement.cpp)
-	#include  "/Users/spiffyzha/Packages/MiscLibs/BB1/bb1_strip.h"
+//	#include  "/Users/spiffyzha/Packages/MiscLibs/BB1/bb1_strip.h"
+	#include STR(path_to_libs/BB1/bb1_strip.h)
 	#include STR(path_to_libs/mini_cal_maker.cpp)
 
 	string blind_r_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_2014/";
