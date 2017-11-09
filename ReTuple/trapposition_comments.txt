@@ -1,0 +1,26 @@
+*******
+On trinatdaq:
+
+Calibrated (Friend) ntuples live here: 
+/home/trinat/anholm/Friends
+
+Code to produce position calibrations lives here:
+/home/trinat/anholm/ReTuple
+
+mini_cal_maker.cpp      <-- the library that does the fancy stuff for position calibrations.
+TheCalibrationator.cpp  <-- uses mini_cal_maker.cpp to produce TTrees with branches for calibrated position info.
+ReTuple.cpp             <-- Creates calibrated imcp position info and a few other branches as well.
+TestTuple.cpp           <-- Demonstrates how to load up a "Friend" with the original ntuples.
+
+*******
+err:
+	mismatch_x_9055 = 0.661175;
+	mismatch_z_9055 = 0.246667;
+r^2 = x^2 + z^2 = 0.4979970
+r = 0.7056890
+r/sqrt(2) =  0.49899749
+
+* position uncertainty from overall mechanical alignment:  0.50 in both x and z.
+
+
+*******
