@@ -41,7 +41,7 @@ using std::make_pair;
 using std::pair;
 using std::min;
 
-//#define on_trinatdaq 1
+#define on_trinatdaq 1
 
 /*
 //string blind_r_path;
@@ -61,17 +61,18 @@ int version = 5;
 #define XSTR(x) #x
 #define STR(x) XSTR(x)
 
+
 //
 #ifdef on_trinatdaq
 //
-	#define path_to_libs /home/trinat/anholm/Library
+//	#define path_to_libs /home/trinat/anholm/Library
+	#define path_to_libs /home/trinat/anholm/MiscLibs
 
 	#include STR(path_to_libs/MetaChain.cpp)
 	#include STR(path_to_libs/treeql_replacement.cpp)
-	#include "/home/trinat/anholm/ReTuple/BB1/bb1_strip.h"   // put this in a MiscLibs-like folder?
-//	#include STR(path_to_libs/mini_cal_maker.cpp)
-	#include "mini_cal_maker.cpp"                            // put this in a MiscLibs-like folder?
-
+	#include STR(path_to_libs/BB1/bb1_strip.h)
+	#include STR(path_to_libs/mini_cal_maker.cpp)
+	
 	string blind_r_path = "/data/trinat/S1188_2014_blinded/";
 	string blind_e_path = "/data/trinat/S1188_2014_blinded/";
 	string blind_o_path = "/home/trinat/anholm/Friends/";
@@ -80,12 +81,11 @@ int version = 5;
 	string unblind_e_path = "/home/trinat/online/analyzedFiles_2014/";
 	string unblind_o_path = "/home/trinat/anholm/Friends/";
 
-	string g4_tree_path     = "/home/trinat/anholm/Trinat_Geant/build/Output/"
-	string g4_friend_path   = "/home/trinat/anholm/Trinat_Geant/build/Output/Friends/"
-	string metadatafilename = "/home/trinat/anholm/Trinat_Geant/build/Output/MetaData.txt"
+	string g4_tree_path     = "/home/trinat/anholm/Trinat_Geant/build/Output/";
+	string g4_friend_path   = "/home/trinat/anholm/Trinat_Geant/build/Output/Friends/";
+	string metadatafilename = "/home/trinat/anholm/Trinat_Geant/build/Output/MetaData.txt";
 
-//	string bb1_prefix = "/home/trinat/anholm/ReTuple/BB1/"
-	string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/"
+	string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
 
 //
 #else  // NOT on trinatdaq.
@@ -94,7 +94,6 @@ int version = 5;
 
 	#include STR(path_to_libs/MetaChain.cpp)
 	#include STR(path_to_libs/treeql_replacement.cpp)
-//	#include  "/Users/spiffyzha/Packages/MiscLibs/BB1/bb1_strip.h"
 	#include STR(path_to_libs/BB1/bb1_strip.h)
 	#include STR(path_to_libs/mini_cal_maker.cpp)
 
@@ -117,7 +116,6 @@ int version = 5;
 //
 
 
-
 string make_rootfilename(string name, int parameter, string name2=string(""))
 {
 	string rootfname;
@@ -125,7 +123,7 @@ string make_rootfilename(string name, int parameter, string name2=string(""))
 	ss.str( std::string() );
 	ss.clear();
 	
-	ss << name << parameter << name2 <<".root";
+	ss << name << parameter << name2 << ".root";
 	rootfname = ss.str();
 	return rootfname;
 }
