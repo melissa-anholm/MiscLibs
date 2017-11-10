@@ -27,7 +27,7 @@ IF( $ENV{USER} STREQUAL "trinat")  # on trinatdaq.
 #add_library (bb1_strip /home/trinat/anholm/ReTuple/BB1/bb1_strip.cpp)  # Trinatdaq.
 add_library (bb1_strip /home/trinat/anholm/MiscLibs/BB1/bb1_strip.cpp)
 ELSE()
-add_library (bb1_strip /Users/spiffyzha/Desktop/Anal-Ysis/ReTuple_trinatdaq/BB1/bb1_strip.cpp)  # Home.
+add_library (bb1_strip $ENV{MISC_INCLUDE_DIR}/BB1/bb1_strip.cpp)  # Home.
 ENDIF()
 
 #Linking the Executable ================
