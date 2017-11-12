@@ -758,15 +758,168 @@ int main(int argc, char *argv[])
 		TBranch * bb1_ly_time = friend_tree -> Branch("BB1_LY_PEAKTIME", &strip_T[b][y]);
 	}
 
-	bool   bb_pass[2]   = {false, false};
-	double bb_energy[2] = {0.0, 0.0};
-	double bb_xpos[2]   = {0.0, 0.0};
-	double bb_ypos[2]   = {0.0, 0.0};
+//	bool   bb_pass[2]   = {false, false};
+//	double bb_energy[2] = {0.0, 0.0};
+//	double bb_xpos[2]   = {0.0, 0.0};
+//	double bb_ypos[2]   = {0.0, 0.0};
 	
 	BB1Hit bb1_hit[2] = {BB1Hit(), BB1Hit()};              // 2 detectors.
 	BB1Hit bb1_sechit[2] = {BB1Hit(), BB1Hit()};           // 2 detectors.
 	BB1Result bb1_result[2] = {BB1Result(), BB1Result()};  // 2 detectors.
 	//
+	
+	// Backscatter Event Classification:
+		
+	// is_type1a_t:  
+	// 	beta goes up through top SD into top PMT, 
+	// 	scatters, back out through top SD, 
+	// 	into lower SD, into lower PMT.
+	// In the data, that looks like:
+	//		1+ hit in top PMT, 2+ hits in top SD, AND
+	//		1+ hit in bottom PMT, exactly 1 hit in bottom SD.
+	Bool_t is_type1a_t = kFALSE;
+	Bool_t is_type1a_b = kFALSE;
+	TBranch *is_type1a_t_branch = friend_tree -> Branch("is_type1a_t", &is_type1a_t);  
+	TBranch *is_type1a_b_branch = friend_tree -> Branch("is_type1a_b", &is_type1a_b);  
+
+	// is_type1b_t:  
+	// 	these events are physically similar to is_type1_t, 
+	// 	but allows for the fact that SDs don't have perfect efficiency.  
+	// 	will get more accidentals in this category though.
+	// Physically:
+	// 	beta goes up through top SD into top PMT, 
+	// 	scatters, back out through top SD, 
+	// 	through the lower SD which doesn't record it, 
+	// 	into the lower PMT.
+	// In the data, that looks like:
+	//		1+ hit in top PMT, 2+ hits in top SD, AND
+	//		1+ hit in bottom PMT, exactly 0 hits in bottom SD.
+	Bool_t is_type1b_t = kFALSE;
+	Bool_t is_type1b_b = kFALSE;
+	TBranch *is_type1b_t_branch = friend_tree -> Branch("is_type1b_t", &is_type1b_t);  
+	TBranch *is_type1b_b_branch = friend_tree -> Branch("is_type1b_b", &is_type1b_b);  
+
+	// is_type1c:  
+	// 	Accounting further for SD inefficiency.  
+	// 	Can't immediately tell (without TOF info or something)
+	// 	which detector was hit first. 
+	// 	Even more accidentals in this category.
+	// Note:  is_type1c events will include *all* events that are 
+	// 	classified as any of the other is_type1* events, as well 
+	// 	as some additional events.
+	// In the data, that looks like: 
+	//		1+ hit in top PMT, any number of top SD hits (including 0), AND
+	//		1+ hit in bottom PMT, any number of bottom SD hits.
+	Bool_t is_type1c = kFALSE;
+	TBranch *is_type1c_branch = friend_tree -> Branch("is_type1c", &is_type1c);  
+	
+	// is_type2a_t:
+	// 	beta goes up to top SD, scatters, 
+	// 	goes down into the bottom SD and bottom PMT.
+	// In the data, that looks like this:
+	//		0 hits in top PMT, exactly 1 hit in top SD, AND
+	//		1+ hit in bottom PMT, exactly 1 hit in bottom SD.
+	Bool_t is_type2a_t = kFALSE;
+	Bool_t is_type2a_b = kFALSE;
+	
+	// is_type2b_t:
+	// Physically similar to is_type_2a_t events, but allows for 
+	// imperfect SD efficiency.  Can also include accidentals.
+	// 	beta goes up to top SD, scatters, 
+	// 	passes through the bottom SD without detection,
+	// 	and into the bottom PMT.
+	// In the data, that looks like this:
+	//		0 hits in the top PMT, exactly 1 hit in the top SD, AND
+	//		1+ hit in the bottom PMT, exactly 0 hits in the bottom SD.
+	Bool_t is_type2b_t = kFALSE;
+	Bool_t is_type2b_b = kFALSE;
+	
+	
+	// is_type3a_t:
+	// 	beta goes up through the top SD, 
+	// 	into the top PMT, scatters back down 
+	// 	through the top SD again, then down 
+	// 	into the bottom SD, where it's absorbed.
+	// In the data, that looks like this:  
+	//		1+ hit in top PMT, 2+ hits in top SD, 
+	//		0 hits in bottom PMT, exactly 1 hit in bottom SD.
+	Bool_t is_type3a_t = kFALSE;
+	Bool_t is_type3a_b = kFALSE;
+	
+	// is_type3b_t:
+	// Physically similar to is_type3a_t, but 
+	// accounts for imperfect SD efficiency.  
+	// Obviously, there'll be accidentals too.  
+	// 	beta goes up through the top SD, 
+	// 	into the top PMT, scatters back down 
+	// 	through the top SD again, then down 
+	// 	into the bottom SD, where it's absorbed.
+	// In the data, that looks like this:  
+	//		1+ hit in top PMT, exactly 1 hits in top SD, 
+	//		0 hits in bottom PMT, exactly 1 hit in bottom SD.
+	Bool_t is_type3b_t = kFALSE;
+	Bool_t is_type3b_b = kFALSE;
+	
+	// is_type4_t:
+	// there is no equivalent in the UCNA paper.
+	// in reality, this category can contains events that match
+	// the type1 and type3 events but aren't recorded as such due
+	// to detector inefficiency.  However, it also results from 
+	// a 4th "physical scenario".  ie:
+	// 	beta goes up through the top SD, into the top PMT, 
+	// 	scatters back through the top SD, and gets 
+	// 	absorbed/scattered somewhere else in the chamber. 
+	// In the data, that looks like this:
+	//		1+ hit in top PMT, 2+ hits in top SD.  
+	//		0 hits in bottom PMT, exactly 0 hits in bottom SD.
+	Bool_t is_type4_t = kFALSE;
+	Bool_t is_type4_b = kFALSE;
+
+	// is_normal_t:
+	// Corresponds to an event without backscattering.  
+	// In reality, this category can also contain events from 
+	// physical scenarios 1, 3, and 4.
+	// 	beta goes up, through the top SD, and is absorbed in the top PMT.
+	// In the data, that looks like this:
+	//		1+ hit in the top PMT, exactly 1 hit in the top SD, AND
+	//		0 hits in the bottom PMT, exactly 0 hits in the bottom SD.
+	Bool_t is_normal_t = kFALSE;
+	Bool_t is_normal_b = kFALSE;
+	TBranch *is_normal_t_branch = friend_tree -> Branch("is_normal_t", &is_normal_t);  
+	TBranch *is_normal_b_branch = friend_tree -> Branch("is_normal_b", &is_normal_b);  
+	
+	// is_other_t:
+	// Any event that hasn't already been described where the top PMT fires.
+	// Mostly, this will be events where something hit the top PMT but
+	// was not recorded in the strip detectors.  eg, gammas and LEDs.  
+	// However this category will *also* contain some weird event types.
+	// In the data, that (usually) looks like this:
+	//		1+ hit in the top PMT, 0 hits in the top SD, AND
+	//		0 hits in the bottom PMT, 0 hits in the bottom SD.
+	// Or it might also look like this:
+	//		1+ hit in the top PMT, 0 hits in the top SD, AND 
+	//		0 hits in the bottom PMT, 2+ hits in the bottom SD. 
+	// Or possibly it might look like this:
+	//		1+ hit in the top PMT, 1 hit in the top SD, AND
+	//		0 hits in the bottom PMT, 2+ hits in the bottom SD.
+	// Or it might look like this:
+	//		1+ hit in the top PMT, 2+ hit in the top SD, AND
+	//		0 hits in the bottom PMT, 2+ hits in the bottom SD.
+	Bool_t is_other_t = kFALSE;
+	Bool_t is_other_b = kFALSE;
+	
+	// This info was already available as the size argument in any of several branches, 
+	// but just in case you want an explicitly available way to count BB1 hits in an event, 
+	// this is now also its own branch.  We stop counting at 2 BB1 hits per detector though, 
+	// so in scenarios where, eg, 3 betas hit the top strip detectors, we'll still only 
+	// count 2 of them, and only have access (in the ntuples) to information about those.
+	int N_hits_bb1_t = 0;
+	int N_hits_bb1_b = 0;
+	TBranch * N_hits_bb1_t_branch = friend_tree -> Branch("N_hits_bb1_t", &N_hits_bb1_t);
+	TBranch * N_hits_bb1_b_branch = friend_tree -> Branch("N_hits_bb1_b", &N_hits_bb1_b);
+	
+	
+	
 	
 	// bad times overhead:
 	vector<pair<UInt_t, UInt_t> > badtimesforrun;
@@ -890,10 +1043,10 @@ int main(int argc, char *argv[])
 		{
 			for(int detector=0; detector <=1; detector++)
 			{
-				bb_pass[detector] = false;
-				bb_energy[detector] = 0.0;
-				bb_xpos[detector] = 0.0;
-				bb_ypos[detector] = 0.0;
+	//			bb_pass[detector] = false;
+	//			bb_energy[detector] = 0.0;
+	//			bb_xpos[detector] = 0.0;
+	//			bb_ypos[detector] = 0.0;
 			
 				for (int axis = 0; axis<=1; axis++) 
 				{ // loop over bb1 axes.
@@ -1051,6 +1204,7 @@ int main(int argc, char *argv[])
 		bb1_t_x -> clear();
 		bb1_t_y -> clear();
 		bb1_t_E -> clear();
+		
 		bb1_b_x -> clear();
 		bb1_b_y -> clear();
 		bb1_b_E -> clear();
