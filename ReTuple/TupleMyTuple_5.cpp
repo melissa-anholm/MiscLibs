@@ -43,18 +43,8 @@ using std::min;
 
 #define on_trinatdaq 1
 
-/*
-//string blind_r_path;
-string blind_e_path;
-string blind_o_path;
-string unblind_r_path, unblind_e_path, unblind_o_path;
-string metadatafilename, g4_tree_path, g4_friend_path;
-string bb1_prefix;
-string path_to_libs;
-*/
-
-bool is_blinded = true;
-bool is_g4      = true;
+bool is_blinded = false;
+bool is_g4      = false;
 
 int version = 5;
 
@@ -65,7 +55,6 @@ int version = 5;
 //
 #ifdef on_trinatdaq
 //
-//	#define path_to_libs /home/trinat/anholm/Library
 	#define path_to_libs /home/trinat/anholm/MiscLibs
 
 	#include STR(path_to_libs/MetaChain.cpp)
@@ -757,11 +746,6 @@ int main(int argc, char *argv[])
 		TBranch * bb1_lx_time = friend_tree -> Branch("BB1_LX_PEAKTIME", &strip_T[b][x]);
 		TBranch * bb1_ly_time = friend_tree -> Branch("BB1_LY_PEAKTIME", &strip_T[b][y]);
 	}
-
-//	bool   bb_pass[2]   = {false, false};
-//	double bb_energy[2] = {0.0, 0.0};
-//	double bb_xpos[2]   = {0.0, 0.0};
-//	double bb_ypos[2]   = {0.0, 0.0};
 	
 	BB1Hit bb1_hit[2] = {BB1Hit(), BB1Hit()};              // 2 detectors.
 	BB1Hit bb1_sechit[2] = {BB1Hit(), BB1Hit()};           // 2 detectors.
@@ -1081,16 +1065,11 @@ int main(int argc, char *argv[])
 		
 		N_hits_scint_t = scint_time_t->size();
 		N_hits_scint_b = scint_time_b->size();
-		if( led_count==0 && photodiode_count==0 && (scint_time_t->size()>0 || scint_time_b->size()>0) /* && (emcp_t->size()>0 || imcp_t->size()>0) */ )
+		if( led_count==0 && photodiode_count==0 && (scint_time_t->size()>0 || scint_time_b->size()>0) )
 		{
 			is_other = kTRUE;
 			for(int detector=0; detector <=1; detector++)
 			{
-	//			bb_pass[detector] = false;
-	//			bb_energy[detector] = 0.0;
-	//			bb_xpos[detector] = 0.0;
-	//			bb_ypos[detector] = 0.0;
-			
 				for (int axis = 0; axis<=1; axis++) 
 				{ // loop over bb1 axes.
 					if (strip_E[detector][axis] -> size() != 40) 
