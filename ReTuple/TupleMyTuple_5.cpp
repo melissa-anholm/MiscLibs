@@ -821,7 +821,9 @@ int main(int argc, char *argv[])
 	//		1+ hit in bottom PMT, exactly 1 hit in bottom SD.
 	Bool_t is_type2a_t = kFALSE;
 	Bool_t is_type2a_b = kFALSE;
-	
+	TBranch *is_type2a_t_branch = friend_tree -> Branch("is_type2a_t", &is_type2a_t);  
+	TBranch *is_type2a_b_branch = friend_tree -> Branch("is_type2a_b", &is_type2a_b);  
+
 	// is_type2b_t:
 	// Physically similar to is_type_2a_t events, but allows for 
 	// imperfect SD efficiency.  Can also include accidentals.
@@ -833,7 +835,8 @@ int main(int argc, char *argv[])
 	//		1+ hit in the bottom PMT, exactly 0 hits in the bottom SD.
 	Bool_t is_type2b_t = kFALSE;
 	Bool_t is_type2b_b = kFALSE;
-	
+	TBranch *is_type2b_t_branch = friend_tree -> Branch("is_type2b_t", &is_type2b_t);  
+	TBranch *is_type2b_b_branch = friend_tree -> Branch("is_type2b_b", &is_type2b_b);  
 	
 	// is_type3a_t:
 	// 	beta goes up through the top SD, 
@@ -845,6 +848,8 @@ int main(int argc, char *argv[])
 	//		0 hits in bottom PMT, exactly 1 hit in bottom SD.
 	Bool_t is_type3a_t = kFALSE;
 	Bool_t is_type3a_b = kFALSE;
+	TBranch *is_type3a_t_branch = friend_tree -> Branch("is_type3a_t", &is_type3a_t);  
+	TBranch *is_type3a_b_branch = friend_tree -> Branch("is_type3a_b", &is_type3a_b);  
 	
 	// is_type3b_t:
 	// Physically similar to is_type3a_t, but 
@@ -859,6 +864,8 @@ int main(int argc, char *argv[])
 	//		0 hits in bottom PMT, exactly 1 hit in bottom SD.
 	Bool_t is_type3b_t = kFALSE;
 	Bool_t is_type3b_b = kFALSE;
+	TBranch *is_type3b_t_branch = friend_tree -> Branch("is_type3b_t", &is_type3b_t);  
+	TBranch *is_type3b_b_branch = friend_tree -> Branch("is_type3b_b", &is_type3b_b);  
 	
 	// is_type4_t:
 	// there is no equivalent in the UCNA paper.
@@ -905,14 +912,19 @@ int main(int argc, char *argv[])
 	// Or it might look like this:
 	//		1+ hit in the top PMT, 2+ hit in the top SD, AND
 	//		0 hits in the bottom PMT, 2+ hits in the bottom SD.
-	Bool_t is_other_t = kFALSE;
-	Bool_t is_other_b = kFALSE;
+	Bool_t is_other = kFALSE;
+	TBranch *is_other_branch = friend_tree -> Branch("is_other", &is_other);  
+	// SEPARATE THESE INTO "T" AND "B" EVENTS?  WHAT EVEN?
 	
 	// This info was already available as the size argument in any of several branches, 
 	// but just in case you want an explicitly available way to count BB1 hits in an event, 
 	// this is now also its own branch.  We stop counting at 2 BB1 hits per detector though, 
 	// so in scenarios where, eg, 3 betas hit the top strip detectors, we'll still only 
-	// count 2 of them, and only have access (in the ntuples) to information about those.
+	// count 2 of them, and only have access (in the ntuples) to information about those. 
+	int N_hits_scint_t = 0;
+	int N_hits_scint_b = 0;
+	TBranch * N_hits_scint_t_branch = friend_tree -> Branch("N_hits_scint_t", &N_hits_scint_t);
+	TBranch * N_hits_scint_b_branch = friend_tree -> Branch("N_hits_scint_b", &N_hits_scint_b);
 	int N_hits_bb1_t = 0;
 	int N_hits_bb1_b = 0;
 	TBranch * N_hits_bb1_t_branch = friend_tree -> Branch("N_hits_bb1_t", &N_hits_bb1_t);
@@ -988,7 +1000,6 @@ int main(int argc, char *argv[])
 	//
 	for(int i=0; i<nentries; i++)
 	{
-	//	if( (i % 100000) == 0) { cout<<"* "; }
 		if( (i % 100000) == 0) { cout<<"Reached entry "<< i << endl; }
 		tree -> GetEntry(i);
 		//
@@ -1036,11 +1047,43 @@ int main(int argc, char *argv[])
 			}
 		}
 		
+		// Set up event types:
+		is_type1a_t = kFALSE;
+		is_type1a_b = kFALSE;
+		is_type1b_t = kFALSE;
+		is_type1b_b = kFALSE;
+		is_type1c = kFALSE;
+
+		is_type2a_t = kFALSE;
+		is_type2a_b = kFALSE;
+		is_type2b_t = kFALSE;
+		is_type2b_b = kFALSE;
+	
+		is_type3a_t = kFALSE;
+		is_type3a_b = kFALSE;
+		is_type3b_t = kFALSE;
+		is_type3b_b = kFALSE;
+		
+		is_type4_t = kFALSE;
+		is_type4_b = kFALSE;
+
+		is_normal_t = kFALSE;
+		is_normal_b = kFALSE;
+	
+		is_other = kFALSE;
+		
 		// BB1 shizzle:
 		bb1_t_pass = kFALSE;
 		bb1_b_pass = kFALSE;
+		
+		N_hits_bb1_t = 0;
+		N_hits_bb1_b = 0;
+		
+		N_hits_scint_t = scint_time_t->size();
+		N_hits_scint_b = scint_time_b->size();
 		if( led_count==0 && photodiode_count==0 && (scint_time_t->size()>0 || scint_time_b->size()>0) /* && (emcp_t->size()>0 || imcp_t->size()>0) */ )
 		{
+			is_other = kTRUE;
 			for(int detector=0; detector <=1; detector++)
 			{
 	//			bb_pass[detector] = false;
@@ -1058,18 +1101,17 @@ int main(int argc, char *argv[])
 					}               
 					// calculate the energy for every single fucking strip.
 					stripdetector[detector][axis].CalcEnergy(*strip_E[detector][axis]);  
+					
 					// load up peak time for every fucking strip.
 					if(!is_g4)
-					{
-						stripdetector[detector][axis].SetMaxT(*strip_T[detector][axis]);   
-					}
+						{ stripdetector[detector][axis].SetMaxT(*strip_T[detector][axis]); }
 				//	else
 				//	{
 				//		// *set* the maxT time for each strip if it's a g4 thing too!  
 				//		// ... wait, I did.  Already.  
 				//	}
 				}
-				bb1_result[detector] = GetResult(stripdetector[detector][x], stripdetector[detector][y], threshold_index, sigma_cut);  
+				bb1_result[detector] = GetResult(stripdetector[detector][x], stripdetector[detector][y], threshold_index, sigma_cut); 
 			
 				bb1_hit[detector] = bb1_result[detector].hit;
 				bb1_sechit[detector] = bb1_result[detector].secHit;
@@ -1082,6 +1124,7 @@ int main(int argc, char *argv[])
 						bb1_t_x -> push_back( bb1_hit[detector].xpos );
 						bb1_t_y -> push_back( bb1_hit[detector].ypos );
 						bb1_t_E -> push_back( bb1_hit[detector].energy );
+						N_hits_bb1_t++;
 					}
 					else if(detector == b)
 					{
@@ -1089,6 +1132,7 @@ int main(int argc, char *argv[])
 						bb1_b_x -> push_back( bb1_hit[detector].xpos );
 						bb1_b_y -> push_back( bb1_hit[detector].ypos );
 						bb1_b_E -> push_back( bb1_hit[detector].energy );
+						N_hits_bb1_b++;
 					}
 					//
 					if(bb1_result[detector].twoHits == true)
@@ -1100,16 +1144,119 @@ int main(int argc, char *argv[])
 								bb1_t_x -> push_back( bb1_sechit[detector].xpos );
 								bb1_t_y -> push_back( bb1_sechit[detector].ypos );
 								bb1_t_E -> push_back( bb1_sechit[detector].energy );
+								N_hits_bb1_t++;
 							}
 							else if(detector == b)
 							{
 								bb1_b_x -> push_back( bb1_sechit[detector].xpos );
 								bb1_b_y -> push_back( bb1_sechit[detector].ypos );
 								bb1_b_E -> push_back( bb1_sechit[detector].energy );
+								N_hits_bb1_b++;
 							}
 						}
 					}
 				}
+			}
+			// that was the loop over BB1 detectors.  now these things have appropriate values:
+			//	N_hits_scint_t, N_hits_scint_b.
+			//	N_hits_bb1_t, N_hits_bb1_b,
+			//	Still inside the loop to get rid of events we don't want.
+			
+			// 1A
+			if( (N_hits_scint_t>=1 && N_hits_scint_b>=1) && (N_hits_bb1_t==2 && N_hits_bb1_b==1) )
+			{
+				is_type1a_t = kTRUE;
+				is_other = kFALSE;
+			}
+			if( (N_hits_scint_t>=1 && N_hits_scint_b>=1) && (N_hits_bb1_t==1 && N_hits_bb1_b==2) )
+			{
+				is_type1a_b = kTRUE;
+				is_other = kFALSE;
+			}
+			// 1B
+			if( (N_hits_scint_t>=1 && N_hits_scint_b>=1) && (N_hits_bb1_t==2 && N_hits_bb1_b==0) )
+			{
+				is_type1b_t = kTRUE;
+				is_other = kFALSE;
+			}
+			if( (N_hits_scint_t>=1 && N_hits_scint_b>=1) && (N_hits_bb1_t==0 && N_hits_bb1_b==2) )
+			{
+				is_type1b_b = kTRUE;
+				is_other = kFALSE;
+			}
+			// 1C
+			if( (N_hits_scint_t>=1 && N_hits_scint_b>=1) )
+			{
+				is_type1c = kTRUE;
+				is_other = kFALSE;
+			}
+			
+			// 2A
+			if( (N_hits_scint_t==0 && N_hits_scint_b>=1) && (N_hits_bb1_t==1 && N_hits_bb1_b==1) )
+			{
+				is_type2a_t = kTRUE;
+				is_other = kFALSE;
+			}
+			if( (N_hits_scint_t>=1 && N_hits_scint_b==0) && (N_hits_bb1_t==1 && N_hits_bb1_b==1) )
+			{
+				is_type2a_b = kTRUE;
+				is_other = kFALSE;
+			}
+			// 2B
+			if( (N_hits_scint_t==0 && N_hits_scint_b>=1) && (N_hits_bb1_t==1 && N_hits_bb1_b==0) )
+			{
+				is_type2b_t = kTRUE;
+				is_other = kFALSE;
+			}
+			if( (N_hits_scint_t>=1 && N_hits_scint_b==0) && (N_hits_bb1_t==0 && N_hits_bb1_b==1) )
+			{
+				is_type2b_b = kTRUE;
+				is_other = kFALSE;
+			}
+			
+			// 3A
+			if( (N_hits_scint_t>=1 && N_hits_scint_b==0) && (N_hits_bb1_t==2 && N_hits_bb1_b==1) )
+			{
+				is_type3a_t = kTRUE;
+				is_other = kFALSE;
+			}
+			if( (N_hits_scint_t==0 && N_hits_scint_b>=1) && (N_hits_bb1_t==1 && N_hits_bb1_b==2) )
+			{
+				is_type3a_b = kTRUE;
+				is_other = kFALSE;
+			}
+			// 3B
+			if( (N_hits_scint_t>=1 && N_hits_scint_b==0) && (N_hits_bb1_t==1 && N_hits_bb1_b==1) )
+			{
+				is_type3b_t = kTRUE;
+				is_other = kFALSE;
+			}
+			if( (N_hits_scint_t==0 && N_hits_scint_b>=1) && (N_hits_bb1_t==1 && N_hits_bb1_b==1) )
+			{
+				is_type3b_b = kTRUE;
+				is_other = kFALSE;
+			}
+			
+			// 4
+			if( (N_hits_scint_t>=1 && N_hits_scint_b==0) && (N_hits_bb1_t==2 && N_hits_bb1_b==0) )
+			{
+				is_type4_t = kTRUE;
+				is_other = kFALSE;
+			}
+			if( (N_hits_scint_t==0 && N_hits_scint_b>=1) && (N_hits_bb1_t==0 && N_hits_bb1_b==2) )
+			{
+				is_type4_b = kTRUE;
+				is_other = kFALSE;
+			}
+			
+			// Normal
+			if( (N_hits_scint_t>=1 && N_hits_scint_b==0) && (N_hits_bb1_t==1 && N_hits_bb1_b==0) )
+			{
+				is_normal_t = kTRUE;
+			}
+			if( (N_hits_scint_t==0 && N_hits_scint_b>=1) && (N_hits_bb1_t==0 && N_hits_bb1_b==1) )
+			{
+				is_normal_b = kTRUE;
 			}
 		}
 		
