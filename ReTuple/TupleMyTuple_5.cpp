@@ -46,7 +46,7 @@ using std::min;
 bool is_blinded = false;
 bool is_g4      = false;
 
-int version = 5;
+int version = 6;
 
 #define XSTR(x) #x
 #define STR(x) XSTR(x)
@@ -635,7 +635,6 @@ int main(int argc, char *argv[])
 	BB1Detector stripdetector[2][2];
 //	cout << "made an array of BB1s." << endl;
 	string tdiff_file[2] = {bb1_prefix+"bb1_u_tdiff.dat", bb1_prefix+"bb1_l_tdiff.dat"};  // WHAT DOES THIS SHIT EVEN DO FOR G4 DATA?  ... I think it's fine, because I'll just set everything to be the same.
-//	cout << "Got here." << endl;
 	if(!is_g4)
 	{
 		stripdetector[t][x] = BB1Detector(bb1_prefix + "bb1_calibration_" + "UX.dat");
@@ -645,13 +644,11 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-	//	cout << "Here?" << endl;
 		stripdetector[t][x] = BB1Detector(bb1_prefix + "g4_calibration_" + "UX.dat");
 		stripdetector[t][y] = BB1Detector(bb1_prefix + "g4_calibration_" + "UY.dat");
 		stripdetector[b][x] = BB1Detector(bb1_prefix + "g4_calibration_" + "LX.dat");
 		stripdetector[b][y] = BB1Detector(bb1_prefix + "g4_calibration_" + "LY.dat");
 	}
-//	cout << "Here." << endl;
 	
 	vector<double> *strip_E[2][2];        // strip detector amplitudes.
 	vector<unsigned int> *strip_T[2][2];  // strip detector peak times.
@@ -666,7 +663,6 @@ int main(int argc, char *argv[])
 			stripdetector[detector][axis].pl = Plane(axis);          // x or y.
 		}
 	}
-//	cout << "Er, well, soon they will be." << endl;
 	tree -> SetBranchAddress("BB1_AMPLITUDE_UX", &strip_E[t][x]);
 	tree -> SetBranchAddress("BB1_AMPLITUDE_UY", &strip_E[t][y]);
 	tree -> SetBranchAddress("BB1_AMPLITUDE_LX", &strip_E[b][x]);
@@ -695,7 +691,7 @@ int main(int argc, char *argv[])
 	TBranch *is_unpolarized_b = friend_tree -> Branch("is_unpolarized", &is_unpolarized);  
 	TBranch *is_ac_b = friend_tree -> Branch("is_ac", &is_ac);  
 	int cyclecount = 50;
-	TBranch * cyclecount_branch = friend_tree -> Branch("AC_CycleCount", &cyclecount);
+	TBranch * cyclecount_branch = friend_tree -> Branch("AC_CycleCount", &cyclecount);  
 	
 	Double_t upper_E;
 	Double_t lower_E;
@@ -753,7 +749,7 @@ int main(int argc, char *argv[])
 	//
 	
 	// Backscatter Event Classification:
-		
+/*
 	// is_type1a_t:  
 	// 	beta goes up through top SD into top PMT, 
 	// 	scatters, back out through top SD, 
@@ -765,7 +761,13 @@ int main(int argc, char *argv[])
 	Bool_t is_type1a_b = kFALSE;
 	TBranch *is_type1a_t_branch = friend_tree -> Branch("is_type1a_t", &is_type1a_t);  
 	TBranch *is_type1a_b_branch = friend_tree -> Branch("is_type1a_b", &is_type1a_b);  
+*/
+	Bool_t is_type1_t = kFALSE;
+	Bool_t is_type1_b = kFALSE;
+	TBranch *is_type1_t_branch = friend_tree -> Branch("is_type1_t", &is_type1_t);  
+	TBranch *is_type1_b_branch = friend_tree -> Branch("is_type1_b", &is_type1_b);  
 
+/*
 	// is_type1b_t:  
 	// 	these events are physically similar to is_type1_t, 
 	// 	but allows for the fact that SDs don't have perfect efficiency.  
@@ -796,7 +798,9 @@ int main(int argc, char *argv[])
 	//		1+ hit in bottom PMT, any number of bottom SD hits.
 	Bool_t is_type1c = kFALSE;
 	TBranch *is_type1c_branch = friend_tree -> Branch("is_type1c", &is_type1c);  
-	
+*/
+
+/*
 	// is_type2a_t:
 	// 	beta goes up to top SD, scatters, 
 	// 	goes down into the bottom SD and bottom PMT.
@@ -807,7 +811,13 @@ int main(int argc, char *argv[])
 	Bool_t is_type2a_b = kFALSE;
 	TBranch *is_type2a_t_branch = friend_tree -> Branch("is_type2a_t", &is_type2a_t);  
 	TBranch *is_type2a_b_branch = friend_tree -> Branch("is_type2a_b", &is_type2a_b);  
+*/
+	Bool_t is_type2_t = kFALSE;
+	Bool_t is_type2_b = kFALSE;
+	TBranch *is_type2_t_branch = friend_tree -> Branch("is_type2_t", &is_type2_t);  
+	TBranch *is_type2_b_branch = friend_tree -> Branch("is_type2_b", &is_type2_b);  
 
+/*
 	// is_type2b_t:
 	// Physically similar to is_type_2a_t events, but allows for 
 	// imperfect SD efficiency.  Can also include accidentals.
@@ -834,7 +844,13 @@ int main(int argc, char *argv[])
 	Bool_t is_type3a_b = kFALSE;
 	TBranch *is_type3a_t_branch = friend_tree -> Branch("is_type3a_t", &is_type3a_t);  
 	TBranch *is_type3a_b_branch = friend_tree -> Branch("is_type3a_b", &is_type3a_b);  
-	
+*/
+
+	Bool_t is_type3_t = kFALSE;
+	Bool_t is_type3_b = kFALSE;
+	TBranch *is_type3_t_branch = friend_tree -> Branch("is_type3_t", &is_type3_t);  
+	TBranch *is_type3_b_branch = friend_tree -> Branch("is_type3_b", &is_type3_b);  
+/*
 	// is_type3b_t:
 	// Physically similar to is_type3a_t, but 
 	// accounts for imperfect SD efficiency.  
@@ -850,7 +866,8 @@ int main(int argc, char *argv[])
 	Bool_t is_type3b_b = kFALSE;
 	TBranch *is_type3b_t_branch = friend_tree -> Branch("is_type3b_t", &is_type3b_t);  
 	TBranch *is_type3b_b_branch = friend_tree -> Branch("is_type3b_b", &is_type3b_b);  
-	
+*/
+
 	// is_type4_t:
 	// there is no equivalent in the UCNA paper.
 	// in reality, this category can contains events that match
@@ -865,6 +882,8 @@ int main(int argc, char *argv[])
 	//		0 hits in bottom PMT, exactly 0 hits in bottom SD.
 	Bool_t is_type4_t = kFALSE;
 	Bool_t is_type4_b = kFALSE;
+	TBranch *is_type4_t_branch = friend_tree -> Branch("is_type4_t", &is_type4_t);  
+	TBranch *is_type4_b_branch = friend_tree -> Branch("is_type4_b", &is_type4_b);  
 
 	// is_normal_t:
 	// Corresponds to an event without backscattering.  
@@ -913,7 +932,6 @@ int main(int argc, char *argv[])
 	int N_hits_bb1_b = 0;
 	TBranch * N_hits_bb1_t_branch = friend_tree -> Branch("N_hits_bb1_t", &N_hits_bb1_t);
 	TBranch * N_hits_bb1_b_branch = friend_tree -> Branch("N_hits_bb1_b", &N_hits_bb1_b);
-	
 	
 	
 	
@@ -1032,6 +1050,14 @@ int main(int argc, char *argv[])
 		}
 		
 		// Set up event types:
+		is_type1_t = kFALSE;
+		is_type1_b = kFALSE;
+		is_type2_t = kFALSE;
+		is_type2_b = kFALSE;
+		is_type3_t = kFALSE;
+		is_type3_b = kFALSE;
+
+		/*
 		is_type1a_t = kFALSE;
 		is_type1a_b = kFALSE;
 		is_type1b_t = kFALSE;
@@ -1047,7 +1073,7 @@ int main(int argc, char *argv[])
 		is_type3a_b = kFALSE;
 		is_type3b_t = kFALSE;
 		is_type3b_b = kFALSE;
-		
+		*/
 		is_type4_t = kFALSE;
 		is_type4_b = kFALSE;
 
@@ -1144,14 +1170,15 @@ int main(int argc, char *argv[])
 			// 1A
 			if( (N_hits_scint_t>=1 && N_hits_scint_b>=1) && (N_hits_bb1_t==2 && N_hits_bb1_b==1) )
 			{
-				is_type1a_t = kTRUE;
+				is_type1_t = kTRUE;
 				is_other = kFALSE;
 			}
 			if( (N_hits_scint_t>=1 && N_hits_scint_b>=1) && (N_hits_bb1_t==1 && N_hits_bb1_b==2) )
 			{
-				is_type1a_b = kTRUE;
+				is_type1_b = kTRUE;
 				is_other = kFALSE;
 			}
+			/*
 			// 1B
 			if( (N_hits_scint_t>=1 && N_hits_scint_b>=1) && (N_hits_bb1_t==2 && N_hits_bb1_b==0) )
 			{
@@ -1169,18 +1196,19 @@ int main(int argc, char *argv[])
 				is_type1c = kTRUE;
 				is_other = kFALSE;
 			}
-			
+			*/
 			// 2A
 			if( (N_hits_scint_t==0 && N_hits_scint_b>=1) && (N_hits_bb1_t==1 && N_hits_bb1_b==1) )
 			{
-				is_type2a_t = kTRUE;
+				is_type2_t = kTRUE;
 				is_other = kFALSE;
 			}
 			if( (N_hits_scint_t>=1 && N_hits_scint_b==0) && (N_hits_bb1_t==1 && N_hits_bb1_b==1) )
 			{
-				is_type2a_b = kTRUE;
+				is_type2_b = kTRUE;
 				is_other = kFALSE;
 			}
+			/*
 			// 2B
 			if( (N_hits_scint_t==0 && N_hits_scint_b>=1) && (N_hits_bb1_t==1 && N_hits_bb1_b==0) )
 			{
@@ -1192,18 +1220,19 @@ int main(int argc, char *argv[])
 				is_type2b_b = kTRUE;
 				is_other = kFALSE;
 			}
-			
+			*/
 			// 3A
 			if( (N_hits_scint_t>=1 && N_hits_scint_b==0) && (N_hits_bb1_t==2 && N_hits_bb1_b==1) )
 			{
-				is_type3a_t = kTRUE;
+				is_type3_t = kTRUE;
 				is_other = kFALSE;
 			}
 			if( (N_hits_scint_t==0 && N_hits_scint_b>=1) && (N_hits_bb1_t==1 && N_hits_bb1_b==2) )
 			{
-				is_type3a_b = kTRUE;
+				is_type3_b = kTRUE;
 				is_other = kFALSE;
 			}
+			/*
 			// 3B
 			if( (N_hits_scint_t>=1 && N_hits_scint_b==0) && (N_hits_bb1_t==1 && N_hits_bb1_b==1) )
 			{
@@ -1215,7 +1244,7 @@ int main(int argc, char *argv[])
 				is_type3b_b = kTRUE;
 				is_other = kFALSE;
 			}
-			
+			*/
 			// 4
 			if( (N_hits_scint_t>=1 && N_hits_scint_b==0) && (N_hits_bb1_t==2 && N_hits_bb1_b==0) )
 			{
