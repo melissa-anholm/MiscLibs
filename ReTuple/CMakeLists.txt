@@ -32,7 +32,7 @@ ENDIF()
 
 #Linking the Executable ================
 #create exectuable
-add_executable (retuple TupleMyTuple_5.cpp)
+add_executable (retuple TupleMyTuple.cpp)
 #add_executable (retuple TupleMyTuple_kludge.cpp)
 #add_executable (testtuple TestTuple.cpp)
 #add_executable (calibrationator TheCalibrationator.cpp)

@@ -16,6 +16,11 @@
 // features include a one-parameter *thing* to switch between my 
 // own computer and trinatdaq, as well as the functionality to 
 // properly friendtuple the G4 data.  
+// 
+// 14.11.2017:  version 6 includes BB1 hit data, which was actually 
+// already there in version 5.  New this version is backscatter 
+// event classification.
+// 
 // ==================================================================== //
 #include <stdlib.h>
 #include <fstream>
@@ -457,7 +462,6 @@ int threshold_index = 0;
 //
 int main(int argc, char *argv[]) 
 {
-//	bool is_blinded = true;
 	int runno;
 	if(argc==2)
 	{
@@ -530,7 +534,6 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-	//	TTree * MetaTree = load_metadata_tree(metadatafilename);
 		this_opdelay = 0.0;
 		
 		// FIX THESE.
@@ -545,10 +548,8 @@ int main(int argc, char *argv[])
 		cout << "File can't be opened." << endl;
 		return 0;
 	}
-//	cout << "File is open." << endl;
 	TTree *tree = new TTree;  // Fix this.  This needs to be a TChain now?  ... No, no it doesn't.
 	tree = (TTree*)f->Get("ntuple");
-//	cout << "Tree is loaded." << endl;
 	
 	UInt_t upper_qdc_int;
 	UInt_t lower_qdc_int;
@@ -561,7 +562,7 @@ int main(int argc, char *argv[])
 	vector<unsigned int> * acmot_all = 0;  //	TNIM_ACMOT_ON_all;
 	vector<unsigned int> * dcmot_all = 0;  //	TNIM_DCMOT_OFF_all;
 	UInt_t eventtime = 0;
-//	cout << "Setting some branch addresses." << endl;
+
 	if(!is_g4)
 	{
 		tree -> SetBranchAddress("QDC_UpperPMT", &upper_qdc_int);
@@ -616,7 +617,6 @@ int main(int argc, char *argv[])
 	// BB1s:  
 	UInt_t led_count = 0;
 	UInt_t photodiode_count = 0;
-//	cout << "Now, additional branches." << endl;
 	if(!is_g4)
 	{
 		tree -> SetBranchAddress("TDC_PULSER_LED_Count", &led_count);
@@ -626,14 +626,9 @@ int main(int argc, char *argv[])
 	vector<double> * scint_time_b = 0;
 	tree -> SetBranchAddress("TDC_SCINT_TOP",    &scint_time_t);  
 	tree -> SetBranchAddress("TDC_SCINT_BOTTOM", &scint_time_b);  
-//	vector<double> *emcp_t = 0;
-//	vector<double> *imcp_t = 0;
-//	tree -> SetBranchAddress("TDC_ELECTRON_MCP", &emcp_t);
-//	tree -> SetBranchAddress("TDC_ION_MCP",      &imcp_t);
 	
 //	cout << "These branches will be strip detector branches." << endl;
 	BB1Detector stripdetector[2][2];
-//	cout << "made an array of BB1s." << endl;
 	string tdiff_file[2] = {bb1_prefix+"bb1_u_tdiff.dat", bb1_prefix+"bb1_l_tdiff.dat"};  // WHAT DOES THIS SHIT EVEN DO FOR G4 DATA?  ... I think it's fine, because I'll just set everything to be the same.
 	if(!is_g4)
 	{
@@ -729,10 +724,10 @@ int main(int argc, char *argv[])
 	bb1_b_x -> clear();
 	bb1_b_y -> clear();
 	bb1_b_E -> clear();
-	Bool_t bb1_t_pass = kFALSE;
-	Bool_t bb1_b_pass = kFALSE;
-	TBranch *bb1_t_pass_b = friend_tree -> Branch("bb1_t_pass", &bb1_t_pass);  
-	TBranch *bb1_b_pass_b = friend_tree -> Branch("bb1_b_pass", &bb1_b_pass);  
+//	Bool_t bb1_t_pass = kFALSE;
+//	Bool_t bb1_b_pass = kFALSE;
+//	TBranch *bb1_t_pass_b = friend_tree -> Branch("bb1_t_pass", &bb1_t_pass);  
+//	TBranch *bb1_b_pass_b = friend_tree -> Branch("bb1_b_pass", &bb1_b_pass);  
 	
 	
 	if(is_g4)
@@ -749,90 +744,32 @@ int main(int argc, char *argv[])
 	//
 	
 	// Backscatter Event Classification:
-/*
-	// is_type1a_t:  
+	// is_type1_t:  
 	// 	beta goes up through top SD into top PMT, 
 	// 	scatters, back out through top SD, 
 	// 	into lower SD, into lower PMT.
 	// In the data, that looks like:
 	//		1+ hit in top PMT, 2+ hits in top SD, AND
 	//		1+ hit in bottom PMT, exactly 1 hit in bottom SD.
-	Bool_t is_type1a_t = kFALSE;
-	Bool_t is_type1a_b = kFALSE;
-	TBranch *is_type1a_t_branch = friend_tree -> Branch("is_type1a_t", &is_type1a_t);  
-	TBranch *is_type1a_b_branch = friend_tree -> Branch("is_type1a_b", &is_type1a_b);  
-*/
+	//		0 LED hits, 0 photodiode hits.
 	Bool_t is_type1_t = kFALSE;
 	Bool_t is_type1_b = kFALSE;
 	TBranch *is_type1_t_branch = friend_tree -> Branch("is_type1_t", &is_type1_t);  
 	TBranch *is_type1_b_branch = friend_tree -> Branch("is_type1_b", &is_type1_b);  
 
-/*
-	// is_type1b_t:  
-	// 	these events are physically similar to is_type1_t, 
-	// 	but allows for the fact that SDs don't have perfect efficiency.  
-	// 	will get more accidentals in this category though.
-	// Physically:
-	// 	beta goes up through top SD into top PMT, 
-	// 	scatters, back out through top SD, 
-	// 	through the lower SD which doesn't record it, 
-	// 	into the lower PMT.
-	// In the data, that looks like:
-	//		1+ hit in top PMT, 2+ hits in top SD, AND
-	//		1+ hit in bottom PMT, exactly 0 hits in bottom SD.
-	Bool_t is_type1b_t = kFALSE;
-	Bool_t is_type1b_b = kFALSE;
-	TBranch *is_type1b_t_branch = friend_tree -> Branch("is_type1b_t", &is_type1b_t);  
-	TBranch *is_type1b_b_branch = friend_tree -> Branch("is_type1b_b", &is_type1b_b);  
-
-	// is_type1c:  
-	// 	Accounting further for SD inefficiency.  
-	// 	Can't immediately tell (without TOF info or something)
-	// 	which detector was hit first. 
-	// 	Even more accidentals in this category.
-	// Note:  is_type1c events will include *all* events that are 
-	// 	classified as any of the other is_type1* events, as well 
-	// 	as some additional events.
-	// In the data, that looks like: 
-	//		1+ hit in top PMT, any number of top SD hits (including 0), AND
-	//		1+ hit in bottom PMT, any number of bottom SD hits.
-	Bool_t is_type1c = kFALSE;
-	TBranch *is_type1c_branch = friend_tree -> Branch("is_type1c", &is_type1c);  
-*/
-
-/*
-	// is_type2a_t:
+	// is_type2_t:
 	// 	beta goes up to top SD, scatters, 
 	// 	goes down into the bottom SD and bottom PMT.
 	// In the data, that looks like this:
 	//		0 hits in top PMT, exactly 1 hit in top SD, AND
 	//		1+ hit in bottom PMT, exactly 1 hit in bottom SD.
-	Bool_t is_type2a_t = kFALSE;
-	Bool_t is_type2a_b = kFALSE;
-	TBranch *is_type2a_t_branch = friend_tree -> Branch("is_type2a_t", &is_type2a_t);  
-	TBranch *is_type2a_b_branch = friend_tree -> Branch("is_type2a_b", &is_type2a_b);  
-*/
+	//		0 LED hits, 0 photodiode hits.
 	Bool_t is_type2_t = kFALSE;
 	Bool_t is_type2_b = kFALSE;
 	TBranch *is_type2_t_branch = friend_tree -> Branch("is_type2_t", &is_type2_t);  
 	TBranch *is_type2_b_branch = friend_tree -> Branch("is_type2_b", &is_type2_b);  
 
-/*
-	// is_type2b_t:
-	// Physically similar to is_type_2a_t events, but allows for 
-	// imperfect SD efficiency.  Can also include accidentals.
-	// 	beta goes up to top SD, scatters, 
-	// 	passes through the bottom SD without detection,
-	// 	and into the bottom PMT.
-	// In the data, that looks like this:
-	//		0 hits in the top PMT, exactly 1 hit in the top SD, AND
-	//		1+ hit in the bottom PMT, exactly 0 hits in the bottom SD.
-	Bool_t is_type2b_t = kFALSE;
-	Bool_t is_type2b_b = kFALSE;
-	TBranch *is_type2b_t_branch = friend_tree -> Branch("is_type2b_t", &is_type2b_t);  
-	TBranch *is_type2b_b_branch = friend_tree -> Branch("is_type2b_b", &is_type2b_b);  
-	
-	// is_type3a_t:
+	// is_type3_t:
 	// 	beta goes up through the top SD, 
 	// 	into the top PMT, scatters back down 
 	// 	through the top SD again, then down 
@@ -840,33 +777,11 @@ int main(int argc, char *argv[])
 	// In the data, that looks like this:  
 	//		1+ hit in top PMT, 2+ hits in top SD, 
 	//		0 hits in bottom PMT, exactly 1 hit in bottom SD.
-	Bool_t is_type3a_t = kFALSE;
-	Bool_t is_type3a_b = kFALSE;
-	TBranch *is_type3a_t_branch = friend_tree -> Branch("is_type3a_t", &is_type3a_t);  
-	TBranch *is_type3a_b_branch = friend_tree -> Branch("is_type3a_b", &is_type3a_b);  
-*/
-
+	//		0 LED hits, 0 photodiode hits.
 	Bool_t is_type3_t = kFALSE;
 	Bool_t is_type3_b = kFALSE;
 	TBranch *is_type3_t_branch = friend_tree -> Branch("is_type3_t", &is_type3_t);  
 	TBranch *is_type3_b_branch = friend_tree -> Branch("is_type3_b", &is_type3_b);  
-/*
-	// is_type3b_t:
-	// Physically similar to is_type3a_t, but 
-	// accounts for imperfect SD efficiency.  
-	// Obviously, there'll be accidentals too.  
-	// 	beta goes up through the top SD, 
-	// 	into the top PMT, scatters back down 
-	// 	through the top SD again, then down 
-	// 	into the bottom SD, where it's absorbed.
-	// In the data, that looks like this:  
-	//		1+ hit in top PMT, exactly 1 hits in top SD, 
-	//		0 hits in bottom PMT, exactly 1 hit in bottom SD.
-	Bool_t is_type3b_t = kFALSE;
-	Bool_t is_type3b_b = kFALSE;
-	TBranch *is_type3b_t_branch = friend_tree -> Branch("is_type3b_t", &is_type3b_t);  
-	TBranch *is_type3b_b_branch = friend_tree -> Branch("is_type3b_b", &is_type3b_b);  
-*/
 
 	// is_type4_t:
 	// there is no equivalent in the UCNA paper.
@@ -880,6 +795,7 @@ int main(int argc, char *argv[])
 	// In the data, that looks like this:
 	//		1+ hit in top PMT, 2+ hits in top SD.  
 	//		0 hits in bottom PMT, exactly 0 hits in bottom SD.
+	//		0 LED hits, 0 photodiode hits.
 	Bool_t is_type4_t = kFALSE;
 	Bool_t is_type4_b = kFALSE;
 	TBranch *is_type4_t_branch = friend_tree -> Branch("is_type4_t", &is_type4_t);  
@@ -893,11 +809,13 @@ int main(int argc, char *argv[])
 	// In the data, that looks like this:
 	//		1+ hit in the top PMT, exactly 1 hit in the top SD, AND
 	//		0 hits in the bottom PMT, exactly 0 hits in the bottom SD.
+	//		0 LED hits, 0 photodiode hits.
 	Bool_t is_normal_t = kFALSE;
 	Bool_t is_normal_b = kFALSE;
 	TBranch *is_normal_t_branch = friend_tree -> Branch("is_normal_t", &is_normal_t);  
 	TBranch *is_normal_b_branch = friend_tree -> Branch("is_normal_b", &is_normal_b);  
 	
+	/*
 	// is_other_t:
 	// Any event that hasn't already been described where the top PMT fires.
 	// Mostly, this will be events where something hit the top PMT but
@@ -915,9 +833,13 @@ int main(int argc, char *argv[])
 	// Or it might look like this:
 	//		1+ hit in the top PMT, 2+ hit in the top SD, AND
 	//		0 hits in the bottom PMT, 2+ hits in the bottom SD.
+	*/
+	
+	// is_other:  
+	// Any scint. event that hasn't already been described.
+	// Includes events with LED and/or photodiode hits.
 	Bool_t is_other = kFALSE;
 	TBranch *is_other_branch = friend_tree -> Branch("is_other", &is_other);  
-	// SEPARATE THESE INTO "T" AND "B" EVENTS?  WHAT EVEN?
 	
 	// This info was already available as the size argument in any of several branches, 
 	// but just in case you want an explicitly available way to count BB1 hits in an event, 
@@ -1057,23 +979,6 @@ int main(int argc, char *argv[])
 		is_type3_t = kFALSE;
 		is_type3_b = kFALSE;
 
-		/*
-		is_type1a_t = kFALSE;
-		is_type1a_b = kFALSE;
-		is_type1b_t = kFALSE;
-		is_type1b_b = kFALSE;
-		is_type1c = kFALSE;
-
-		is_type2a_t = kFALSE;
-		is_type2a_b = kFALSE;
-		is_type2b_t = kFALSE;
-		is_type2b_b = kFALSE;
-	
-		is_type3a_t = kFALSE;
-		is_type3a_b = kFALSE;
-		is_type3b_t = kFALSE;
-		is_type3b_b = kFALSE;
-		*/
 		is_type4_t = kFALSE;
 		is_type4_b = kFALSE;
 
@@ -1083,17 +988,24 @@ int main(int argc, char *argv[])
 		is_other = kFALSE;
 		
 		// BB1 shizzle:
-		bb1_t_pass = kFALSE;
-		bb1_b_pass = kFALSE;
+	//	bb1_t_pass = kFALSE;
+	//	bb1_b_pass = kFALSE;
 		
 		N_hits_bb1_t = 0;
 		N_hits_bb1_b = 0;
 		
 		N_hits_scint_t = scint_time_t->size();
 		N_hits_scint_b = scint_time_b->size();
+		
+		if(scint_time_t->size()>0 || scint_time_b->size()>0)
+		{
+			// include LED and photodiode events here.
+			is_other = kTRUE;
+		}
+		
 		if( led_count==0 && photodiode_count==0 && (scint_time_t->size()>0 || scint_time_b->size()>0) )
 		{
-			is_other = kTRUE;
+		//	is_other = kTRUE;
 			for(int detector=0; detector <=1; detector++)
 			{
 				for (int axis = 0; axis<=1; axis++) 
@@ -1125,7 +1037,7 @@ int main(int argc, char *argv[])
 				{
 					if(detector == t)
 					{
-						bb1_t_pass = kTRUE;
+				//		bb1_t_pass = kTRUE;
 						bb1_t_x -> push_back( bb1_hit[detector].xpos );
 						bb1_t_y -> push_back( bb1_hit[detector].ypos );
 						bb1_t_E -> push_back( bb1_hit[detector].energy );
@@ -1133,7 +1045,7 @@ int main(int argc, char *argv[])
 					}
 					else if(detector == b)
 					{
-						bb1_b_pass = kTRUE;
+				//		bb1_b_pass = kTRUE;
 						bb1_b_x -> push_back( bb1_hit[detector].xpos );
 						bb1_b_y -> push_back( bb1_hit[detector].ypos );
 						bb1_b_E -> push_back( bb1_hit[detector].energy );
@@ -1178,25 +1090,7 @@ int main(int argc, char *argv[])
 				is_type1_b = kTRUE;
 				is_other = kFALSE;
 			}
-			/*
-			// 1B
-			if( (N_hits_scint_t>=1 && N_hits_scint_b>=1) && (N_hits_bb1_t==2 && N_hits_bb1_b==0) )
-			{
-				is_type1b_t = kTRUE;
-				is_other = kFALSE;
-			}
-			if( (N_hits_scint_t>=1 && N_hits_scint_b>=1) && (N_hits_bb1_t==0 && N_hits_bb1_b==2) )
-			{
-				is_type1b_b = kTRUE;
-				is_other = kFALSE;
-			}
-			// 1C
-			if( (N_hits_scint_t>=1 && N_hits_scint_b>=1) )
-			{
-				is_type1c = kTRUE;
-				is_other = kFALSE;
-			}
-			*/
+			
 			// 2A
 			if( (N_hits_scint_t==0 && N_hits_scint_b>=1) && (N_hits_bb1_t==1 && N_hits_bb1_b==1) )
 			{
@@ -1208,19 +1102,7 @@ int main(int argc, char *argv[])
 				is_type2_b = kTRUE;
 				is_other = kFALSE;
 			}
-			/*
-			// 2B
-			if( (N_hits_scint_t==0 && N_hits_scint_b>=1) && (N_hits_bb1_t==1 && N_hits_bb1_b==0) )
-			{
-				is_type2b_t = kTRUE;
-				is_other = kFALSE;
-			}
-			if( (N_hits_scint_t>=1 && N_hits_scint_b==0) && (N_hits_bb1_t==0 && N_hits_bb1_b==1) )
-			{
-				is_type2b_b = kTRUE;
-				is_other = kFALSE;
-			}
-			*/
+			
 			// 3A
 			if( (N_hits_scint_t>=1 && N_hits_scint_b==0) && (N_hits_bb1_t==2 && N_hits_bb1_b==1) )
 			{
@@ -1232,19 +1114,7 @@ int main(int argc, char *argv[])
 				is_type3_b = kTRUE;
 				is_other = kFALSE;
 			}
-			/*
-			// 3B
-			if( (N_hits_scint_t>=1 && N_hits_scint_b==0) && (N_hits_bb1_t==1 && N_hits_bb1_b==1) )
-			{
-				is_type3b_t = kTRUE;
-				is_other = kFALSE;
-			}
-			if( (N_hits_scint_t==0 && N_hits_scint_b>=1) && (N_hits_bb1_t==1 && N_hits_bb1_b==1) )
-			{
-				is_type3b_b = kTRUE;
-				is_other = kFALSE;
-			}
-			*/
+			
 			// 4
 			if( (N_hits_scint_t>=1 && N_hits_scint_b==0) && (N_hits_bb1_t==2 && N_hits_bb1_b==0) )
 			{
@@ -1261,10 +1131,12 @@ int main(int argc, char *argv[])
 			if( (N_hits_scint_t>=1 && N_hits_scint_b==0) && (N_hits_bb1_t==1 && N_hits_bb1_b==0) )
 			{
 				is_normal_t = kTRUE;
+				is_other = kFALSE;
 			}
 			if( (N_hits_scint_t==0 && N_hits_scint_b>=1) && (N_hits_bb1_t==0 && N_hits_bb1_b==1) )
 			{
 				is_normal_b = kTRUE;
+				is_other = kFALSE;
 			}
 		}
 		
