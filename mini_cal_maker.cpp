@@ -5,6 +5,8 @@
 #include <map>
 #include <cmath>  // trinatdaq
 
+using std::make_pair;
+
 // -- * -- // -- * -- // -- * -- // -- * -- // -- * -- // -- * -- // -- * -- // 
 
 class calibration

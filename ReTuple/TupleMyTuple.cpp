@@ -201,7 +201,7 @@ Double_t get_upper_E(double qdc, int run, bool g4data=false)
 			offset = 110.7;  // +/- 0.2
 			slope  = 388.3;  // +/- 0.4
 		}
-		E = (qdc - offset) / (slope*1000.0);
+		E = 1000.0*(qdc - offset) / slope;
 	}
 	else
 	{
@@ -254,7 +254,7 @@ Double_t get_lower_E(double qdc, int run, bool g4data=false)
 			offset = 143.0;  // +/- 0.3
 			slope  = 413.2;  // +/- 0.4
 		}
-		E = (qdc - offset) / (slope*1000.0);
+		E = 1000.0*(qdc - offset) / slope;
 	}
 	else
 	{
@@ -458,6 +458,12 @@ enum bb1_axis
 };
 double sigma_cut = 3.0;
 int threshold_index = 0;
+
+double get_r(double x, double y)
+{
+	double r2 = pow(x, 2) + pow(y, 2);
+	return sqrt(r2);
+}
 
 //
 int main(int argc, char *argv[]) 
@@ -705,25 +711,35 @@ int main(int argc, char *argv[])
 	dl_x_pos -> clear();
 	dl_z_pos -> clear();
 	
+	
+	// LATER:  ADD BB1_R BRANCHES.  THOSE'LL BE USEFUL...
 	// new bb1 things:
 	vector<double> * bb1_t_x = 0;
 	vector<double> * bb1_t_y = 0;
 	vector<double> * bb1_t_E = 0;
-	vector<double> * bb1_b_x = 0;
-	vector<double> * bb1_b_y = 0;
-	vector<double> * bb1_b_E = 0;
+	vector<double> * bb1_t_r = 0;
 	TBranch *bb1_t_x_branch = friend_tree -> Branch("bb1_top_x", &bb1_t_x);
 	TBranch *bb1_t_y_branch = friend_tree -> Branch("bb1_top_y", &bb1_t_y);
 	TBranch *bb1_t_E_branch = friend_tree -> Branch("bb1_top_E", &bb1_t_E);
-	TBranch *bb1_b_x_branch = friend_tree -> Branch("bb1_bottom_x", &bb1_b_x);
-	TBranch *bb1_b_y_branch = friend_tree -> Branch("bb1_bottom_y", &bb1_b_y);
-	TBranch *bb1_b_E_branch = friend_tree -> Branch("bb1_bottom_E", &bb1_b_E);
+	TBranch *bb1_t_r_branch = friend_tree -> Branch("bb1_top_r", &bb1_t_r);
 	bb1_t_x -> clear();
 	bb1_t_y -> clear();
 	bb1_t_E -> clear();
+	bb1_t_r -> clear();
+
+	vector<double> * bb1_b_x = 0;
+	vector<double> * bb1_b_y = 0;
+	vector<double> * bb1_b_E = 0;
+	vector<double> * bb1_b_r = 0;
+	TBranch *bb1_b_x_branch = friend_tree -> Branch("bb1_bottom_x", &bb1_b_x);
+	TBranch *bb1_b_y_branch = friend_tree -> Branch("bb1_bottom_y", &bb1_b_y);
+	TBranch *bb1_b_E_branch = friend_tree -> Branch("bb1_bottom_E", &bb1_b_E);
+	TBranch *bb1_b_r_branch = friend_tree -> Branch("bb1_bottom_r", &bb1_b_r);
 	bb1_b_x -> clear();
 	bb1_b_y -> clear();
 	bb1_b_E -> clear();
+	bb1_b_r -> clear();
+	
 //	Bool_t bb1_t_pass = kFALSE;
 //	Bool_t bb1_b_pass = kFALSE;
 //	TBranch *bb1_t_pass_b = friend_tree -> Branch("bb1_t_pass", &bb1_t_pass);  
@@ -874,7 +890,7 @@ int main(int argc, char *argv[])
 
 	Long64_t nentries = tree->GetEntries();
 	cout << "nentries = " << nentries << endl;
-	int b=0;
+	int badint=0;
 	int skipped = 0;
 	//
 	
@@ -936,7 +952,7 @@ int main(int argc, char *argv[])
 			upper_E_res = get_upper_E_res(upper_E, runno, is_g4);
 			lower_E_res = get_lower_E_res(lower_E, runno, is_g4);
 			
-			all_okay = get_all_okay_for_event(unix_time, badtimesforrun, &b, &skipped);
+			all_okay = get_all_okay_for_event(unix_time, badtimesforrun, &badint, &skipped);
 			
 			x1_count = x1_dla->size();
 			x2_count = x2_dla->size();
@@ -1041,6 +1057,7 @@ int main(int argc, char *argv[])
 						bb1_t_x -> push_back( bb1_hit[detector].xpos );
 						bb1_t_y -> push_back( bb1_hit[detector].ypos );
 						bb1_t_E -> push_back( bb1_hit[detector].energy );
+						bb1_t_r -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
 						N_hits_bb1_t++;
 					}
 					else if(detector == b)
@@ -1049,6 +1066,7 @@ int main(int argc, char *argv[])
 						bb1_b_x -> push_back( bb1_hit[detector].xpos );
 						bb1_b_y -> push_back( bb1_hit[detector].ypos );
 						bb1_b_E -> push_back( bb1_hit[detector].energy );
+						bb1_b_r -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
 						N_hits_bb1_b++;
 					}
 					//
@@ -1061,6 +1079,7 @@ int main(int argc, char *argv[])
 								bb1_t_x -> push_back( bb1_sechit[detector].xpos );
 								bb1_t_y -> push_back( bb1_sechit[detector].ypos );
 								bb1_t_E -> push_back( bb1_sechit[detector].energy );
+								bb1_t_r -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
 								N_hits_bb1_t++;
 							}
 							else if(detector == b)
@@ -1068,6 +1087,7 @@ int main(int argc, char *argv[])
 								bb1_b_x -> push_back( bb1_sechit[detector].xpos );
 								bb1_b_y -> push_back( bb1_sechit[detector].ypos );
 								bb1_b_E -> push_back( bb1_sechit[detector].energy );
+								bb1_b_r -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
 								N_hits_bb1_b++;
 							}
 						}
@@ -1231,10 +1251,12 @@ int main(int argc, char *argv[])
 		bb1_t_x -> clear();
 		bb1_t_y -> clear();
 		bb1_t_E -> clear();
+		bb1_t_r -> clear();
 		
 		bb1_b_x -> clear();
 		bb1_b_y -> clear();
 		bb1_b_E -> clear();
+		bb1_b_r -> clear();
 		
 	}
 	if(!is_g4)

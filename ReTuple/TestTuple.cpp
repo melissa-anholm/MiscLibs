@@ -7,7 +7,7 @@
 // This may not work quite the way I intended anymore...
 // Instead, try this:
 // 
-// root [0] TFile *file = new TFile("/home/trinat/online/analyzedFiles_2014/output00411.root");
+// root [0] TFile * file = new TFile("/home/trinat/online/analyzedFiles_2014/output00411.root");
 // root [1] TTree * tree = (TTree*)file->Get("ntuple");
 // root [2] tree -> AddFriend("friendtuple", "/home/trinat/anholm/Friends/friend00411.root");
 // 

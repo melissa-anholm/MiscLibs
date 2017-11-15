@@ -238,11 +238,10 @@ int hist_type::set_other_parameters()
 	}
 	else if (type == std::string("scint_cal_qdc") )
 	{
-	//	nbins = 1000;
 		nbins = 600;
 		xmin = -0.5;
 		xmax = 6000.5-1.0;
-		units = std::string("Scint. Energy (keV)");
+		units = std::string("Scintillator Energy (keV)");
 		user_xmin = xmin;
 		user_xmax = 5500.0;
 	}
