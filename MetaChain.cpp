@@ -20,6 +20,26 @@ using std::string;
 
 #include "treeql_replacement.cpp"
 
+
+#define metachain_on_trinatdaq 1
+//#define XSTR(x) #x
+//#define STR(x) XSTR(x)
+
+
+#ifdef metachain_on_trinatdaq
+string br_path = "/data/trinat/S1188_2014_blinded/";
+string be_path = "/data/trinat/S1188_2014_blinded/";
+string bf_path = "/home/trinat/anholm/Friends/";  // BAD!!
+
+string ur_path = "/home/trinat/online/analyzedFiles_2014/";
+string ue_path = "/home/trinat/online/analyzedFiles_2014/";
+string uf_path = "/home/trinat/anholm/Friends/";  
+
+string g4_path  = "/home/trinat/anholm/Trinat_Geant/build/Output/";
+string g4f_path = "/home/trinat/anholm/Trinat_Geant/build/Output/Friends/";
+//string metadatafilename = "/home/trinat/anholm/Trinat_Geant/build/Output/MetaData.txt";
+
+#else
 string br_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
 string be_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
 string bf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Friends_2014/";
@@ -31,11 +51,12 @@ string uf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
 string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
 string g4f_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
 
+#endif
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 
 // ====================================== //
 // TChains for Data:
-string get_datafilename(string path, int runno, bool use_blinded=true)
+string get_datafilename(string path, int runno, bool use_blinded=false)
 {	
 	string fname;
 	std::stringstream ss;
@@ -84,7 +105,7 @@ string get_simfriendname(string path, int runno)
 	return fname;
 }
 
-string get_datafriendname(string path, int runno, bool use_blinded=true)
+string get_datafriendname(string path, int runno, bool use_blinded=false)
 {	
 	string fname;
 	std::stringstream ss;
@@ -103,7 +124,7 @@ string get_datafriendname(string path, int runno, bool use_blinded=true)
 	return fname;
 }
 
-TChain * get_single_datatree(int runno, bool use_blinded=true)
+TChain * get_single_datatree(int runno, bool use_blinded=false)
 {
 	TFile * file;
 	string filename;
@@ -118,19 +139,21 @@ TChain * get_single_datatree(int runno, bool use_blinded=true)
 		cout << "* Using blinded data." << endl;
 		if( runs.good_electron[runno] == true || runs.good_recoil[runno] == true )
 		{
+			cout << "* Using run " << runno << endl;
 			if(runs.good_electron[runno] == true)
 			{
+				cout << "* Run " << runno << " is an electron run." << endl;
 				filename = get_datafilename(be_path, runno, use_blinded);
 			}
 			else if(runs.good_recoil[runno] == true)
 			{
+				cout << "* Run " << runno << " is a recoil run." << endl;
 				filename = get_datafilename(br_path, runno, use_blinded);
 			}
 			tree_chain -> Add(filename.c_str());
 		
 			friendname = get_datafriendname(bf_path, runno, use_blinded);
 			friend_chain -> Add(friendname.c_str());
-			cout << "* Using run " << runno << endl;
 		}
 		else
 		{
@@ -142,30 +165,32 @@ TChain * get_single_datatree(int runno, bool use_blinded=true)
 		cout << "* Using unblinded data." << endl;
 		if( runs.good_electron[runno] == true || runs.good_recoil[runno] == true )
 		{
+			cout << "* Using run " << runno << endl;
 			if(runs.good_electron[runno] == true)
 			{
+				cout << "* Run " << runno << " is an electron run." << endl;
 				filename = get_datafilename(ue_path, runno, use_blinded);
 			}
 			else if(runs.good_recoil[runno] == true)
 			{
+				cout << "* Run " << runno << " is a recoil run." << endl;
 				filename = get_datafilename(ur_path, runno, use_blinded);
 			}
 			tree_chain -> Add(filename.c_str());
 		
 			friendname = get_datafriendname(uf_path, runno, use_blinded);
 			friend_chain -> Add(friendname.c_str());
-			cout << "* Using run " << runno << endl;
 		}
 		else
 		{
-			cout << "Can't use run " << runno << ".  ABORT." << endl;
+			cout << "* Can't use run " << runno << ".  ABORT." << endl;
 		}
 	}
 	tree_chain -> AddFriend(friend_chain);
 	return tree_chain;
 }
 
-TChain * get_chain_from_Efield(double Efield, bool use_blinded=true)
+TChain * get_chain_from_Efield(double Efield, bool use_blinded=false)
 {
 	bool use_shitty=false;
 	
@@ -268,7 +293,7 @@ TChain * get_chain_from_Efield(double Efield, bool use_blinded=true)
 	return tree_chain;
 }
 
-TChain * get_electron_chain_from_letter(string runset_letter, bool use_blinded=true) // case sensitive.
+TChain * get_electron_chain_from_letter(string runset_letter, bool use_blinded=false) // case sensitive.
 {
 	set_of_runs runs;
 	
@@ -324,7 +349,7 @@ TChain * get_electron_chain_from_letter(string runset_letter, bool use_blinded=t
 	return tree_chain;
 }
 
-TChain * get_recoil_chain_from_letter(string runset_letter, bool use_blinded=true)  // case sensitive.
+TChain * get_recoil_chain_from_letter(string runset_letter, bool use_blinded=false)  // case sensitive.
 {
 	set_of_runs runs;
 	
@@ -391,7 +416,7 @@ TChain * get_recoil_chain_from_letter(string runset_letter, bool use_blinded=tru
 	return tree_chain;
 }
 
-TChain * get_electron_chain_from_runnos(vector<int> use_these_runs, bool use_blinded=true)
+TChain * get_electron_chain_from_runnos(vector<int> use_these_runs, bool use_blinded=false)
 {
 	string filename;
 	string friendname;
@@ -449,6 +474,88 @@ TChain * get_electron_chain_from_runnos(vector<int> use_these_runs, bool use_bli
 	tree_chain -> AddFriend(friend_chain);
 	return tree_chain;
 }
+
+TChain * get_electron_chain_for_all(bool use_blinded=false)
+{
+	set_of_runs runs;
+	
+	string filename;
+	string friendname;
+	TChain * tree_chain = new TChain("ntuple");
+	TChain * friend_chain = new TChain("friendtuple");
+	
+	string path;
+	string friendpath;
+	if(use_blinded==true)
+	{
+		cout << "* Using blinded dataset." << endl;
+		path = be_path;
+		friendpath = bf_path;
+	}
+	else
+	{
+		cout << "* Using un-blinded dataset." << endl;
+		path = ue_path;
+		friendpath = uf_path;
+	}
+	cout << endl;
+	for(int i=302; i<runs.N_runs; i++)
+	{
+		if(runs.good_electron[i] == true)  // if compton edge is bad, the whole run is marked as bad now.
+		{
+			cout << "Adding run " << i << endl;
+			filename = get_datafilename(path, i, use_blinded);
+			tree_chain -> Add(filename.c_str());
+		
+			friendname = get_datafriendname(friendpath, i, use_blinded);
+			friend_chain -> Add(friendname.c_str());
+		}
+	}
+	tree_chain -> AddFriend(friend_chain);
+	return tree_chain;
+
+}
+
+TChain * get_recoil_chain_for_all(bool use_blinded=false)
+{
+	set_of_runs runs;
+	
+	string filename;
+	string friendname;
+	TChain * tree_chain = new TChain("ntuple");
+	TChain * friend_chain = new TChain("friendtuple");
+	
+	string path;
+	string friendpath;
+	if(use_blinded==true)
+	{
+		cout << "* Using blinded dataset." << endl;
+		path = br_path;
+		friendpath = bf_path;
+	}
+	else
+	{
+		cout << "* Using un-blinded dataset." << endl;
+		path = ur_path;
+		friendpath = uf_path;
+	}
+	cout << endl;
+	for(int i=302; i<runs.N_runs; i++)
+	{
+		if(runs.good_recoil[i] == true)  // if compton edge is bad, the whole run is marked as bad now.
+		{
+			cout << "Adding run " << i << endl;
+			filename = get_datafilename(path, i, use_blinded);
+			tree_chain -> Add(filename.c_str());
+		
+			friendname = get_datafriendname(friendpath, i, use_blinded);
+			friend_chain -> Add(friendname.c_str());
+		}
+	}
+	tree_chain -> AddFriend(friend_chain);
+	return tree_chain;
+}
+
 
 // ====================================== //
 // Newer TChains for Simulations:
