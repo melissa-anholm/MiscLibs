@@ -7353,6 +7353,11 @@ void set_of_runs::update_goodruns()
 		{
 			good_recoil[i] = false;
 		}
+		
+		if( i==361 || i== 368 || i==370 || i==371 )  // idk what happened, but DSSSDs don't seem to be on?
+		{
+			good_recoil[i] = false;  
+		}
 	//	if( i<=371 || i==497 )
 	//	{
 	//		// "usable".
