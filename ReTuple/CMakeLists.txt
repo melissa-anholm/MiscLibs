@@ -3,7 +3,7 @@ project (Blah CXX)
 
 #ROOT includes ===========================
 IF( $ENV{USER} STREQUAL "trinat")  # on trinatdaq.
-INCLUDE(/home/trinat/anholm/Library/FindROOT.cmake)   # Trinatdaq.
+INCLUDE(/home/trinat/anholm/MiscLibs/FindROOT.cmake)   # Trinatdaq.
 ELSE() 
 INCLUDE($ENV{MISC_INCLUDE_DIR}/FindROOT.cmake)        # Home.
 ENDIF() 
