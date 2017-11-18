@@ -7198,7 +7198,7 @@ void set_of_runs::init_goodrecoil()
 	good_recoil[473] = true;
 	good_recoil[474] = true;
 	good_recoil[491] = true;
-	good_recoil[497] = true;
+	good_recoil[497] = true;  // bad E-field.  fixed in update_goodruns()
 	good_recoil[498] = true;
 	good_recoil[499] = true;
 	good_recoil[509] = true;
@@ -7349,12 +7349,16 @@ void set_of_runs::update_goodruns()
 			good_electron[i] = false;
 			good_recoil[i] = false;
 		}
-		if( i<=371 || i==497 )
+		if( i==497 )
 		{
-			// "usable".
-		//	good_electron[i] = false;
 			good_recoil[i] = false;
 		}
+	//	if( i<=371 || i==497 )
+	//	{
+	//		// "usable".
+	//	//	good_electron[i] = false;
+	//		good_recoil[i] = false;
+	//	}
 	}
 }
 
