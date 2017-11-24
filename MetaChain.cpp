@@ -54,6 +54,7 @@ string g4f_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
 #endif
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 
+
 // ====================================== //
 // TChains for Data:
 string get_datafilename(string path, int runno, bool use_blinded=false)
@@ -205,13 +206,13 @@ TChain * get_chain_from_Efield(double Efield, bool use_blinded=false)
 	string path;
 	string friendpath;
 	
-	if( !((Efield==66.0 || Efield==66.7) || Efield==150.0 || Efield==395.0 || Efield==415.0 || Efield==535.0) )
+	if( !((Efield==66.0 || Efield==66.7 || Efield==67.0 ) || Efield==150.0 || Efield==395.0 || Efield==415.0 || Efield==535.0) )
 	{
 		cout << "Bad E-field value.  ABORT." << endl;
 	}
 	else
 	{
-		if(Efield==66.0)
+		if(Efield==66.0 || Efield==67.0)
 			{ Efield=66.7; }
 		cout << "* Using the set of runs at E = " << Efield << endl;
 		
