@@ -182,14 +182,14 @@ int hist_type::set_other_parameters()
 		user_xmin = 50;
 		user_xmax = 150;
 	}
-	else if (type == std::string("cal_e_scint_tof")) // electron tof w.r.t. scint time + offset.
+	else if (type == std::string("cal_e_scint_tof")) // electron tof w.r.t. scint time // + offset.
 	{
 		nbins = 4000;
 		xmin = (-2000.5+1.0)*v1192_to_ns;
 		xmax = (2000.5)*v1192_to_ns;
-		units = std::string("ns");
-		user_xmin = -20;
-		user_xmax = 60;
+		units = std::string("electron - scint [ns]");
+		user_xmin = -90.0;
+		user_xmax = -50.0;
 	}
 	else if (type == std::string("cal_scint_tof"))  // for eg: scint_t - scint_b.
 	{
