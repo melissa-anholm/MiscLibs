@@ -75,9 +75,9 @@ int version = 6;
 	string unblind_e_path = "/home/trinat/online/analyzedFiles_2014/";
 	string unblind_o_path = "/home/trinat/anholm/Friends/";
 
-	string g4_tree_path     = "/home/trinat/anholm/Trinat_Geant/build/Output/";
-	string g4_friend_path   = "/home/trinat/anholm/Trinat_Geant/build/Output/Friends/";
-	string metadatafilename = "/home/trinat/anholm/Trinat_Geant/build/Output/MetaData.txt";
+	string g4_tree_path     = "/home/trinat/anholm/Trinat_Geant/build/Output/";              //
+	string g4_friend_path   = "/home/trinat/anholm/Trinat_Geant/build/Output/Friends/";      //
+	string metadatafilename = "/home/trinat/anholm/Trinat_Geant/build/Output/MetaData.txt";  //
 
 	string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
 
@@ -95,9 +95,9 @@ int version = 6;
 	string blind_e_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
 	string blind_o_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Friends/";
 
-	string unblind_r_path = "/Users/spiffyzha/Desktop/Anal-Ysis/";
-	string unblind_e_path = "/Users/spiffyzha/Desktop/Anal-Ysis/";
-	string unblind_o_path = "/Users/spiffyzha/Desktop/Anal-Ysis/";
+	string unblind_r_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Recoils_2014/";
+	string unblind_e_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons_2014/";
+	string unblind_o_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
 
 	string g4_tree_path     = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
 	string g4_friend_path   = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
@@ -994,13 +994,13 @@ int main(int argc, char *argv[])
 		is_type2_b = kFALSE;
 		is_type3_t = kFALSE;
 		is_type3_b = kFALSE;
-
+		
 		is_type4_t = kFALSE;
 		is_type4_b = kFALSE;
-
+		
 		is_normal_t = kFALSE;
 		is_normal_b = kFALSE;
-	
+		
 		is_other = kFALSE;
 		
 		// BB1 shizzle:

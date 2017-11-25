@@ -100,13 +100,17 @@ BB1Detector::BB1Detector(string fname) : det(D_undef), pl(P_undef)
   double pos;
   int count = 0;
   while (ifs >> nn >> sn >> pos >> cal >> dcal >> res >> dres >> t[0] >> t[1] >> t[2] >>
-         t[3] >> t[4] >> t[5] && !ifs.eof() && ifs.good() && count < 40) {
+         t[3] >> t[4] /*>> t[5]*/ && !ifs.eof() && ifs.good() && count < 40) {
     count++;
+
+//BB1Strip::BB1Strip(int nn_, int sn_, double cal_, double dcal_, double res_, double dres_, double* t_, double pos_)
     strip[nn] = BB1Strip(nn, sn, cal, dcal, res, dres, t, pos);  // this initialization is defined stupidly.  therefore, t[i] gets re-initialized immediately after.  
+//	cout << "Defined:  BB1Strip(nn, sn, cal, dcal, res, dres, t, pos):" << endl;
+//	cout << nn << "\t" << sn  << "\t" << cal << "\t" << dcal << "\t"
+//	     << res << "\t" << dres << "\t" << t << "\t" << pos << endl;
     for (int i = 0; i < 6; i++) 
       {
         strip[nn].t[i] = t[i];
-
       }
     //    cout << "Strip " << nn << " cal = " << cal << endl;
     //    cout << t[2] << "\t" << strip[nn].t[2] << endl;
@@ -294,7 +298,7 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
         zmax = z;
       }
     }
-    xstrips_sorted.push_back(xstrips[zmax]);
+    xstrips_sorted.push_back(xstrips[zmax]);  // xstrips is a list of strip numbers ...
     xstrips.erase(xstrips.begin()+zmax);
   } while (xstrips.size() > 0);
   do {
@@ -315,24 +319,34 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
     for (int ii = 0; ii < 20; ii++) cout << "bb1";
     cout << endl;
     cout << "X-strips above individual thresholds:" << endl;
-    cout << "ntuple#, strip#, energy, resolution" << endl;
+    cout << "ntuple#, strip#, energy, resolution, xpos, xstrips_sorted[ii], cal" << endl;
     for (unsigned int ii = 0; ii < xstrips_sorted.size(); ii++) 
     {
       BB1Strip x = xDet.GetStripByStripN(xstrips_sorted[ii]);
-      cout << x.GetNtupleNumber() << "\t"
-           << x.GetStripNumber() << "\t"
+      cout << x.GetNtupleNumber() << "\t"  // GetNtupleNumber() returns nn
+           << x.GetStripNumber() << "\t"   // GetStripNumber() returns sn
            << x.GetEnergy() << "\t"
-           << x.GetResolution() << endl;
+           << x.GetResolution() << "\t"
+           << x.GetPos() << "="
+           << xDet.GetPositionForStrip(xstrips_sorted[ii]) << "\t"
+           << xstrips_sorted[ii] << "\t"
+           << x.GetCalibration() << endl;
+//     posx = xDet.GetPositionForStrip(smaxx);
+
     }
     cout << "Y-strips above individual thresholds:" << endl;
-    cout << "ntuple#, strip#, energy, resolution" << endl;
+    cout << "ntuple#, strip#, energy, resolution, ypos, ystrips_sorted[ii]" << endl;
     for (unsigned int ii = 0; ii < ystrips_sorted.size(); ii++) 
     {
       BB1Strip y = yDet.GetStripByStripN(ystrips_sorted[ii]);
       cout << y.GetNtupleNumber() << "\t"
            << y.GetStripNumber() << "\t"
            << y.GetEnergy() << "\t"
-           << y.GetResolution() << endl;        
+           << y.GetResolution() << "\t" //<< endl;        
+           << y.GetPos() << "=" 
+           << yDet.GetPositionForStrip(ystrips_sorted[ii]) << "\t"
+           << ystrips_sorted[ii] << "\t"
+           << y.GetCalibration() << endl;
     }
 
   }
@@ -364,7 +378,7 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
       }
       r.twoHits = true;
 
-      h.xpos = xDet.GetPositionForStrip(xstrips_sorted[0]);
+      h.xpos = xDet.GetPositionForStrip(xstrips_sorted[0]); // argument should be 'sn'
       h.ypos = yDet.GetPositionForStrip(ystrips_sorted[0]);
       double enext = xs[0].GetEnergy();
       double eneyt = ys[0].GetEnergy();
