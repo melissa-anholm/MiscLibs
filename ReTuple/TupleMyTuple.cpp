@@ -42,14 +42,14 @@ using std::endl;
 using std::string;
 using std::stringstream;
 using std::vector;
-using std::make_pair;
+using std::make_pair;  // unused?
 using std::pair;
 using std::min;
 
-#define on_trinatdaq 1
+//#define on_trinatdaq 1
 
 bool is_blinded = false;
-bool is_g4      = false;
+bool is_g4      = true;
 
 int version = 6;
 
@@ -636,6 +636,9 @@ int main(int argc, char *argv[])
 //	cout << "These branches will be strip detector branches." << endl;
 	BB1Detector stripdetector[2][2];
 	string tdiff_file[2] = {bb1_prefix+"bb1_u_tdiff.dat", bb1_prefix+"bb1_l_tdiff.dat"};  // WHAT DOES THIS SHIT EVEN DO FOR G4 DATA?  ... I think it's fine, because I'll just set everything to be the same.
+//	tdiff_file[0] = bb1_prefix+"bb1_u_tdiff.dat";  
+//	tdiff_file[1] = bb1_prefix+"bb1_l_tdiff.dat";  
+
 	if(!is_g4)
 	{
 		stripdetector[t][x] = BB1Detector(bb1_prefix + "bb1_calibration_" + "UX.dat");
@@ -1013,13 +1016,16 @@ int main(int argc, char *argv[])
 		N_hits_scint_t = scint_time_t->size();
 		N_hits_scint_b = scint_time_b->size();
 		
+		if(upper_E < 10.0) {N_hits_scint_t=0;}
+		if(lower_E < 10.0) {N_hits_scint_b=0;}
+		
 		if(scint_time_t->size()>0 || scint_time_b->size()>0)
 		{
 			// include LED and photodiode events here.
 			is_other = kTRUE;
 		}
 		
-		if( led_count==0 && photodiode_count==0 && (scint_time_t->size()>0 || scint_time_b->size()>0) )
+		if( led_count==0 && photodiode_count==0 && (N_hits_scint_t>0 || N_hits_scint_b>0) )
 		{
 		//	is_other = kTRUE;
 			for(int detector=0; detector <=1; detector++)
