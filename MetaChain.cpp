@@ -20,13 +20,15 @@ using std::string;
 
 #include "treeql_replacement.cpp"
 
+//#include "location.cpp"
 
-#define metachain_on_trinatdaq 1
+
+//#define metachain_on_trinatdaq 1
+
 //#define XSTR(x) #x
 //#define STR(x) XSTR(x)
 
-
-#ifdef metachain_on_trinatdaq
+#ifdef weareontrinatdaq
 string br_path = "/data/trinat/S1188_2014_blinded/";
 string be_path = "/data/trinat/S1188_2014_blinded/";
 string bf_path = "/home/trinat/anholm/Friends/";  // BAD!!
@@ -52,6 +54,9 @@ string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
 string g4f_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
 
 #endif
+
+string metadata_namestub = "MetaData.txt";  // full path is g4_path+metadatanamestub
+
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 
 
@@ -71,36 +76,6 @@ string get_datafilename(string path, int runno, bool use_blinded=false)
 	} 
 	ss << ".root";
 	
-	fname = ss.str();
-	
-	return fname;
-}
-
-string get_simfilename(string path, int runno)
-{	
-	string fname;
-	std::stringstream ss;
-	ss.str( std::string() );
-	ss.clear();
-	
-	ss << path << "output_" << runno;
-	ss << ".root";
-	
-	fname = ss.str();
-	
-	return fname;
-}
-
-string get_simfriendname(string path, int runno)
-{	
-	string fname;
-	std::stringstream ss;
-	ss.str( std::string() );
-	ss.clear();
-	
-	ss << path << "friend_" << runno;
-	ss << ".root";
-
 	fname = ss.str();
 	
 	return fname;
@@ -260,35 +235,8 @@ TChain * get_chain_from_Efield(double Efield, bool use_blinded=false)
 					friendname = get_datafriendname(friendpath, i, use_blinded);
 					friend_chain -> Add(friendname.c_str());
 				}
-	//			else if(runs.good_recoil[i] == true)
-	//			{
-	//				if( runs.usable[i]==true)
-	//				{
-	//					cout << "Using run " << i << endl;
-	//					filename = get_datafilename(r_path, i);
-	//					tree_chain -> Add(filename.c_str());
-	//					
-	//					friendname = get_datafriendname(f_path, i);
-	//					friend_chain -> Add(friendname.c_str());
-	//				}
-			//		else if(use_shitty==true)
-			//		{
-			//			// don't do anything.
-			//			cout << "Using run " << i << " (shitty)." << endl;
-			//			filename = get_datafilename(r_path, i);
-			//			tree_chain -> Add(filename.c_str());
-			//			
-			//			friendname = get_datafriendname(f_path, i);
-			//			friend_chain -> Add(friendname.c_str());
-			//		}
-		//			else // if use_shitty==false and runs.usable[i]==false.
-		//			{
-		//				cout << "Skipping Run " << i << endl;
-		//			}
-	//			}
 			}
 		}
-	//	tree_chain -> AddFriend("friendtuple");
 		tree_chain -> AddFriend(friend_chain);
 	}
 	return tree_chain;
@@ -560,14 +508,84 @@ TChain * get_recoil_chain_for_all(bool use_blinded=false)
 
 // ====================================== //
 // Newer TChains for Simulations:
+string get_simfilename(string path, int runno)
+{	
+	string fname;
+	std::stringstream ss;
+	ss.str( std::string() );
+	ss.clear();
+	
+	ss << path << "output_" << runno;
+	ss << ".root";
+	
+	fname = ss.str();
+	
+	return fname;
+}
+
+string get_simfilename(TTree * MetaTree, int runno)
+{	
+	string namestub;
+	string fname;
+	
+	int this_run = 0;
+	MetaTree -> SetBranchAddress("Run", &this_run);
+	char this_filename[256];
+	MetaTree -> SetBranchAddress("Filename", &this_filename);
+
+	int nentries = MetaTree -> GetEntries();
+	for(int i=0; i<nentries; i++)
+	{
+		MetaTree -> GetEntry(i);
+		if(runno==this_run)
+		{
+			namestub = string(this_filename);
+		}
+	}
+	fname = g4_path + namestub;
+	return fname;
+}
+
+string get_simfriendname(string path, int runno)
+{	
+	string fname;
+	std::stringstream ss;
+	ss.str( std::string() );
+	ss.clear();
+	
+	ss << path << "friend_" << runno;
+	ss << ".root";
+
+	fname = ss.str();
+	
+	return fname;
+}
+
 
 TTree * load_metadata_tree(string metadatafilename)
 {
 	TTree *MetaTree = new TTree();
-//	int nrows = toftree -> ReadFile(metadatafilename.c_str());
 	int nentries = MetaTree -> ReadFile(metadatafilename.c_str());
 	return MetaTree;
 }
+
+TChain * get_single_simtree(int runno)
+{
+	string metadatafilename = g4_path + metadata_namestub;
+	TTree *MetaTree = load_metadata_tree(metadatafilename);
+	
+	string filename = get_simfilename(MetaTree, runno);
+	string friendname = get_simfriendname(g4f_path, runno);
+	
+	TChain * tree_chain   = new TChain("ntuple");
+	TChain * friend_chain = new TChain("friendtuple");
+	tree_chain -> Add(filename.c_str());
+	friend_chain -> Add(friendname.c_str());
+	
+	tree_chain -> AddFriend(friend_chain);
+	return tree_chain;
+}
+
 
 vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 {
@@ -579,8 +597,7 @@ vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 //	MetaTree -> SetBranchAddress("Filename", filename);
 	double this_rho = 0.0;
 	MetaTree -> SetBranchAddress("Rho", &this_rho);
-	
-	TChain * tree_chain = new TChain("ntuple");
+//	TChain * tree_chain = new TChain("ntuple");
 
 	int nentries = MetaTree -> GetEntries();
 	if(maxrun != 0)
@@ -616,8 +633,6 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 	
 	int run = 0;
 	MetaTree -> SetBranchAddress("Run", &run);
-//	char*  filename = new char[256];
-//	MetaTree -> SetBranchAddress("Filename", filename);
 	double this_rho = 0.0;
 	MetaTree -> SetBranchAddress("Rho", &this_rho);
 	
@@ -648,6 +663,83 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 }
 
 
+/*
+string int_to_string(int x)
+{
+	std::ostringstream o;
+	if (!(o << x))
+		cout << "Bad conversion!" << endl;
+	return o.str();
+}
+*/
+
+
+void meta_hadd_physlist(string use_this_physlist)  // this function is just a kludge.  Still.
+{
+	string original_fname = g4_path+metadata_namestub;
+//	string archive_fname  = g4_path+"MetaData_old.txt";
+	TTree * MetaTree = load_metadata_tree(original_fname);
+
+//Run/I:Filename/C:BadFlag/I:Efield/D:Rho/D:EventsGenerated/I:EventsSaved/I:SaveEventTypes/C:Polarization/D:Alignment/D:MinCosTheta/D:Efield_Uniformity/O:StepperType/I:StepperName/C:StepMax_mm/D:PhysicsListName/C:Trap_x_mm/D:Trap_y_mm/D:Trap_z_mm/D:Trap_sigma_x/D:Trap_sigma_y/D:Trap_sigma_z/D:Temperature/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:SailVelocity_x_mm_per_ms/D:SailVelocity_y_mm_per_ms/D:SailVelocity_z_mm_per_ms/D:ChargeState/I
+	// above:  that's old.
+	
+
+	int this_run = 0;
+	MetaTree -> SetBranchAddress("Run", &this_run);
+	vector<int> set_of_runs;
+
+	char this_filename[256];
+	MetaTree -> SetBranchAddress("Filename", &this_filename);
+	vector<string> set_of_filenames;
+	
+	int n_eventsgenerated;
+	int n_eventssaved;
+	MetaTree -> SetBranchAddress("EventsGenerated", &n_eventsgenerated);
+	MetaTree -> SetBranchAddress("EventsSaved",     &n_eventssaved);
+
+	char this_PhysicsListName[256];
+	MetaTree -> SetBranchAddress("PhysicsListName", &this_PhysicsListName);
+	
+	int total_eventsgenerated = 0;
+	int total_eventssaved = 0;
+	
+	cout << "Looking for runs with this PhysicsList:  " << use_this_physlist << endl;
+	int nentries = MetaTree -> GetEntries();
+	for(int i=0; i<nentries; i++)
+	{
+		MetaTree -> GetEntry(i);
+		
+	//	cout << "Run = " << this_run << "\tPhysicsListName = " << this_PhysicsListName << endl;
+		if(strcmp(this_PhysicsListName, use_this_physlist.c_str()) == 0)
+		{
+			total_eventsgenerated += n_eventsgenerated;
+			total_eventssaved += n_eventssaved;
+		//	cout << "Same!" << endl;
+			set_of_runs.push_back(this_run);
+			set_of_filenames.push_back( string(this_filename) );
+		//	cout << "this_filename = " << this_filename << endl;
+		}
+	}
+	cout << "Generated " << total_eventsgenerated << " events in total." << endl;
+	cout << "Expect to have " << total_eventssaved << " events saved." << endl;
+	cout << "Use these runs:  " << endl;
+	for(int i=0; i<set_of_runs.size(); i++)
+	{
+	//	cout << "i = " << i << " \tUse Run: " << set_of_runs[i] << endl;
+		cout << set_of_runs[i] << ", ";
+	}
+	cout << endl;
+	cout << "Try this command:  " << endl;
+	cout << "hadd output_10000.root ";
+	for(int i=0; i<set_of_runs.size(); i++)
+	{
+	//	cout << "output_" << set_of_runs[i] << ".root ";
+		cout << set_of_filenames[i] << " ";
+	}
+	cout << endl;
+//	cout << "That is all." << endl;
+}
+
 
 // ====================================== //
 // TChains for Simulations (do I ever even use these?):
@@ -660,27 +752,35 @@ string make_simfilename(string namestub, int runno)
 	
 	ss << g4_path << namestub << runno << ".root";
 	fname = ss.str();
-	
+//	cout << "created simfilename:  " << fname << endl;
+//	cout << "see, because g4_path=" << g4_path << ", namestub=" << namestub << ", runno=" << runno << endl;
 	return fname;
 }
 
-TChain * make_simchain(vector<int> use_these_runs, string namestub=g4_path+string("output_") )
+TChain * make_simchain(vector<int> use_these_runs, string namestub=string("output_") )
 {
 	int nruns = use_these_runs.size();
 	cout << "nruns = " << nruns << endl;
 
 	string filename = "";
 	TChain * simchain = new TChain("ntuple");
+	string friendname = "";
+	TChain * simfriendchain = new TChain("friendtuple");
 	for(int i=0; i<nruns; i++)
 	{
 		filename = make_simfilename(namestub, use_these_runs[i]);
+		friendname = get_simfriendname(g4f_path, use_these_runs[i]);
 		simchain -> Add(filename.c_str());
-		cout << "Added " << filename << endl;
+		cout << "Added " << filename << " to chain." << endl;
+		simfriendchain -> Add(friendname.c_str());
+		cout << "Added " << filename << " to friendchain." << endl;
 	}
-	
+	simchain -> AddFriend(simfriendchain);
+
 	return simchain;
 }
 
+/*
 class MetaTuple
 {
 public:
@@ -839,18 +939,12 @@ public:
 
 TChain * MetaTuple::LoadNewChain(MetaTuple CompTuple)
 {
-//	TFile * file;
-//	string filename;
 	TChain * tree_chain = new TChain("ntuple");
-	
-//	const char* fname;
-	
 	for(int i=0; i<nentries; i++)
 	{
 		MetaTree -> GetEntry(i);
 		if( Compare(CompTuple) )
 		{
-		//	fname = filename
 			tree_chain -> Add( (g4_path+string(filename)).c_str() ); // filename is already associated with the correct thing...
 			cout << "Adding " << filename << " to chain." << endl;
 		}
@@ -861,17 +955,11 @@ TChain * MetaTuple::LoadNewChain(MetaTuple CompTuple)
 
 TChain * MetaTuple::AddToChain(TChain* this_chain, MetaTuple CompTuple)
 {
-//	TFile * file;
-//	string filename;
-//	TChain * tree_chain = new TChain("ntuple");	
-//	const char* fname;
-	
 	for(int i=0; i<nentries; i++)
 	{
 		MetaTree -> GetEntry(i);
 		if( Compare(CompTuple) )
 		{
-		//	fname = filename
 			this_chain -> Add( (g4_path+string(filename)).c_str() ); // filename is already associated with the correct thing...
 			cout << "Adding " << filename << " to chain." << endl;
 		}
@@ -1119,7 +1207,7 @@ MetaTuple::MetaTuple(string metadatafilename)
 	cout << "MetaTuple created.  There are " << nentries << " rows." << endl;
 //	LoadMetaData();
 }
-
+*/
 
 
 

@@ -489,6 +489,8 @@ int main(int argc, char *argv[])
 	string fname;
 	string friend_fname;
 	double this_opdelay;
+	TTree * MetaTree;
+	// = load_metadata_tree(metadatafilename);
 	if(!is_g4)
 	{
 		// polarization classification overhead:
@@ -538,10 +540,11 @@ int main(int argc, char *argv[])
 			friend_fname = make_rootfilename(unblind_o_path+"friend00",runno);
 		}
 	}
-	else
+	else // 
 	{
-		this_opdelay = 0.0;
+//		MetaTree = load_metadata_tree(metadatafilename);
 		
+		this_opdelay = 0.0;
 		// FIX THESE.
 		fname  = make_rootfilename(g4_tree_path+"output_", runno);
 		friend_fname = make_rootfilename(g4_friend_path+"friend_", runno);
@@ -628,6 +631,11 @@ int main(int argc, char *argv[])
 		tree -> SetBranchAddress("TDC_PULSER_LED_Count", &led_count);
 		tree -> SetBranchAddress("TDC_PHOTO_DIODE_Count", &photodiode_count);
 	}
+//	else
+//	{
+//		
+//	}
+
 	vector<double> * scint_time_t = 0;
 	vector<double> * scint_time_b = 0;
 	tree -> SetBranchAddress("TDC_SCINT_TOP",    &scint_time_t);  
@@ -714,7 +722,21 @@ int main(int argc, char *argv[])
 	dl_x_pos -> clear();
 	dl_z_pos -> clear();
 	
+	// these are defined above, but only need to create new branches for g4 runs.
+//	UInt_t led_count = 0;
+//	UInt_t photodiode_count = 0;
+	vector<double> *tdc_photodiode = 0;
+	vector<double> *tdc_pulser_led = 0;
+	if(is_g4)
+	{
+		TBranch *led_count_branch = friend_tree -> Branch("TDC_PULSER_LED_Count", &led_count);
+		TBranch *photodiode_count_branch = friend_tree -> Branch("TDC_PHOTO_DIODE_Count", &photodiode_count);
+		TBranch *photodiode_vec_branch = friend_tree -> Branch("TDC_PHOTO_DIODE",&tdc_photodiode);
+		TBranch *led_vec_branch = friend_tree -> Branch("TDC_PULSER_LED",&tdc_pulser_led);
+	}
 	
+	// BB1s:  
+		
 	// LATER:  ADD BB1_R BRANCHES.  THOSE'LL BE USEFUL...
 	// new bb1 things:
 	vector<double> * bb1_t_x = 0;
@@ -902,7 +924,8 @@ int main(int argc, char *argv[])
 	Double_t polarization = 0.0;
 	if(is_g4)
 	{
-		TTree * MetaTree = load_metadata_tree(metadatafilename);
+	//	TTree * MetaTree = load_metadata_tree(metadatafilename);
+		MetaTree = load_metadata_tree(metadatafilename);
 		int this_runno;
 		MetaTree -> SetBranchAddress("Run", &this_runno);
 		double this_pol;
@@ -947,6 +970,16 @@ int main(int argc, char *argv[])
 		tree -> GetEntry(i);
 		//
 		
+		// photodiode and led events, for g4:
+		if(is_g4)
+		{ // I may not even need to do all this stuff explicitly, bc it never changes.
+			led_count = 0;
+			photodiode_count = 0;
+			tdc_photodiode -> clear();
+			tdc_pulser_led -> clear();
+		}
+		
+		// rMCP position stuff:
 		ion_count = ion_events->size();
 		if(!is_g4)
 		{
@@ -1007,19 +1040,15 @@ int main(int argc, char *argv[])
 		is_other = kFALSE;
 		
 		// BB1 shizzle:
-	//	bb1_t_pass = kFALSE;
-	//	bb1_b_pass = kFALSE;
-		
 		N_hits_bb1_t = 0;
 		N_hits_bb1_b = 0;
-		
 		N_hits_scint_t = scint_time_t->size();
 		N_hits_scint_b = scint_time_b->size();
 		
 		if(upper_E < 10.0) {N_hits_scint_t=0;}
 		if(lower_E < 10.0) {N_hits_scint_b=0;}
 		
-		if(scint_time_t->size()>0 || scint_time_b->size()>0)
+		if(N_hits_scint_t>0 || N_hits_scint_b>0)
 		{
 			// include LED and photodiode events here.
 			is_other = kTRUE;
@@ -1027,7 +1056,6 @@ int main(int argc, char *argv[])
 		
 		if( led_count==0 && photodiode_count==0 && (N_hits_scint_t>0 || N_hits_scint_b>0) )
 		{
-		//	is_other = kTRUE;
 			for(int detector=0; detector <=1; detector++)
 			{
 				for (int axis = 0; axis<=1; axis++) 
@@ -1171,17 +1199,20 @@ int main(int argc, char *argv[])
 		{
 			all_okay = kTRUE;  // covered.
 			is_polarized = kTRUE;
-			Bool_t is_unpolarized = kFALSE;
-			Bool_t is_ac = kFALSE;
-			int cyclecount = 50;
-				
-			Double_t upper_E;  // ok
-			Double_t lower_E;  // ok
-			Double_t upper_E_res;  // ok
-			Double_t lower_E_res;  // ok
-			
-			vector<double> *dl_x_pos = 0;  // ok
-			vector<double> *dl_z_pos = 0;  // ok
+			is_unpolarized = kFALSE;
+			is_ac = kFALSE;
+			cyclecount = 50;
+	//		Bool_t is_unpolarized = kFALSE;
+	//		Bool_t is_ac = kFALSE;
+	//		int cyclecount = 50;
+	//			
+	//		Double_t upper_E;  // ok
+	//		Double_t lower_E;  // ok
+	//		Double_t upper_E_res;  // ok
+	//		Double_t lower_E_res;  // ok
+	//		
+	//		vector<double> *dl_x_pos = 0;  // ok  // huh?  this is already there.
+	//		vector<double> *dl_z_pos = 0;  // ok  // 
 		}
 		else // if(!is_g4)
 		{
