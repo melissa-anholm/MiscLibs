@@ -82,6 +82,23 @@ vector<int> ones_like(vector<int> in_vec)
 	return out_vec;
 }
 
-
+vector<double> termbyterm_multiply(vector<double> vec_a, vector<double> vec_b)
+{
+	vector<double> empty;
+	if( vec_a.size() != vec_b.size())
+	{
+		std::cout << "Missized vectors!  Can't multiply." << std::endl;
+		return empty;
+	}
+	
+	int length = std::min(vec_a.size(), vec_b.size());
+	vector<double> vec_c = zeros(length);
+	for(int i=0; i<length; i++)
+	{
+		vec_c[i] = vec_a[i] * vec_b[i];
+	}
+	
+	return vec_c;
+}
 
 #endif

@@ -11,6 +11,8 @@ using std::vector;
 #include <Pythonic.cpp>
 
 //double v1192_to_ns = 100.0/1024.0;
+using std::string;
+
 
 /*
 TGraphErrors * make_TGraphErrors_like(TH1D * hist)
@@ -77,6 +79,31 @@ TGraphErrors * make_TGraphErrors(vector<double> x_avg, vector<double> y_avg, vec
 	
 	return my_TGraphErrors;
 }
+
+TGraph * make_TGraph(vector<double> x_avg, vector<double> y_avg, int color=int(kBlack))
+{
+	int N_points = std::min(x_avg.size(), y_avg.size());
+	
+	if( x_avg.size() != y_avg.size() )
+		{ std::cout << "* WARNING:  TGraphErrors input vectors have non-constant sizes.  Creating graph anyway." << std::endl; }
+
+	double * x = &x_avg[0];
+	double * y = &y_avg[0];
+//	double * x_err = &delta_x[0];
+//	double * y_err = &delta_y[0];
+	
+	TGraph * my_TGraph;
+	my_TGraph = new TGraph(N_points, x, y);
+	// kludge:
+	my_TGraph->SetMarkerStyle(21);
+	my_TGraph->SetMarkerSize(0.4);
+	my_TGraph->SetMarkerColor(color);
+	my_TGraph->SetLineColor(color);
+	
+	return my_TGraph;
+}
+
+
 
 TGraphErrors * make_TGraphErrors(vector<double> x_avg, vector<double> y_avg)
 {

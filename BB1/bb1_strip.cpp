@@ -27,6 +27,8 @@ BB1Strip::BB1Strip() {
   energy = 0.;
   denergy = 0.;
   maxT = 0;
+//pos = 32.45;
+pos = 0.0;
   for (int i = 0; i < 6; i++) t[i] = 0.;
 }
 
@@ -190,7 +192,9 @@ vector<double> BB1Detector::GetResolution() {
 
 double BB1Detector::GetPositionForStrip(int sn) 
 {
-  return GetStripByStripN(sn).GetPos();
+	double pos = GetStripByStripN(sn).GetPos();
+	return pos;
+//  return GetStripByStripN(sn).GetPos();
   // double pos = 0.0;
   // if (det == upper && pl == Y) {
   //   pos = 19.5 - double(sn);

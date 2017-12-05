@@ -22,7 +22,7 @@ class BB1Strip {
  public :
   BB1Strip();
   BB1Strip(int nn_, int sn_, double cal_, double dcal_, double res_,
-           double dres_, double* t_, double pos);
+           double dres_, double* t_, double pos_);
   double t[6];                  /* threshold for SN .25, .5, .75, 1, 2, 0.17 */
   double CalcEnergy(double adc);
   double GetResolution() {return res;};
@@ -43,7 +43,6 @@ class BB1Detector {
  private:
   vector<BB1Strip> strip;
  public :
-
 
   BB1Detector();
   BB1Detector(string fname);

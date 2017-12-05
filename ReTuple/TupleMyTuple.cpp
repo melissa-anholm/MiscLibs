@@ -85,8 +85,9 @@ int version = 6;
 #else  // NOT on trinatdaq.
 //
 	#define path_to_libs /Users/spiffyzha/Packages/MiscLibs
-
-	#include STR(path_to_libs/MetaChain.cpp)
+	
+	#include "/Users/spiffyzha/Packages/MiscLibs/MetaChain.cpp"
+//	#include STR(path_to_libs/MetaChain.cpp)
 	#include STR(path_to_libs/treeql_replacement.cpp)
 	#include STR(path_to_libs/BB1/bb1_strip.h)
 	#include STR(path_to_libs/mini_cal_maker.cpp)
