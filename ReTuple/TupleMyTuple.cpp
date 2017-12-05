@@ -48,8 +48,9 @@ using std::min;
 
 //#define on_trinatdaq 1
 
-bool is_blinded = false;
-bool is_g4      = true;
+bool is_blinded      = false;
+bool is_g4           = true;
+bool use_g4_metadata = true;
 
 int version = 6;
 
@@ -61,8 +62,9 @@ int version = 6;
 #ifdef on_trinatdaq
 //
 	#define path_to_libs /home/trinat/anholm/MiscLibs
-
-	#include STR(path_to_libs/MetaChain.cpp)
+	
+	#include "/home/trinat/anholm/MiscLibs/MetaChain.cpp"
+//	#include STR(path_to_libs/MetaChain.cpp)
 	#include STR(path_to_libs/treeql_replacement.cpp)
 	#include STR(path_to_libs/BB1/bb1_strip.h)
 	#include STR(path_to_libs/mini_cal_maker.cpp)
@@ -543,11 +545,18 @@ int main(int argc, char *argv[])
 	}
 	else // 
 	{
-//		MetaTree = load_metadata_tree(metadatafilename);
 		
 		this_opdelay = 0.0;
 		// FIX THESE.
-		fname  = make_rootfilename(g4_tree_path+"output_", runno);
+		if(use_g4_metadata)
+		{
+			MetaTree = load_metadata_tree(metadatafilename);
+			fname = get_simfilename(MetaTree, runno);
+		}
+		else
+		{
+			fname  = make_rootfilename(g4_tree_path+"output_", runno);
+		}
 		friend_fname = make_rootfilename(g4_friend_path+"friend_", runno);
 	}
 	
@@ -560,6 +569,9 @@ int main(int argc, char *argv[])
 	}
 	TTree *tree = new TTree;  // Fix this.  This needs to be a TChain now?  ... No, no it doesn't.
 	tree = (TTree*)f->Get("ntuple");
+
+	TFile *friendfile = new TFile(friend_fname.c_str(), "RECREATE");
+	TTree *friend_tree = new TTree("friendtuple", "friendtuple");
 	
 	UInt_t upper_qdc_int;
 	UInt_t lower_qdc_int;
@@ -691,9 +703,7 @@ int main(int argc, char *argv[])
 
 	// 
 	// Friend Tree:
-	cout << "There.  Onwards to the friend tree." << endl;
-	TFile *friendfile = new TFile(friend_fname.c_str(), "RECREATE");
-	TTree *friend_tree = new TTree("friendtuple", "friendtuple");
+//	cout << "There.  Onwards to the friend tree." << endl;
 	
 	Bool_t all_okay = kTRUE;
 	Bool_t is_polarized = kFALSE;
@@ -932,7 +942,7 @@ int main(int argc, char *argv[])
 		double this_pol;
 		MetaTree -> SetBranchAddress("Polarization", &this_pol);
 		double final_pol;
-		int final_entry;
+	//	int final_entry;
 	
 		int nmetaentries = MetaTree -> GetEntries();
 		cout << "nmetaentries = " << nmetaentries << endl;
@@ -942,12 +952,12 @@ int main(int argc, char *argv[])
 			if(this_runno == runno)
 			{
 				final_pol = this_pol;
-				final_entry = i;
+		//		final_entry = i;
 				break;
 			}
 		}
-		cout << "final_pol = " << final_pol << endl;
-		cout << "final_entry = " << final_entry << endl;
+	//	cout << "final_pol = " << final_pol << endl;
+	//	cout << "final_entry = " << final_entry << endl;
 		
 		polarization = final_pol;
 		if(final_pol >= 0.0)
