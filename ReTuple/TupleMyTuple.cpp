@@ -47,6 +47,7 @@ using std::pair;
 using std::min;
 
 //#define on_trinatdaq 1
+#define quasi_on_trinatdaq 1
 
 bool is_blinded      = false;
 bool is_g4           = true;
@@ -65,10 +66,11 @@ int version = 6;
 	
 	#include "/home/trinat/anholm/MiscLibs/MetaChain.cpp"
 //	#include STR(path_to_libs/MetaChain.cpp)
-	#include STR(path_to_libs/treeql_replacement.cpp)
-	#include STR(path_to_libs/BB1/bb1_strip.h)
-	#include STR(path_to_libs/mini_cal_maker.cpp)
-	
+	#include "/home/trinat/anholm/MiscLibs/treeql_replacement.cpp"
+	#include "/home/trinat/anholm/MiscLibs/BB1/bb1_strip.h"
+	#include "/home/trinat/anholm/MiscLibs/mini_cal_maker.cpp"
+
+/*
 	string blind_r_path = "/data/trinat/S1188_2014_blinded/";
 	string blind_e_path = "/data/trinat/S1188_2014_blinded/";
 	string blind_o_path = "/home/trinat/anholm/Friends/";
@@ -80,20 +82,19 @@ int version = 6;
 	string g4_tree_path     = "/home/trinat/anholm/Trinat_Geant/build/Output/";              //
 	string g4_friend_path   = "/home/trinat/anholm/Trinat_Geant/build/Output/Friends/";      //
 	string metadatafilename = "/home/trinat/anholm/Trinat_Geant/build/Output/MetaData.txt";  //
-
+*/
 	string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
-
 //
 #else  // NOT on trinatdaq.
 //
 	#define path_to_libs /Users/spiffyzha/Packages/MiscLibs
 	
 	#include "/Users/spiffyzha/Packages/MiscLibs/MetaChain.cpp"
-//	#include STR(path_to_libs/MetaChain.cpp)
-	#include STR(path_to_libs/treeql_replacement.cpp)
-	#include STR(path_to_libs/BB1/bb1_strip.h)
-	#include STR(path_to_libs/mini_cal_maker.cpp)
+	#include "/Users/spiffyzha/Packages/MiscLibs/treeql_replacement.cpp"
+	#include "/Users/spiffyzha/Packages/MiscLibs/BB1/bb1_strip.h"
+	#include "/Users/spiffyzha/Packages/MiscLibs/mini_cal_maker.cpp"
 
+/*
 	string blind_r_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_2014/";
 	string blind_e_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
 	string blind_o_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Friends/";
@@ -105,12 +106,24 @@ int version = 6;
 	string g4_tree_path     = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
 	string g4_friend_path   = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
 	string metadatafilename = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/MetaData.txt";
-
+*/
 	string bb1_prefix = "/Users/spiffyzha/Packages/MiscLibs/BB1/";  // 
-
 //
 #endif
 //
+
+// import the old variable names from how they're defined in metatuple:
+string blind_r_path = br_path;
+string blind_e_path = be_path;
+string blind_o_path = bf_path;
+
+string unblind_r_path = ur_path;
+string unblind_e_path = ue_path;
+string unblind_o_path = uf_path;
+
+string g4_tree_path     = g4_path;
+string g4_friend_path   = g4f_path;
+string metadatafilename = metadata_name;
 
 
 string make_rootfilename(string name, int parameter, string name2=string(""))
@@ -484,11 +497,6 @@ int main(int argc, char *argv[])
 	TObjString * version_string = make_tstring(string("ReTuple version "), version);
 	cout << "ReTuple version " << version << endl;
 	
-	if(is_g4)
-	{ 
-		is_blinded = false; 
-	}
-	
 	string fname;
 	string friend_fname;
 	double this_opdelay;
@@ -545,11 +553,12 @@ int main(int argc, char *argv[])
 	}
 	else // 
 	{
-		
+		is_blinded = false; 
 		this_opdelay = 0.0;
 		// FIX THESE.
 		if(use_g4_metadata)
 		{
+			cout << "Looking at the metadata..." << endl;
 			MetaTree = load_metadata_tree(metadatafilename);
 			fname = get_simfilename(MetaTree, runno);
 		}
@@ -559,6 +568,8 @@ int main(int argc, char *argv[])
 		}
 		friend_fname = make_rootfilename(g4_friend_path+"friend_", runno);
 	}
+	cout << "fname = " << fname << endl;
+	cout << "friend_fname = " << friend_fname << endl;
 	
 	// Original Tree:
 	TFile *f = new TFile(fname.c_str(), "READ");
@@ -572,6 +583,7 @@ int main(int argc, char *argv[])
 
 	TFile *friendfile = new TFile(friend_fname.c_str(), "RECREATE");
 	TTree *friend_tree = new TTree("friendtuple", "friendtuple");
+	cout << "Loaded up the ntuple and created the new friendtuple." << endl;
 	
 	UInt_t upper_qdc_int;
 	UInt_t lower_qdc_int;

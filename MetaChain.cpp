@@ -28,7 +28,7 @@ using std::string;
 //#define XSTR(x) #x
 //#define STR(x) XSTR(x)
 
-#ifdef weareontrinatdaq
+#ifdef on_trinatdaq
 string br_path = "/data/trinat/S1188_2014_blinded/";
 string be_path = "/data/trinat/S1188_2014_blinded/";
 string bf_path = "/home/trinat/anholm/Friends/";  // BAD!!
@@ -40,7 +40,7 @@ string uf_path = "/home/trinat/anholm/Friends/";
 string g4_path  = "/home/trinat/anholm/Trinat_Geant/build/Output/";
 string g4f_path = "/home/trinat/anholm/Trinat_Geant/build/Output/Friends/";
 //string metadatafilename = "/home/trinat/anholm/Trinat_Geant/build/Output/MetaData.txt";
-
+string metadata_name = "/home/trinat/anholm/G4_Output/MetaData.txt";
 #else
 string br_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
 string be_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
@@ -50,12 +50,18 @@ string ur_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Recoils_2014/";
 string ue_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons_2014/";
 string uf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
 
-string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
+//string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
+#ifdef quasi_on_trinatdaq
+	string g4_path  = "/Users/spiffyzha/Desktop/TempMount/anholm/G4_Output/";
+#else
+	string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
+#endif
 string g4f_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
-
+string metadata_name = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/MetaData.txt";
 #endif
 
-string metadata_namestub = "MetaData.txt";  // full path is g4_path+metadatanamestub
+
+//string metadata_namestub = "MetaData.txt";  // full path is g4_path+metadatanamestub
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 
@@ -571,7 +577,7 @@ TTree * load_metadata_tree(string metadatafilename)
 
 TChain * get_single_simtree(int runno)
 {
-	string metadatafilename = g4_path + metadata_namestub;
+	string metadatafilename = metadata_name; //g4_path + metadata_namestub;
 	TTree *MetaTree = load_metadata_tree(metadatafilename);
 	
 	string filename = get_simfilename(MetaTree, runno);
@@ -676,7 +682,7 @@ string int_to_string(int x)
 
 void meta_hadd_physlist(string use_this_physlist)  // this function is just a kludge.  Still.
 {
-	string original_fname = g4_path+metadata_namestub;
+	string original_fname = metadata_name;//g4_path+metadata_namestub;
 //	string archive_fname  = g4_path+"MetaData_old.txt";
 	TTree * MetaTree = load_metadata_tree(original_fname);
 
