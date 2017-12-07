@@ -101,4 +101,23 @@ vector<double> termbyterm_multiply(vector<double> vec_a, vector<double> vec_b)
 	return vec_c;
 }
 
+vector<double> termbyterm_divide(vector<double> vec_a, vector<double> vec_b) // vec_a/vec_b
+{
+	vector<double> empty;
+	if( vec_a.size() != vec_b.size())
+	{
+		std::cout << "Missized vectors!  Can't divide." << std::endl;
+		return empty;
+	}
+	
+	int length = std::min(vec_a.size(), vec_b.size());
+	vector<double> vec_c = zeros(length);
+	for(int i=0; i<length; i++)
+	{
+		vec_c[i] = double(vec_a[i]) / double(vec_b[i]);
+	}
+	
+	return vec_c;
+}
+
 #endif
