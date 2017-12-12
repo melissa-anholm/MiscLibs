@@ -37,8 +37,8 @@ string ur_path = "/home/trinat/online/analyzedFiles_2014/";
 string ue_path = "/home/trinat/online/analyzedFiles_2014/";
 string uf_path = "/home/trinat/anholm/Friends/";  
 
-string g4_path  = "/home/trinat/anholm/Trinat_Geant/build/Output/";
-string g4f_path = "/home/trinat/anholm/Trinat_Geant/build/Output/Friends/";
+string g4_path  = "/home/trinat/anholm/G4_Output/";
+string g4f_path = "/home/trinat/anholm/G4_Output/";
 //string metadatafilename = "/home/trinat/anholm/Trinat_Geant/build/Output/MetaData.txt";
 string metadata_name = "/home/trinat/anholm/G4_Output/MetaData.txt";
 #else

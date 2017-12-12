@@ -46,8 +46,8 @@ using std::make_pair;  // unused?
 using std::pair;
 using std::min;
 
-//#define on_trinatdaq 1
-#define quasi_on_trinatdaq 1
+#define on_trinatdaq 1
+//#define quasi_on_trinatdaq 1
 
 bool is_blinded      = false;
 bool is_g4           = true;

@@ -1,6 +1,7 @@
 #ifndef INCLUDE_GRAPHEXTRAS
 #define INCLUDE_GRAPHEXTRAS 1
 
+#include <cmath> // sqrt
 #include <vector>
 using std::vector;
 
@@ -8,7 +9,7 @@ using std::vector;
 #include <TGraphErrors.h>
 
 //#include <HistExtras.cpp>
-#include <Pythonic.cpp>
+#include "Pythonic.cpp"
 
 //double v1192_to_ns = 100.0/1024.0;
 using std::string;
