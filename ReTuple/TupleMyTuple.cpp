@@ -21,6 +21,8 @@
 // already there in version 5.  New this version is backscatter 
 // event classification.
 // 
+// 11.12.2017:  version 7:  use overall BB1 threshold too!  60 keV.
+// 
 // ==================================================================== //
 #include <stdlib.h>
 #include <fstream>
