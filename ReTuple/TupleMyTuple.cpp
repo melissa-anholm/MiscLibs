@@ -21,6 +21,8 @@
 // already there in version 5.  New this version is backscatter 
 // event classification.
 // 
+// 11.12.2017:  version 7:  use overall BB1 threshold too!  60 keV.
+// 
 // ==================================================================== //
 #include <stdlib.h>
 #include <fstream>
@@ -47,13 +49,13 @@ using std::pair;
 using std::min;
 
 //#define on_trinatdaq 1
-#define quasi_on_trinatdaq 1
+//#define quasi_on_trinatdaq 1
 
 bool is_blinded      = false;
-bool is_g4           = true;
+bool is_g4           = false;
 bool use_g4_metadata = true;
 
-int version = 6;
+int version = 7;
 
 #define XSTR(x) #x
 #define STR(x) XSTR(x)
@@ -112,7 +114,7 @@ int version = 6;
 #endif
 //
 
-// import the old variable names from how they're defined in metatuple:
+// import the old variable names from how they're defined in metachain:
 string blind_r_path = br_path;
 string blind_e_path = be_path;
 string blind_o_path = bf_path;
@@ -474,6 +476,7 @@ enum bb1_axis
 };
 double sigma_cut = 3.0;
 int threshold_index = 0;
+double bb1_energy_threshold = 60.0;  // Ben uses 60 keV
 
 double get_r(double x, double y)
 {
@@ -1106,7 +1109,7 @@ int main(int argc, char *argv[])
 				bb1_hit[detector] = bb1_result[detector].hit;
 				bb1_sechit[detector] = bb1_result[detector].secHit;
 			
-				if(bb1_hit[detector].pass == true)
+				if(bb1_hit[detector].pass == true && bb1_hit[detector].energy >= bb1_energy_threshold )
 				{
 					if(detector == t)
 					{
@@ -1129,7 +1132,7 @@ int main(int argc, char *argv[])
 					//
 					if(bb1_result[detector].twoHits == true)
 					{
-						if(bb1_sechit[detector].pass == true)
+						if(bb1_sechit[detector].pass == true && bb1_hit[detector].energy >= bb1_energy_threshold)
 						{
 							if(detector == t)
 							{
