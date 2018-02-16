@@ -182,6 +182,7 @@ int hist_type::set_other_parameters()
 		user_xmin = 50;
 		user_xmax = 150;
 	}
+	/*
 	else if (type == std::string("cal_e_scint_tof")) // electron tof w.r.t. scint time // + offset.
 	{
 		nbins = 4000;
@@ -190,6 +191,16 @@ int hist_type::set_other_parameters()
 		units = std::string("electron - scint [ns]");
 		user_xmin = -90.0;
 		user_xmax = -50.0;
+	}
+	*/
+	else if (type == std::string("cal_e_scint_tof")) // electron tof w.r.t. scint time // + offset.
+	{
+		nbins = 400;
+		xmin = (-200.5+1.0)*v1192_to_ns;
+		xmax = (200.5)*v1192_to_ns;
+		units = std::string("electron - scint - offset [ns]");
+		user_xmin = 4.0;
+		user_xmax = 18.0;
 	}
 	else if (type == std::string("cal_scint_tof"))  // for eg: scint_t - scint_b.
 	{
@@ -495,6 +506,15 @@ int hist_type::set_other_parameters()
 		nbins = 82;
 		user_xmin = xmin;
 		user_xmax = xmax;
+	}
+	else if(type==std::string("bb1_energy"))
+	{
+		units = std::string("Calibrated BB1 Energy (keV)");
+		xmin = -0.5;
+		xmax = xmin + 6000.0;
+		nbins = 600;
+		user_xmin = xmin;
+		user_xmax = 400.5;
 	}
 	else if(type==std::string("runno")) 
 	{

@@ -19,10 +19,10 @@ using std::string;
 #include "TBranch.h"  // do I need this?
 
 #include "treeql_replacement.cpp"
+#include "location.cpp"
 
-//#include "location.cpp"
 
-
+/*
 //#define metachain_on_trinatdaq 1
 
 //#define XSTR(x) #x
@@ -59,7 +59,7 @@ string uf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
 string g4f_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
 string metadata_name = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/MetaData.txt";
 #endif
-
+*/
 
 //string metadata_namestub = "MetaData.txt";  // full path is g4_path+metadatanamestub
 

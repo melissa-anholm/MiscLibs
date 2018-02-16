@@ -145,8 +145,8 @@ TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_his
 			r2p = r2p_hist -> GetBinContent(i);
 			r2m = r2m_hist -> GetBinContent(i);
 			
-			bin_content = get_asymmetry(r1p, r1m, r2p, r2m);
-			bin_err = get_asymmetry_err(r1p, r1m, r2p, r2m);
+		//	bin_content = get_asymmetry(r1p, r1m, r2p, r2m);
+		//	bin_err = get_asymmetry_err(r1p, r1m, r2p, r2m);
 	//		cout << "bin " << i << ":\t";
 	//		cout << bin_content << " +/- " << bin_err << endl;
 			
