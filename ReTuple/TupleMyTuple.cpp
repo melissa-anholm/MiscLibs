@@ -31,11 +31,9 @@
 #include <sstream> 
 #include <utility>
 
-//#include <TApplication.h>
 #include <TBranch.h>
 #include <TFile.h>
 #include <TTree.h>
-//#include <TChain.h>
 #include <TObjString.h>
 
 using std::cout;
@@ -49,7 +47,7 @@ using std::pair;
 using std::min;
 
 #define on_trinatdaq 1
-//#define quasi_on_trinatdaq 1
+
 
 bool is_blinded      = false;
 bool is_g4           = false;
@@ -57,64 +55,31 @@ bool use_g4_metadata = true;
 
 int version = 7;
 
-#define XSTR(x) #x
-#define STR(x) XSTR(x)
+//#define XSTR(x) #x
+//#define STR(x) XSTR(x)
 
 
 //
 #ifdef on_trinatdaq
-//
-	#define path_to_libs /home/trinat/anholm/MiscLibs
-	
 	#include "/home/trinat/anholm/MiscLibs/MetaChain.cpp"
-//	#include STR(path_to_libs/MetaChain.cpp)
 	#include "/home/trinat/anholm/MiscLibs/treeql_replacement.cpp"
 	#include "/home/trinat/anholm/MiscLibs/BB1/bb1_strip.h"
 	#include "/home/trinat/anholm/MiscLibs/mini_cal_maker.cpp"
 
-/*
-	string blind_r_path = "/data/trinat/S1188_2014_blinded/";
-	string blind_e_path = "/data/trinat/S1188_2014_blinded/";
-	string blind_o_path = "/home/trinat/anholm/Friends/";
-
-	string unblind_r_path = "/home/trinat/online/analyzedFiles_2014/";
-	string unblind_e_path = "/home/trinat/online/analyzedFiles_2014/";
-	string unblind_o_path = "/home/trinat/anholm/Friends/";
-
-	string g4_tree_path     = "/home/trinat/anholm/Trinat_Geant/build/Output/";              //
-	string g4_friend_path   = "/home/trinat/anholm/Trinat_Geant/build/Output/Friends/";      //
-	string metadatafilename = "/home/trinat/anholm/Trinat_Geant/build/Output/MetaData.txt";  //
-*/
 	string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
 //
 #else  // NOT on trinatdaq.
-//
-	#define path_to_libs /Users/spiffyzha/Packages/MiscLibs
-	
 	#include "/Users/spiffyzha/Packages/MiscLibs/MetaChain.cpp"
 	#include "/Users/spiffyzha/Packages/MiscLibs/treeql_replacement.cpp"
 	#include "/Users/spiffyzha/Packages/MiscLibs/BB1/bb1_strip.h"
 	#include "/Users/spiffyzha/Packages/MiscLibs/mini_cal_maker.cpp"
-
-/*
-	string blind_r_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_2014/";
-	string blind_e_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
-	string blind_o_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Friends/";
-
-	string unblind_r_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Recoils_2014/";
-	string unblind_e_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons_2014/";
-	string unblind_o_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
-
-	string g4_tree_path     = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
-	string g4_friend_path   = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
-	string metadatafilename = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/MetaData.txt";
-*/
+	
 	string bb1_prefix = "/Users/spiffyzha/Packages/MiscLibs/BB1/";  // 
 //
 #endif
 //
 
-// import the old variable names from how they're defined in metachain:
+// import the old variable names from how they're defined in MetaChain.cpp:
 string blind_r_path = br_path;
 string blind_e_path = be_path;
 string blind_o_path = bf_path;
@@ -379,13 +344,13 @@ Double_t get_lower_E_res(double lower_E, int run, bool g4data=false)
 
 
 // Cycle Counter:
-double time_to_polarize = 100.0;   // ns.
+double time_to_polarize = 100.0;   // microsec.
 long rollover_count = 1073741824;  // acmot/op seems to loop at ~1038e6.  "Usually."
 int ac_cyclelength = 97260;
 //int dc_slop = int(12000/50); // events read out 12 microseconds?  I think that's right...
 class my_prev_event
 {
-// kludge to deep copy timestamps.
+// kludge to copy timestamps.
 private:
 	int timestamp;
 	int timestamp_prev;
@@ -421,7 +386,6 @@ bool check_pol(int acmottime, double op_delay)
 {
 	int ac_cycle_mus = 97260*50/1000; // in microseconds.  4863 mus.
 	int actime = 2956;
-//	double time_to_polarize = 100.0;
 	double time_anomaly = 32.0;  // it's, what, 200?  33?  ...32.
 	double timing_jitter = 5.0;  // 
 	
@@ -499,6 +463,10 @@ int main(int argc, char *argv[])
 	}
 	TObjString * version_string = make_tstring(string("ReTuple version "), version);
 	cout << "ReTuple version " << version << endl;
+	cout << "For BB1s, we use a " << sigma_cut << " sigma energy agreement cut." << endl;
+	cout << "For BB1s, we use SNR threshold \'index\' " << threshold_index << "." << endl;
+	cout << "For BB1s, we use an energy threshold of " << bb1_energy_threshold << " keV." << endl;
+
 	
 	string fname;
 	string friend_fname;
@@ -620,7 +588,6 @@ int main(int argc, char *argv[])
 	int acmot_count;
 	int dcmot_count;
 	
-//	cout << "Setting some more branch addresses." << endl;
 	vector<double> *ion_events = 0;
 	tree -> SetBranchAddress("TDC_ION_MCP", &ion_events);
 	int ion_count = 0;
@@ -659,17 +626,12 @@ int main(int argc, char *argv[])
 		tree -> SetBranchAddress("TDC_PULSER_LED_Count", &led_count);
 		tree -> SetBranchAddress("TDC_PHOTO_DIODE_Count", &photodiode_count);
 	}
-//	else
-//	{
-//		
-//	}
 
 	vector<double> * scint_time_t = 0;
 	vector<double> * scint_time_b = 0;
 	tree -> SetBranchAddress("TDC_SCINT_TOP",    &scint_time_t);  
 	tree -> SetBranchAddress("TDC_SCINT_BOTTOM", &scint_time_b);  
 	
-//	cout << "These branches will be strip detector branches." << endl;
 	BB1Detector stripdetector[2][2];
 	string tdiff_file[2] = {bb1_prefix+"bb1_u_tdiff.dat", bb1_prefix+"bb1_l_tdiff.dat"};  // WHAT DOES THIS SHIT EVEN DO FOR G4 DATA?  ... I think it's fine, because I'll just set everything to be the same.
 //	tdiff_file[0] = bb1_prefix+"bb1_u_tdiff.dat";  
@@ -718,8 +680,6 @@ int main(int argc, char *argv[])
 
 	// 
 	// Friend Tree:
-//	cout << "There.  Onwards to the friend tree." << endl;
-	
 	Bool_t all_okay = kTRUE;
 	Bool_t is_polarized = kFALSE;
 	Bool_t is_unpolarized = kFALSE;
@@ -762,9 +722,6 @@ int main(int argc, char *argv[])
 	}
 	
 	// BB1s:  
-		
-	// LATER:  ADD BB1_R BRANCHES.  THOSE'LL BE USEFUL...
-	// new bb1 things:
 	vector<double> * bb1_t_x = 0;
 	vector<double> * bb1_t_y = 0;
 	vector<double> * bb1_t_E = 0;
@@ -885,8 +842,8 @@ int main(int argc, char *argv[])
 	/*
 	// is_other_t:
 	// Any event that hasn't already been described where the top PMT fires.
-	// Mostly, this will be events where something hit the top PMT but
-	// was not recorded in the strip detectors.  eg, gammas and LEDs.  
+	// Mostly, this will probably be events where something hit the top PMT 
+	// but was not recorded in the strip detectors.  eg, gammas and LEDs.  
 	// However this category will *also* contain some weird event types.
 	// In the data, that (usually) looks like this:
 	//		1+ hit in the top PMT, 0 hits in the top SD, AND
@@ -950,14 +907,12 @@ int main(int argc, char *argv[])
 	Double_t polarization = 0.0;
 	if(is_g4)
 	{
-	//	TTree * MetaTree = load_metadata_tree(metadatafilename);
 		MetaTree = load_metadata_tree(metadatafilename);
 		int this_runno;
 		MetaTree -> SetBranchAddress("Run", &this_runno);
 		double this_pol;
 		MetaTree -> SetBranchAddress("Polarization", &this_pol);
 		double final_pol;
-	//	int final_entry;
 	
 		int nmetaentries = MetaTree -> GetEntries();
 		cout << "nmetaentries = " << nmetaentries << endl;
@@ -967,12 +922,9 @@ int main(int argc, char *argv[])
 			if(this_runno == runno)
 			{
 				final_pol = this_pol;
-		//		final_entry = i;
 				break;
 			}
 		}
-	//	cout << "final_pol = " << final_pol << endl;
-	//	cout << "final_entry = " << final_entry << endl;
 		
 		polarization = final_pol;
 		if(final_pol >= 0.0)

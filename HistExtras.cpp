@@ -151,28 +151,6 @@ int hist_type::set_other_parameters()
 		user_xmin = -200;
 		user_xmax = -50;
 	}
-	/*
-	else if (type == std::string("cal_tof_zoom"))
-	{
-		nbins = 300;
-		xmin = (-5000.5)*v1192_to_ns;
-		xmax = (25000.5-1.0)*v1192_to_ns;
-		units = std::string("ion tof (ns)");
-		user_xmin = 0;
-		user_xmax = 3000;
-	}
-	*/
-	/*
-	else if (type == std::string("extrafine_cal_tof"))
-	{
-		nbins =  14000;
-		xmin = (-10000.5+1.0)*v1192_to_ns;
-		xmax = ( 60000.5)*v1192_to_ns;
-		units = std::string("ion tof (ns)");
-		user_xmin = -500;
-		user_xmax = 5500;
-	}
-	*/
 	else if (type == std::string("cal_e_tof"))
 	{
 		nbins = 20000;
@@ -281,17 +259,6 @@ int hist_type::set_other_parameters()
 		user_xmin = xmin;
 		user_xmax = xmax;
 	}
-	/*
-	else if (type==std::string("events_per_time"))
-	{
-		nbins = 60*90;
-		xmin = -0.5;
-		xmax = 60*60*90-0.5;
-		units = std::string("Time (min?)");
-		user_xmin = xmin;
-		user_xmax = 60*60*30;
-	}
-	*/
 	else if(type==std::string("events_per_time")) 
 	{
 		units = std::string("Unix Time (s) - 1402200000");
@@ -505,26 +472,6 @@ int hist_type::set_other_parameters()
 		user_xmin = 300;
 		user_xmax = 520;
 	}
-	/*
-	else if(type==std::string("imcp_x_PI")) 
-	{
-		units = std::string("iMCP x (mm)");
-		xmin = -20.5;
-		xmax = xmin + 40.0;
-		nbins = 600;
-		user_xmin = xmin;
-		user_xmax = xmax;
-	}
-	else if(type==std::string("imcp_z_PI")) 
-	{
-		units = std::string("iMCP z (mm)");
-		xmin = -20.5;
-		xmax = xmin + 40.0;
-		nbins = 600;
-		user_xmin = xmin;
-		user_xmax = xmax;
-	}
-	*/
 	else if(type==std::string("N_hits")) // only for the 2Ds, really.
 	{
 		units = std::string("Event Count");
@@ -534,35 +481,6 @@ int hist_type::set_other_parameters()
 		user_xmin = 0.5;
 		user_xmax = 5.5;
 	}
-	/*
-	else if (type == std::string("cal_tof_395"))
-	{
-		nbins = 1400;
-		xmin = (-80000.5+1.0)*v1192_to_ns;
-		xmax = (60000.5)*v1192_to_ns;
-		units = std::string("ns");
-		user_xmin = -500;
-		user_xmax = 5500;
-	}
-	else if (type == std::string("cal_tof_415"))
-	{
-		nbins = 1400;
-		xmin = (-80000.5+1.0)*v1192_to_ns;
-		xmax = (60000.5)*v1192_to_ns;
-		units = std::string("ns");
-		user_xmin = -500;
-		user_xmax = 5500;
-	}
-	else if (type == std::string("cal_tof_535"))
-	{
-		nbins = 1400;
-		xmin = (-80000.5+1.0)*v1192_to_ns;
-		xmax = (60000.5)*v1192_to_ns;
-		units = std::string("ns");
-		user_xmin = -500;
-		user_xmax = 5500;
-	}
-	*/
 	else if(type==std::string("WSA_Sum"))
 	{
 		units = std::string("Wedge+Strip+Z");

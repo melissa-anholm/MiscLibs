@@ -20,48 +20,36 @@ using std::string;
 
 #include "treeql_replacement.cpp"
 
-//#include "location.cpp"
-
-
-//#define metachain_on_trinatdaq 1
 
 //#define XSTR(x) #x
 //#define STR(x) XSTR(x)
 
-#ifdef on_trinatdaq
-string br_path = "/data/trinat/S1188_2014_blinded/";
-string be_path = "/data/trinat/S1188_2014_blinded/";
-string bf_path = "/home/trinat/anholm/Friends/";  // BAD!!
+#ifdef on_trinatdaq  // define this (or not) in whatever code calls this.  
+	string br_path = "/data/trinat/S1188_2014_blinded/";
+	string be_path = "/data/trinat/S1188_2014_blinded/";
+	string bf_path = "/home/trinat/anholm/Friends/";  // BAD!!
 
-string ur_path = "/home/trinat/online/analyzedFiles_2014/";
-string ue_path = "/home/trinat/online/analyzedFiles_2014/";
-string uf_path = "/home/trinat/anholm/Friends/";  
+	string ur_path = "/home/trinat/online/analyzedFiles_2014/";
+	string ue_path = "/home/trinat/online/analyzedFiles_2014/";
+	string uf_path = "/home/trinat/anholm/Friends/";  
 
-string g4_path  = "/home/trinat/anholm/G4_Output/";
-string g4f_path = "/home/trinat/anholm/G4_Output/";
-//string metadatafilename = "/home/trinat/anholm/Trinat_Geant/build/Output/MetaData.txt";
-string metadata_name = "/home/trinat/anholm/G4_Output/MetaData.txt";
+	string g4_path  = "/home/trinat/anholm/G4_Output/";
+	string g4f_path = "/home/trinat/anholm/G4_Output/";
+	string metadata_name = "/home/trinat/anholm/G4_Output/MetaData.txt";
 #else
-string br_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
-string be_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
-string bf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Friends_2014/";
+	string br_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
+	string be_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
+	string bf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Friends_2014/";
 
-string ur_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Recoils_2014/";
-string ue_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons_2014/";
-string uf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
+	string ur_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Recoils_2014/";
+	string ue_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons_2014/";
+	string uf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
 
-//string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
-#ifdef quasi_on_trinatdaq
-	string g4_path  = "/Users/spiffyzha/Desktop/TempMount/anholm/G4_Output/";
-#else
 	string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
-#endif
-string g4f_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
-string metadata_name = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/MetaData.txt";
+	string g4f_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
+	string metadata_name = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/MetaData.txt";
 #endif
 
-
-//string metadata_namestub = "MetaData.txt";  // full path is g4_path+metadatanamestub
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 
@@ -354,18 +342,8 @@ TChain * get_recoil_chain_from_letter(string runset_letter, bool use_blinded=fal
 				friendname = get_datafriendname(friendpath, i, use_blinded);
 				friend_chain -> Add(friendname.c_str());
 			}
-		//	else
-		//	{
-		//		cout << "Run " << i << ":  runs.runset_letter[i] = " << runs.runset_letter[i] << endl;
-		//	}
 		}
 	}
-	
-//	cout << endl;
-//	cout << "*****************************************" << endl;
-//	cout << "This doesn't work yet;  fuck you Melissa!" << endl;
-//	cout << "*****************************************" << endl;
-//	cout << endl;
 	
 	tree_chain -> AddFriend(friend_chain);
 	return tree_chain;
@@ -719,7 +697,6 @@ void meta_hadd_physlist(string use_this_physlist)  // this function is just a kl
 		{
 			total_eventsgenerated += n_eventsgenerated;
 			total_eventssaved += n_eventssaved;
-		//	cout << "Same!" << endl;
 			set_of_runs.push_back(this_run);
 			set_of_filenames.push_back( string(this_filename) );
 		//	cout << "this_filename = " << this_filename << endl;
@@ -742,7 +719,6 @@ void meta_hadd_physlist(string use_this_physlist)  // this function is just a kl
 		cout << set_of_filenames[i] << " ";
 	}
 	cout << endl;
-//	cout << "That is all." << endl;
 }
 
 
@@ -1263,12 +1239,6 @@ TChain * get_single_datatree_fromfile(string filename)
 }
 */
 // ====================================== //
-/*
-void test_load_chain()
-{
-	
-}
-*/
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 
 #endif
