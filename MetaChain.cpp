@@ -354,18 +354,8 @@ TChain * get_recoil_chain_from_letter(string runset_letter, bool use_blinded=fal
 				friendname = get_datafriendname(friendpath, i, use_blinded);
 				friend_chain -> Add(friendname.c_str());
 			}
-		//	else
-		//	{
-		//		cout << "Run " << i << ":  runs.runset_letter[i] = " << runs.runset_letter[i] << endl;
-		//	}
 		}
 	}
-	
-//	cout << endl;
-//	cout << "*****************************************" << endl;
-//	cout << "This doesn't work yet;  fuck you Melissa!" << endl;
-//	cout << "*****************************************" << endl;
-//	cout << endl;
 	
 	tree_chain -> AddFriend(friend_chain);
 	return tree_chain;
@@ -718,7 +708,6 @@ void meta_hadd_physlist(string use_this_physlist)  // this function is just a kl
 		{
 			total_eventsgenerated += n_eventsgenerated;
 			total_eventssaved += n_eventssaved;
-		//	cout << "Same!" << endl;
 			set_of_runs.push_back(this_run);
 			set_of_filenames.push_back( string(this_filename) );
 		//	cout << "this_filename = " << this_filename << endl;
@@ -741,7 +730,6 @@ void meta_hadd_physlist(string use_this_physlist)  // this function is just a kl
 		cout << set_of_filenames[i] << " ";
 	}
 	cout << endl;
-//	cout << "That is all." << endl;
 }
 
 
@@ -1262,12 +1250,6 @@ TChain * get_single_datatree_fromfile(string filename)
 }
 */
 // ====================================== //
-/*
-void test_load_chain()
-{
-	
-}
-*/
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 
 #endif
