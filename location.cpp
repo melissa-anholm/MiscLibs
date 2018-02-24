@@ -32,10 +32,10 @@ string ue_path = "/home/trinat/online/analyzedFiles_2014/";
 string uf_path = "/home/trinat/anholm/Friends/";  
 
 string g4_path  = "/home/trinat/anholm/G4_Output/";
-string g4f_path = "/home/trinat/anholm/G4_Output/";
-//string metadatafilename = "/home/trinat/anholm/Trinat_Geant/build/Output/MetaData.txt";
-string metadata_name = "/home/trinat/anholm/G4_Output/MetaData.txt";
-#else
+//string g4f_path = "/home/trinat/anholm/G4_Output/";
+//string metadata_name = "/home/trinat/anholm/G4_Output/MetaData.txt";
+
+#else  // not on trinatdaq.
 string br_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
 string be_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
 string bf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Friends_2014/";
@@ -44,17 +44,19 @@ string ur_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Recoils_2014/";
 string ue_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons_2014/";
 string uf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
 
-//string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
-#ifdef quasi_on_trinatdaq
-	string g4_path  = "/Users/spiffyzha/Desktop/TempMount/anholm/G4_Output/";
-#else
-	string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
+string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
+//string g4f_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
 #endif
 
-string g4f_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
-string metadata_name = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/MetaData.txt";
-#endif
+string g4f_path = g4_path+"Friends/";
+string metadata_name = g4_path+"MetaData.txt";
 
+void set_g4_path(string newpath)
+{
+	g4_path = newpath;
+	g4f_path = g4_path+"Friends/";
+	metadata_name = g4_path+"MetaData.txt";
+}
 
 /*
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //

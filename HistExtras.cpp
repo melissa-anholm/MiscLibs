@@ -267,7 +267,7 @@ int hist_type::set_other_parameters()
 	}
 	else if (type == std::string("Ben_Ebeta") )
 	{
-		nbins = 600;
+		nbins = 600/10;
 		xmin = 0.0;
 		xmax = 6000.0;
 		units = std::string("Scintillator Energy [keV]");
@@ -763,6 +763,11 @@ TH2D * CreateHist2d(std::string title, std::string x_type, std::string y_type, i
 	this_hist_2d -> SetStats(0);
 	
 	return this_hist_2d;
+}
+
+TH2D * CreateHist2d(std::string title, std::string x_type, std::string y_type, int rebin)
+{
+	return CreateHist2d(title, x_type, y_type, rebin, rebin);
 }
 
 TH2D * CreateHist2d(std::string title, std::string x_type, std::string y_type)
