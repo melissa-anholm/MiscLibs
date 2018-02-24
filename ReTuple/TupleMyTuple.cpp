@@ -47,7 +47,7 @@ using std::pair;
 using std::min;
 
 #define on_trinatdaq 1
-
+//#define quasi_on_trinatdaq 1
 
 bool is_blinded      = false;
 bool is_g4           = false;
@@ -58,9 +58,14 @@ int version = 7;
 //#define XSTR(x) #x
 //#define STR(x) XSTR(x)
 
+//#include <location.cpp>
+//#include "location.cpp"
 
 //
 #ifdef on_trinatdaq
+//
+//	#define path_to_libs /home/trinat/anholm/MiscLibs
+	
 	#include "/home/trinat/anholm/MiscLibs/MetaChain.cpp"
 	#include "/home/trinat/anholm/MiscLibs/treeql_replacement.cpp"
 	#include "/home/trinat/anholm/MiscLibs/BB1/bb1_strip.h"
@@ -69,6 +74,9 @@ int version = 7;
 	string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
 //
 #else  // NOT on trinatdaq.
+//
+//	#define path_to_libs /Users/spiffyzha/Packages/MiscLibs
+	
 	#include "/Users/spiffyzha/Packages/MiscLibs/MetaChain.cpp"
 	#include "/Users/spiffyzha/Packages/MiscLibs/treeql_replacement.cpp"
 	#include "/Users/spiffyzha/Packages/MiscLibs/BB1/bb1_strip.h"
@@ -124,10 +132,13 @@ TObjString * make_tstring(string descriptor, int value)
 // Bad Times:
 vector<pair<UInt_t, UInt_t> >  ProcessAllOkayForRunsInFile(int runno) 
 {
-//	cout << "Run:  " << runno << endl;
-  string btimes_file = "badTimes.txt";
+	string btimes_file = "badTimes.txt";
+	vector<pair<UInt_t, UInt_t> > time;
+	if(is_g4) 
+	{
+		return time;
+	}
 
-  vector<pair<UInt_t, UInt_t> > time;
   std::ifstream tf;
   tf.open(btimes_file.c_str(), std::ifstream::in);
   UInt_t r, t1, t2;
@@ -382,6 +393,7 @@ int my_prev_event::ts_prev()
 	return timestamp_prev;
 }
 // AC/Pol classification:
+/*
 bool check_pol(int acmottime, double op_delay)
 {
 	int ac_cycle_mus = 97260*50/1000; // in microseconds.  4863 mus.
@@ -393,6 +405,24 @@ bool check_pol(int acmottime, double op_delay)
 	if( ( double(acmottime)/1000.0 > actime + time_to_polarize + op_delay + time_anomaly
 			&& double(acmottime)/1000.0 < ac_cycle_mus + time_anomaly - timing_jitter) 
 		|| double(acmottime)/1000.0 < time_anomaly-timing_jitter  )
+	{ 
+		polarized = true;
+	}
+	return polarized;
+}
+*/
+bool check_pol2(int acmottime, double op_delay)
+{  // check_pol2 tries to follow Ben's timing cuts convention...
+	int ac_cycle_mus = 97260*50/1000; // in microseconds.  4863 mus.
+	int actime = 2956;  // 4863 - 2956 = 1907
+//	double time_to_polarize = 100.0;
+	double time_anomaly = 32.0;  // it's, what, 200?  33?  ...32.
+	double timing_jitter = 5.0;  // 
+	
+	bool polarized = false;
+	if( ( double(acmottime)/1000.0 > actime + time_to_polarize + op_delay + time_anomaly
+			&& double(acmottime)/1000.0 < /* ac_cycle_mus + time_anomaly - timing_jitter*/ actime + 1900 ) 
+		/* || double(acmottime)/1000.0 < time_anomaly-timing_jitter */ )
 	{ 
 		polarized = true;
 	}
@@ -922,6 +952,7 @@ int main(int argc, char *argv[])
 			if(this_runno == runno)
 			{
 				final_pol = this_pol;
+				cout << "Looking at entry i = " << i << endl;
 				break;
 			}
 		}
@@ -1194,7 +1225,7 @@ int main(int argc, char *argv[])
 		}
 		else // if(!is_g4)
 		{
-			is_polarized = check_pol(acmot_last, this_opdelay);
+			is_polarized = check_pol2(acmot_last, this_opdelay);
 			is_unpolarized = check_unpol(acmot_last, this_opdelay);
 			is_ac = check_ac(acmot_last, this_opdelay);
 		

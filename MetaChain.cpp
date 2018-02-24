@@ -19,7 +19,11 @@ using std::string;
 #include "TBranch.h"  // do I need this?
 
 #include "treeql_replacement.cpp"
+#include "location.cpp"
 
+
+/*
+//#define metachain_on_trinatdaq 1
 
 //#define XSTR(x) #x
 //#define STR(x) XSTR(x)
@@ -50,11 +54,16 @@ using std::string;
 	string metadata_name = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/MetaData.txt";
 #endif
 
+string g4f_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
+string metadata_name = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/MetaData.txt";
+#endif
+*/
+
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 
 
-// ====================================== //
+// ====================================== // ====================================== //
 // TChains for Data:
 string get_datafilename(string path, int runno, bool use_blinded=false)
 {	
@@ -490,7 +499,7 @@ TChain * get_recoil_chain_for_all(bool use_blinded=false)
 }
 
 
-// ====================================== //
+// ====================================== // ====================================== //
 // Newer TChains for Simulations:
 string get_simfilename(string path, int runno)
 {	
@@ -545,7 +554,6 @@ string get_simfriendname(string path, int runno)
 	return fname;
 }
 
-
 TTree * load_metadata_tree(string metadatafilename)
 {
 	TTree *MetaTree = new TTree();
@@ -555,8 +563,8 @@ TTree * load_metadata_tree(string metadatafilename)
 
 TChain * get_single_simtree(int runno)
 {
-	string metadatafilename = metadata_name; //g4_path + metadata_namestub;
-	TTree *MetaTree = load_metadata_tree(metadatafilename);
+//	string metadatafilename = metadata_name; //g4_path + metadata_namestub;
+	TTree *MetaTree = load_metadata_tree(metadata_name);
 	
 	string filename = get_simfilename(MetaTree, runno);
 	string friendname = get_simfriendname(g4f_path, runno);
@@ -567,9 +575,9 @@ TChain * get_single_simtree(int runno)
 	friend_chain -> Add(friendname.c_str());
 	
 	tree_chain -> AddFriend(friend_chain);
+	delete MetaTree;
 	return tree_chain;
 }
-
 
 vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 {

@@ -101,6 +101,7 @@ double get_asymmetry(double r1p, double r1m, double r2p, double r2m)
 
 double get_asymmetry_err(double r1p, double r1m, double r2p, double r2m)
 {
+	/*
 	double t1 = sqrt(r1p*r2m);
 	double t2 = sqrt(r1m*r2p);
 	double dAdt1 =  2.0*t2/( (t1+t2)*(t1+t2) );
@@ -116,6 +117,45 @@ double get_asymmetry_err(double r1p, double r1m, double r2p, double r2m)
 		dAdt1 = 0.0;
 	}
 	DA2 = dAdt1*dAdt1*( 0.25*r2m + 0.25*r1p ) + dAdt2*dAdt2*( 0.25*r2p + 0.25*r1m );
+	return sqrt(DA2);
+	*/
+	/*
+	double s;
+	double DA2 = 0.0;
+	if(r1p!=0.0 && r1m!=0.0 && r2p!=0.0 && r2m!=0.0)
+	{
+		s = sqrt( (r1m*r2p) / (r1p*r2m) );
+		DA2 = ( s*s / ((1.0+s)*(1.0+s)) ) * (1.0/r1p + 1.0/r1m + 1.0/r2p + 1.0/r2m);
+	}
+	return sqrt(DA2);
+	*/
+	/*
+	double s;
+	double DA2 = 0.0;
+	if(r1p!=0.0 && r1m!=0.0 && r2p!=0.0 && r2m!=0.0)
+	{
+		s = sqrt( (r1m*r2p) / (r1p*r2m) );
+		DA2 = 1.0/4.0 * pow( (s-1.0)/(s+1.0), 2) * s*s * (1.0/r1p + 1.0/r1m + 1.0/r2p + 1.0/r2m);
+	}
+	return sqrt(DA2);
+	*/
+	double s;
+	double DA2 = 1.0;
+	if(r1p!=0.0 && r1m!=0.0 && r2p!=0.0 && r2m!=0.0)
+	{
+		s = sqrt( (r1m*r2p) / (r1p*r2m) );
+		DA2 = pow( -2.0/( (1.0+s)*(1.0+s) ), 2) * 1.0/4.0 * s*s * (1.0/r1p + 1.0/r1m + 1.0/r2p + 1.0/r2m);
+	}
+	else
+	{
+		cout << "r1p=" << r1p << "\tr1m=" << r1m << "\tr2p=" << r2p << "\tr2m=" << r2m << endl;
+		if(r1p==0.0) {r1p=1.0;}
+		if(r1m==0.0) {r1m=1.0;}
+		if(r2p==0.0) {r2p=1.0;}
+		if(r2m==0.0) {r2m=1.0;}
+		s = sqrt( (r1m*r2p) / (r1p*r2m) );
+		DA2 = pow( -2.0/( (1.0+s)*(1.0+s) ), 2) * 1.0/4.0 * s*s * (1.0/r1p + 1.0/r1m + 1.0/r2p + 1.0/r2m);
+	}
 	return sqrt(DA2);
 }
 
@@ -145,8 +185,8 @@ TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_his
 			r2p = r2p_hist -> GetBinContent(i);
 			r2m = r2m_hist -> GetBinContent(i);
 			
-			bin_content = get_asymmetry(r1p, r1m, r2p, r2m);
-			bin_err = get_asymmetry_err(r1p, r1m, r2p, r2m);
+		//	bin_content = get_asymmetry(r1p, r1m, r2p, r2m);
+		//	bin_err = get_asymmetry_err(r1p, r1m, r2p, r2m);
 	//		cout << "bin " << i << ":\t";
 	//		cout << bin_content << " +/- " << bin_err << endl;
 			
@@ -205,6 +245,8 @@ vector<TPad *> make_residupad(TH1D* top_hist, TH1D* bottom_hist, string top_draw
 	pad2 -> cd();
 
 	bottom_hist -> GetYaxis() -> SetTitle( bottom_hist->GetTitle() );
+//	bottom_hist -> GetYaxis() -> SetRangeUser( -2.0, 2.0 );
+
 	bottom_hist -> SetTitle("");
 	bottom_hist -> GetXaxis() -> SetRangeUser( pad1->GetUxmin(), pad1->GetUxmax() );
 	
@@ -266,6 +308,117 @@ TH1D * tf1_to_hist_like(TF1 * this_tf1, TH1D * this_hist, TColor this_color)
 	return new_th1d;
 }
 
+// ---- // ---- // ---- // ---- // ---- // ---- //
+bool HistsHaveSameBinning(TH1D *a, TH1D *b, bool verbose=false) 
+{
+	bool same = true;
+	if (!a || !b) 
+	{
+		cout << "ERROR:  Histogram doesn't exist" << endl;
+		cout << "a=" << a << ", b=" << b << endl;
+		same = false;
+	//	return same;
+	}
+	else if ( a -> GetNbinsX() != b -> GetNbinsX() ) 
+	{
+		cout << "ERROR:  Histograms have different numbers of bins." << endl;
+		same = false;
+	//	return same;
+	}
+	double eps = 1.E-3;
+	if (same) 
+	{
+		for (int i = 1; i <= a -> GetNbinsX(); i++) 
+		{
+			if (fabs(a->GetBinCenter(i) - b->GetBinCenter(i)) > eps)
+			{
+				same = false;
+			}
+		}
+	}
+	//
+	if(same && verbose)
+	{
+		cout << "Histograms " << a->GetName() << " and ";
+		cout << b->GetName() << " have the same binning." << endl;
+	}
+	else if(!same)
+	{
+		cout << "ERROR:  bin centres are different." << endl;
+	}
+	return same;
+}
+
+double justgetthedamnchisquared(TH1D * h1, TH1D * h2, bool use_weighted, int bmin=0, int bmax=0)
+{
+	double chi2 = 0.0;
+	int nbins = 0;
+	
+	double h1_bcont = 0.0;
+	double h1_berr = 0.0;
+	double h2_bcont = 0.0;
+	double h2_berr = 0.0;
+	double combined_berr = 1.0;
+	double chi_contribution = 0.0;
+	
+	if(HistsHaveSameBinning(h1, h2))
+	{
+		nbins = h1 -> GetNbinsX();
+		
+		cout << "nbins = " << nbins;// << endl;
+		if(bmax == 0 || bmax > nbins) { bmax = nbins; }
+		if(bmin < 0 || bmin > bmax ) { bmin=0; }
+		cout << "\tbins_in_use = " << bmax - bmin << endl;
+		cout << "E_min = " << h1->GetBinCenter(bmin) - h1->GetBinWidth(bmin);
+		cout << "\tE_max = " << h1->GetBinCenter(bmax) +  h1->GetBinWidth(bmax) << endl;
+		cout << endl;
+		
+		for (int i = bmin; i <= bmax; i++) 
+		{
+			if (i < bmin) 
+			{
+				cout << "i<bmin.  why did this happen?" << endl;
+				continue;
+			}
+			if (i > bmax) 
+			{
+				continue;
+				cout << "i>bmax.  why did this happen?" << endl;
+			}
+			
+			h1_bcont = h1 -> GetBinContent(i);
+			h1_berr  = h1 -> GetBinError(i);   // this is the literal size of the error bars.
+			h2_bcont = h2 -> GetBinContent(i);
+			h2_berr  = h2 -> GetBinError(i);
+			if(use_weighted)
+			{
+		//		cout << "bin " << i << ":\tBinError1 = " << h1_berr << ",\tBinError2 = " << h2_berr;// << endl;
+		//		cout << ";\tBinContent1 = " << h1_bcont << ",  \tBinContent2 = " << h2_bcont << endl;
+				// The sumw2 are squared, but the bin error is not.
+			
+				combined_berr = sqrt(h1_berr*h1_berr + h2_berr*h2_berr);
+			
+				// or ... is it???
+			//	combined_berr = sqrt(h1_berr + h2_berr);
+				
+				if (combined_berr <= 0) { combined_berr = 1.0; }
+		//		cout << "i=" << i << "\th1-h2=" << h1_bcont - h2_bcont << "\tcombined_berr = " << combined_berr << "\th1_berr = " << h1_berr << "\th2_berr = " << h2_berr << endl;
+			}
+			chi_contribution = (h1_bcont - h2_bcont)/combined_berr;
+			chi2 = chi2 + chi_contribution*chi_contribution;
+			
+		//	cout << "i=" << i << "\th1-h2 = " << h1_bcont - h2_bcont << "  \tcombined_err = " << combined_berr << "  \tdchi2 = " << chi_contribution*chi_contribution << endl;
+		}
+	}
+	else
+	{
+		cout << "That's bad.  Hists should really have the same binning..." << endl;
+	}
+	
+	cout << endl;
+	return chi2;  // returns 0 if hists don't have the same binning.
+}
+
 TH1D* get_residuals(TH1D* h1, TH1D* h2)
 {
 //	// Residuals for BB1s, from Ben:
@@ -273,16 +426,19 @@ TH1D* get_residuals(TH1D* h1, TH1D* h2)
 //	residuals -> SetBinContent(i, r);
 //	residuals -> SetBinError(i, 0.);
 	
+	// SetBinError(...) sets the sumw2 to be err^2.
+
 	TH1D * new_hist = (TH1D*)h1 -> Clone( "Residuals" );
-	new_hist -> SetTitle("Residuals");
+//	new_hist -> SetTitle("Residuals");
+	new_hist -> SetTitle("(h1-h2) / sqrt(dh1^2+dh2^2) ");
 	new_hist -> Sumw2(kFALSE);
 	new_hist -> Sumw2();
 
 	int n_bins  = h1->GetNbinsX();
 	int n_bins2 = h2->GetNbinsX();
 	
-	TArrayD* errs1 = h1->GetSumw2();
-	TArrayD* errs2 = h2->GetSumw2();
+	TArrayD* errs1_2 = h1->GetSumw2(); // these are actually the *squares* of the weights.
+	TArrayD* errs2_2 = h2->GetSumw2(); // GetSumw2 is the squares, GetBinError is the unsquared weights.
 	
 //	TArrayD* errs_new = new_hist->GetSumw2();
 	
@@ -301,7 +457,11 @@ TH1D* get_residuals(TH1D* h1, TH1D* h2)
 	for (int i =1; i<=n_bins; i++) 
 	{
 		dif = h1->GetBinContent(i) - h2->GetBinContent(i);
-		sig = sqrt( h1->At(i) * h1->At(i) + h2->At(i) * h2->At(i) );
+	//	sig = sqrt( h1->At(i) * h1->At(i) + h2->At(i) * h2->At(i) );
+	//	sig = sqrt( h1->At(i) + h2->At(i) );
+	//	sig = 1.0;
+	//	cout << "i=" << i << ",\terrs1_2->At(i) = " << errs1_2->At(i) << ",\th1->GetBinError(i) = " << h1->GetBinError(i) << endl;
+		sig = sqrt( errs1_2->At(i) + errs2_2->At(i) );
 		res = dif / sig;
 		
 		new_hist -> SetBinContent(i, res);
@@ -311,7 +471,8 @@ TH1D* get_residuals(TH1D* h1, TH1D* h2)
 	new_hist -> SetMarkerColor(kBlack);
 	new_hist -> SetLineColor(kBlack);
 	new_hist -> SetMarkerStyle(20);
-	new_hist -> GetYaxis() -> SetRangeUser(-0.08, 0.08);
+//	new_hist -> GetYaxis() -> SetRangeUser(-0.08, 0.08);
+	new_hist -> GetYaxis() -> SetRangeUser(-2.0, 2.0);
 //	new_hist -> GetYaxis() -> SetRange(-1, -1);
 	return new_hist;  // ...
 }

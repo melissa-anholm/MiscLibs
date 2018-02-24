@@ -521,14 +521,6 @@ void NonMemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_
 
 int SuperMinuit::DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
 {
-	/*
-	n_params           = n_params_;
-	gin                = gin_;
-	result_to_minimize = result_to_minimize_;
-	parameters         = parameters_;
-	ierflg             = ierflg_;
-	*/
-	
 	double val0 = 0.5;
 	double val1 = 0.4;
 	
