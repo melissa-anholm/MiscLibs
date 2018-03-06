@@ -1,8 +1,3 @@
-// This is nonstandard coding practice buuuuut....
-// this file should *only* be included via "location.h".
-//#ifndef include_location
-//#include "location.h"
-//#endif
 #ifndef include_location
 #define include_location 1
 
@@ -19,34 +14,70 @@
 #endif
 */
 
-#endif
 
+//bool on_trinatdaq = false;
+//bool on_fifteen   = false;
+//bool on_trinat02  = true;
 
-#ifdef on_trinatdaq
-string br_path = "/data/trinat/S1188_2014_blinded/";
-string be_path = "/data/trinat/S1188_2014_blinded/";
-string bf_path = "/home/trinat/anholm/Friends/";  // BAD!!
+extern bool on_trinatdaq;
+extern bool on_fifteen;
+extern bool on_trinat02;
 
-string ur_path = "/home/trinat/online/analyzedFiles_2014/";
-string ue_path = "/home/trinat/online/analyzedFiles_2014/";
-string uf_path = "/home/trinat/anholm/Friends/";  
+//
+string br_path       = "";
+string be_path       = "";
+string bf_path       = "";
 
-string g4_path  = "/home/trinat/anholm/G4_Output/";
-//string g4f_path = "/home/trinat/anholm/G4_Output/";
-//string metadata_name = "/home/trinat/anholm/G4_Output/MetaData.txt";
+string ur_path       = "";
+string ue_path       = "";
+string uf_path       = "";
 
-#else  // not on trinatdaq.
-string br_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
-string be_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
-string bf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Friends_2014/";
+string g4_path       = "";
 
-string ur_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Recoils_2014/";
-string ue_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons_2014/";
-string uf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
+string g4f_path      = "";
+string metadata_name = "";
 
-string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
-//string g4f_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
-#endif
+//
+if(on_trinatdaq)
+{
+	br_path = "/data/trinat/S1188_2014_blinded/";
+	be_path = "/data/trinat/S1188_2014_blinded/";
+	bf_path = "/home/trinat/anholm/Friends/";  // BAD!!
+
+	ur_path = "/home/trinat/online/analyzedFiles_2014/";
+	ue_path = "/home/trinat/online/analyzedFiles_2014/";
+	uf_path = "/home/trinat/anholm/Friends/";  
+
+	g4_path  = "/home/trinat/anholm/G4_Output/";
+}
+else if(on_fifteen)
+{
+	br_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
+	be_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
+	bf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Friends_2014/";
+
+	ur_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Recoils_2014/";
+	ue_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons_2014/";
+	uf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
+
+	g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
+}
+else if(on_trinat02)
+{
+	br_path = "/data/trinat/S1188_2014_blinded/";  // bad
+	be_path = "/data/trinat/S1188_2014_blinded/";  // bad
+	bf_path = "/home1/trinat/anholm/Friends/";  // BAD!!
+
+	ur_path = "/home1/trinat/online/analyzedFiles_2014/";  // bad
+	ue_path = "/home1/trinat/online/analyzedFiles_2014/";  // bad
+	uf_path = "/home1/trinat/anholm/Friends/";   // bad
+
+	g4_path  = "/home1/trinat/anholm/K37/build/Output/";
+}
+else
+{
+	// Location not defined.  :(
+}
 
 string g4f_path = g4_path+"Friends/";
 string metadata_name = g4_path+"MetaData.txt";
@@ -58,34 +89,4 @@ void set_g4_path(string newpath)
 	metadata_name = g4_path+"MetaData.txt";
 }
 
-/*
-// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
-#ifdef on_trinatdaq
-
-string br_path = "/data/trinat/S1188_2014_blinded/";
-string be_path = "/data/trinat/S1188_2014_blinded/";
-string bf_path = "/home/trinat/anholm/Friends/";  // BAD!!
-
-string ur_path = "/home/trinat/online/analyzedFiles_2014/";
-string ue_path = "/home/trinat/online/analyzedFiles_2014/";
-string uf_path = "/home/trinat/anholm/Friends/";  
-
-string g4_path  = "/home/trinat/anholm/Trinat_Geant/build/Output/";
-string g4f_path = "/home/trinat/anholm/Trinat_Geant/build/Output/Friends/";
-//string metadatafilename = "/home/trinat/anholm/Trinat_Geant/build/Output/MetaData.txt";
-
-#else
-string br_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
-string be_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
-string bf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Friends_2014/";
-
-string ur_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Recoils_2014/";
-string ue_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons_2014/";
-string uf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
-
-string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
-string g4f_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
-
 #endif
-// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
-*/
