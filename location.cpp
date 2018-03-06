@@ -24,6 +24,8 @@ extern bool on_fifteen;
 extern bool on_trinat02;
 
 //
+string bb1_prefix    = "";
+
 string br_path       = "";
 string be_path       = "";
 string bf_path       = "";
@@ -40,6 +42,8 @@ string metadata_name = "";
 //
 if(on_trinatdaq)
 {
+	bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
+
 	br_path = "/data/trinat/S1188_2014_blinded/";
 	be_path = "/data/trinat/S1188_2014_blinded/";
 	bf_path = "/home/trinat/anholm/Friends/";  // BAD!!
@@ -52,6 +56,8 @@ if(on_trinatdaq)
 }
 else if(on_fifteen)
 {
+	bb1_prefix = "/Users/spiffyzha/Packages/MiscLibs/BB1/";  // 
+	
 	br_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
 	be_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
 	bf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Friends_2014/";
@@ -64,6 +70,8 @@ else if(on_fifteen)
 }
 else if(on_trinat02)
 {
+	bb1_prefix = "/home1/trinat/anholm/Packages/MiscLibs/BB1/";  // 
+	
 	br_path = "/data/trinat/S1188_2014_blinded/";  // bad
 	be_path = "/data/trinat/S1188_2014_blinded/";  // bad
 	bf_path = "/home1/trinat/anholm/Friends/";  // BAD!!

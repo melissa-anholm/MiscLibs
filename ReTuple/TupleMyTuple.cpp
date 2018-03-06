@@ -46,9 +46,12 @@ using std::make_pair;  // unused?
 using std::pair;
 using std::min;
 
-#define on_trinatdaq 1
-//#define quasi_on_trinatdaq 1
+//
+bool on_trinatdaq = false;
+bool on_fifteen   = false;
+bool on_trinat02  = true;
 
+//
 bool is_blinded      = false;
 bool is_g4           = false;
 bool use_g4_metadata = true;
@@ -58,34 +61,39 @@ int version = 7;
 //#define XSTR(x) #x
 //#define STR(x) XSTR(x)
 
-//#include <location.cpp>
-//#include "location.cpp"
 
-//
-#ifdef on_trinatdaq
-//
+if(on_trinatdaq)
 //	#define path_to_libs /home/trinat/anholm/MiscLibs
+	#include "/home/trinat/anholm/MiscLibs/location.cpp"
 	
 	#include "/home/trinat/anholm/MiscLibs/MetaChain.cpp"
 	#include "/home/trinat/anholm/MiscLibs/treeql_replacement.cpp"
 	#include "/home/trinat/anholm/MiscLibs/BB1/bb1_strip.h"
 	#include "/home/trinat/anholm/MiscLibs/mini_cal_maker.cpp"
 
-	string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
-//
-#else  // NOT on trinatdaq.
-//
+//	string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
+}
+else if(on_fifteen)
+{
 //	#define path_to_libs /Users/spiffyzha/Packages/MiscLibs
+//	string bb1_prefix = "/Users/spiffyzha/Packages/MiscLibs/BB1/";  //  now in location.cpp
+	#include "/Users/spiffyzha/Packages/MiscLibs/location.cpp"
 	
 	#include "/Users/spiffyzha/Packages/MiscLibs/MetaChain.cpp"
 	#include "/Users/spiffyzha/Packages/MiscLibs/treeql_replacement.cpp"
 	#include "/Users/spiffyzha/Packages/MiscLibs/BB1/bb1_strip.h"
 	#include "/Users/spiffyzha/Packages/MiscLibs/mini_cal_maker.cpp"
+}
+else if(on_trinat02)
+{
+//	string bb1_prefix = "/home1/trinat/anholm/Packages/MiscLibs/BB1/";  //  now in location.cpp
+	#include "/home1/trinat/anholm/Packages/MiscLibs/location.cpp"
 	
-	string bb1_prefix = "/Users/spiffyzha/Packages/MiscLibs/BB1/";  // 
-//
-#endif
-//
+	#include "/home1/trinat/anholm/Packages/MiscLibs/MetaChain.cpp"
+	#include "/home1/trinat/anholm/Packages/MiscLibs/treeql_replacement.cpp"
+	#include "/home1/trinat/anholm/Packages/MiscLibs/BB1/bb1_strip.h"
+	#include "/home1/trinat/anholm/Packages/MiscLibs/mini_cal_maker.cpp"
+}
 
 // import the old variable names from how they're defined in MetaChain.cpp:
 string blind_r_path = br_path;

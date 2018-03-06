@@ -2,10 +2,12 @@ cmake_minimum_required (VERSION 2.6)
 project (Blah CXX)
 
 #ROOT includes ===========================
-IF( $ENV{USER} STREQUAL "trinat")  # on trinatdaq.
-INCLUDE(/home/trinat/anholm/MiscLibs/FindROOT.cmake)   # Trinatdaq.
+IF($ENV{HOST} STREQUAL "trinat02.triumf.ca")
+	INCLUDE(/home1/trinat/anholm/Packages/MiscLibs/FindROOT.cmake)   # trinat02.
+ELSEIF( $ENV{USER} STREQUAL "trinat")  # on trinatdaq.
+	INCLUDE(/home/trinat/anholm/MiscLibs/FindROOT.cmake)   # Trinatdaq.
 ELSE() 
-INCLUDE($ENV{MISC_INCLUDE_DIR}/FindROOT.cmake)        # Home.
+	INCLUDE($ENV{MISC_INCLUDE_DIR}/FindROOT.cmake)        # Home.
 ENDIF() 
 
 INCLUDE_DIRECTORIES (${ROOT_INCLUDE_DIR})
@@ -23,10 +25,12 @@ LINK_DIRECTORIES (/usr/local/lib)  # for trinatdaq
 SET(CMAKE_BUILD_TYPE ReLWithDebInfo)
 
 #Adding the Libraries ==================
-IF( $ENV{USER} STREQUAL "trinat")  # on trinatdaq.
-add_library (bb1_strip /home/trinat/anholm/MiscLibs/BB1/bb1_strip.cpp)
+IF($ENV{HOST} STREQUAL "trinat02.triumf.ca")  
+	add_library (bb1_strip /home1/trinat/anholm/Packages/MiscLibs/BB1/bb1_strip.cpp)
+ELSEIF( $ENV{USER} STREQUAL "trinat")  # on trinatdaq.
+	add_library (bb1_strip /home/trinat/anholm/MiscLibs/BB1/bb1_strip.cpp)
 ELSE()
-add_library (bb1_strip $ENV{MISC_INCLUDE_DIR}/BB1/bb1_strip.cpp)  # Home.
+	add_library (bb1_strip $ENV{MISC_INCLUDE_DIR}/BB1/bb1_strip.cpp)  # Home.
 ENDIF()
 
 #Linking the Executable ================
