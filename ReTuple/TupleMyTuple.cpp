@@ -46,8 +46,8 @@ using std::make_pair;  // unused?
 using std::pair;
 using std::min;
 
-#define on_trinatdaq 1
-//#define quasi_on_trinatdaq 1
+//#define on_trinatdaq 1
+#define on_trinat02 1
 
 bool is_blinded      = false;
 bool is_g4           = false;
@@ -63,9 +63,6 @@ int version = 7;
 
 //
 #ifdef on_trinatdaq
-//
-//	#define path_to_libs /home/trinat/anholm/MiscLibs
-	
 	#include "/home/trinat/anholm/MiscLibs/MetaChain.cpp"
 	#include "/home/trinat/anholm/MiscLibs/treeql_replacement.cpp"
 	#include "/home/trinat/anholm/MiscLibs/BB1/bb1_strip.h"
@@ -74,15 +71,22 @@ int version = 7;
 	string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
 //
 #else  // NOT on trinatdaq.
+#ifdef on_trinat02
+	#include "/home1/trinat/anholm/Packages/MiscLibs/MetaChain.cpp"
+	#include "/home1/trinat/anholm/Packages/MiscLibs/treeql_replacement.cpp"
+	#include "/home1/trinat/anholm/Packages/MiscLibs/BB1/bb1_strip.h"
+	#include "/home1/trinat/anholm/Packages/MiscLibs/mini_cal_maker.cpp"
+
+	string bb1_prefix = "/home1/trinat/anholm/Packages/MiscLibs/BB1/";
 //
-//	#define path_to_libs /Users/spiffyzha/Packages/MiscLibs
-	
+#else // not on trinat02 (and also not on trinatdaq)
 	#include "/Users/spiffyzha/Packages/MiscLibs/MetaChain.cpp"
 	#include "/Users/spiffyzha/Packages/MiscLibs/treeql_replacement.cpp"
 	#include "/Users/spiffyzha/Packages/MiscLibs/BB1/bb1_strip.h"
 	#include "/Users/spiffyzha/Packages/MiscLibs/mini_cal_maker.cpp"
 	
 	string bb1_prefix = "/Users/spiffyzha/Packages/MiscLibs/BB1/";  // 
+#endif
 //
 #endif
 //
