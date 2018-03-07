@@ -7,3 +7,4 @@ ReTuple/Makefile
 ReTuple/libbb1_strip.a
 ReTuple/._*
 ._*
+.fuse_*
