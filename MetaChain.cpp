@@ -635,7 +635,14 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 	MetaTree -> SetBranchAddress("Run", &run);
 	double this_rho = 0.0;
 	MetaTree -> SetBranchAddress("Rho", &this_rho);
-	
+	int this_neventsgenerated = 0;
+	int this_neventssaved = 0;
+	MetaTree -> SetBranchAddress("EventsGenerated", &this_neventsgenerated);
+	MetaTree -> SetBranchAddress("EventsSaved", &this_neventssaved);
+
+	int total_events_generated = 0;
+	int total_events_recorded = 0;
+
 	TChain * tree_chain   = new TChain("ntuple");
 	TChain * friend_chain = new TChain("friendtuple");
 	string filename;// = get_simfilename(path, run);
@@ -645,7 +652,10 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 		MetaTree -> GetEntry(i);
 		if(this_rho == rho)
 		{
-			cout << "Using run " << run << "  (i=" << i << ")" << endl;
+			cout << "Using run " << run << "  (i=" << i << ")\tN_gen=" << this_neventsgenerated << ",\tN_saved=" << this_neventssaved << endl;
+			total_events_generated = total_events_generated + this_neventsgenerated;
+			total_events_recorded = total_events_recorded + this_neventssaved;
+			
 			filename   = get_simfilename(path, run);
 			friendname = get_simfriendname(friendpath, run);
 			tree_chain -> Add(filename.c_str());
@@ -658,6 +668,7 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 		}
 	}
 	
+	cout << "rho=" << this_rho << ", N_generated=" << total_events_generated << ", \tN_saved=" << total_events_recorded << endl;
 	tree_chain -> AddFriend(friend_chain);
 	return tree_chain;
 }
