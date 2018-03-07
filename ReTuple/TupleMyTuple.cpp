@@ -51,7 +51,7 @@ using std::min;
 
 //
 bool is_blinded      = false;
-bool is_g4           = false;
+bool is_g4           = true;
 bool use_g4_metadata = true;
 
 int version = 7;
@@ -570,6 +570,11 @@ int main(int argc, char *argv[])
 			cout << "Looking at the metadata..." << endl;
 			MetaTree = load_metadata_tree(metadatafilename);
 			fname = get_simfilename(MetaTree, runno);
+			if(fname==string(""))
+			{
+				cout << "Exiting..." << endl;
+				return 0;
+			}
 		}
 		else
 		{
@@ -960,7 +965,7 @@ int main(int argc, char *argv[])
 			if(this_runno == runno)
 			{
 				final_pol = this_pol;
-				cout << "Looking at entry i = " << i << endl;
+				cout << "Looking at entry i = " << i << ":  run = " << runno << endl;
 				break;
 			}
 		}

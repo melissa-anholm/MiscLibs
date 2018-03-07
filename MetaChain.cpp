@@ -518,7 +518,7 @@ string get_simfilename(string path, int runno)
 
 string get_simfilename(TTree * MetaTree, int runno)
 {	
-	string namestub;
+	string namestub = "";
 	string fname;
 	
 	int this_run = 0;
@@ -536,7 +536,15 @@ string get_simfilename(TTree * MetaTree, int runno)
 		}
 	}
 	fname = g4_path + namestub;
-	return fname;
+	if(namestub!=string(""))
+	{
+		return fname;
+	}
+	else
+	{
+		cout << "ERROR:  Couldn't find run number " << runno << " in the metadata." << endl;
+		return namestub;
+	}
 }
 
 string get_simfriendname(string path, int runno)
