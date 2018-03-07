@@ -19,7 +19,10 @@
 #endif
 */
 
-
+/*
+//#define on_trinatdaq 1
+#define on_trinat02 1
+*/
 
 #ifdef on_trinatdaq
 string br_path = "/data/trinat/S1188_2014_blinded/";
@@ -31,8 +34,6 @@ string ue_path = "/home/trinat/online/analyzedFiles_2014/";
 string uf_path = "/home/trinat/anholm/Friends/";  
 
 string g4_path  = "/home/trinat/anholm/G4_Output/";
-//string g4f_path = "/home/trinat/anholm/G4_Output/";
-//string metadata_name = "/home/trinat/anholm/G4_Output/MetaData.txt";
 
 #else  // not on trinatdaq.
 #ifdef on_trinat02
@@ -58,7 +59,6 @@ string ue_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons_2014/";
 string uf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
 
 string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
-//string g4f_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
 #endif
 #endif
 
