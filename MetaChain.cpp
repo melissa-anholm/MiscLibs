@@ -638,7 +638,7 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 	int this_neventsgenerated = 0;
 	int this_neventssaved = 0;
 	MetaTree -> SetBranchAddress("EventsGenerated", &this_neventsgenerated);
-	MetaTree -> SetBranchAddress("EventsSaved", &this_neventssaved);
+	MetaTree -> SetBranchAddress("EventsSaved",     &this_neventssaved);
 
 	int total_events_generated = 0;
 	int total_events_recorded = 0;
