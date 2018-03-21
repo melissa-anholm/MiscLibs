@@ -47,11 +47,11 @@ using std::pair;
 using std::min;
 
 //#define on_trinatdaq 1
-#define on_trinat02 1
+//#define on_trinat02 1
 
 //
 bool is_blinded      = false;
-bool is_g4           = true;
+bool is_g4           = false;
 bool use_g4_metadata = true;
 
 int version = 7;
@@ -917,10 +917,16 @@ int main(int argc, char *argv[])
 	int N_hits_scint_b = 0;
 	TBranch * N_hits_scint_t_branch = friend_tree -> Branch("N_hits_scint_t", &N_hits_scint_t);
 	TBranch * N_hits_scint_b_branch = friend_tree -> Branch("N_hits_scint_b", &N_hits_scint_b);
+	
 	int N_hits_bb1_t = 0;
 	int N_hits_bb1_b = 0;
 	TBranch * N_hits_bb1_t_branch = friend_tree -> Branch("N_hits_bb1_t", &N_hits_bb1_t);
 	TBranch * N_hits_bb1_b_branch = friend_tree -> Branch("N_hits_bb1_b", &N_hits_bb1_b);
+	
+	int had_Nhits_bb1_t = 0;
+	int had_Nhits_bb1_b = 0;
+	TBranch * twohits_bb1_t_branch = friend_tree -> Branch("had_Nhits_bb1_t", &had_Nhits_bb1_t);
+	TBranch * twohits_bb1_b_branch = friend_tree -> Branch("had_Nhits_bb1_b", &had_Nhits_bb1_b);
 	
 	
 	
@@ -1061,11 +1067,16 @@ int main(int argc, char *argv[])
 		
 		is_other = kFALSE;
 		
+	//	has_bb1_twohits_t = false;
+	//	has_bb1_twohits_b = false;
+		
 		// BB1 shizzle:
 		N_hits_bb1_t = 0;
 		N_hits_bb1_b = 0;
 		N_hits_scint_t = scint_time_t->size();
 		N_hits_scint_b = scint_time_b->size();
+		had_Nhits_bb1_t = 0;
+		had_Nhits_bb1_b = 0;
 		
 		if(upper_E < 10.0) {N_hits_scint_t=0;}
 		if(lower_E < 10.0) {N_hits_scint_b=0;}
@@ -1104,51 +1115,74 @@ int main(int argc, char *argv[])
 			
 				bb1_hit[detector] = bb1_result[detector].hit;
 				bb1_sechit[detector] = bb1_result[detector].secHit;
-			
-				if(bb1_hit[detector].pass == true && bb1_hit[detector].energy >= bb1_energy_threshold )
+				
+				if(bb1_hit[detector].pass == true)
 				{
 					if(detector == t)
 					{
-				//		bb1_t_pass = kTRUE;
-						bb1_t_x -> push_back( bb1_hit[detector].xpos );
-						bb1_t_y -> push_back( bb1_hit[detector].ypos );
-						bb1_t_E -> push_back( bb1_hit[detector].energy );
-						bb1_t_r -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-						N_hits_bb1_t++;
+						had_Nhits_bb1_t=1;
 					}
-					else if(detector == b)
+					if(detector == b)
 					{
-				//		bb1_b_pass = kTRUE;
-						bb1_b_x -> push_back( bb1_hit[detector].xpos );
-						bb1_b_y -> push_back( bb1_hit[detector].ypos );
-						bb1_b_E -> push_back( bb1_hit[detector].energy );
-						bb1_b_r -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-						N_hits_bb1_b++;
+						had_Nhits_bb1_b=1;
 					}
-					//
-					if(bb1_result[detector].twoHits == true)
+					if( bb1_hit[detector].energy >= bb1_energy_threshold )
 					{
-						if(bb1_sechit[detector].pass == true && bb1_hit[detector].energy >= bb1_energy_threshold)
+						if(detector == t)
 						{
-							if(detector == t)
-							{
-								bb1_t_x -> push_back( bb1_sechit[detector].xpos );
-								bb1_t_y -> push_back( bb1_sechit[detector].ypos );
-								bb1_t_E -> push_back( bb1_sechit[detector].energy );
-								bb1_t_r -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-								N_hits_bb1_t++;
-							}
-							else if(detector == b)
-							{
-								bb1_b_x -> push_back( bb1_sechit[detector].xpos );
-								bb1_b_y -> push_back( bb1_sechit[detector].ypos );
-								bb1_b_E -> push_back( bb1_sechit[detector].energy );
-								bb1_b_r -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-								N_hits_bb1_b++;
-							}
+					//		bb1_t_pass = kTRUE;
+							bb1_t_x -> push_back( bb1_hit[detector].xpos );
+							bb1_t_y -> push_back( bb1_hit[detector].ypos );
+							bb1_t_E -> push_back( bb1_hit[detector].energy );
+							bb1_t_r -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
+							N_hits_bb1_t++;
+						}
+						else if(detector == b)
+						{
+					//		bb1_b_pass = kTRUE;
+							bb1_b_x -> push_back( bb1_hit[detector].xpos );
+							bb1_b_y -> push_back( bb1_hit[detector].ypos );
+							bb1_b_E -> push_back( bb1_hit[detector].energy );
+							bb1_b_r -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
+							N_hits_bb1_b++;
 						}
 					}
 				}
+				//
+				if(bb1_result[detector].twoHits == true)
+				{
+					if(detector == t)
+					{
+					//	has_bb1_twohits_t = true;
+						had_Nhits_bb1_t=2;
+					}
+					if(detector == b)
+					{
+					//	has_bb1_twohits_b = true;
+						had_Nhits_bb1_b=2;
+					}
+					//
+					if(bb1_sechit[detector].pass == true /* && bb1_hit[detector].energy >= bb1_energy_threshold */)
+					{
+						if(detector == t)
+						{
+							bb1_t_x -> push_back( bb1_sechit[detector].xpos );
+							bb1_t_y -> push_back( bb1_sechit[detector].ypos );
+							bb1_t_E -> push_back( bb1_sechit[detector].energy );
+							bb1_t_r -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+							N_hits_bb1_t++;
+						}
+						else if(detector == b)
+						{
+							bb1_b_x -> push_back( bb1_sechit[detector].xpos );
+							bb1_b_y -> push_back( bb1_sechit[detector].ypos );
+							bb1_b_E -> push_back( bb1_sechit[detector].energy );
+							bb1_b_r -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+							N_hits_bb1_b++;
+						}
+					}
+				}
+			//	}
 			}
 			// that was the loop over BB1 detectors.  now these things have appropriate values:
 			//	N_hits_scint_t, N_hits_scint_b.

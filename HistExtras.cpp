@@ -245,12 +245,48 @@ int hist_type::set_other_parameters()
 	}
 	else if (type == std::string("Ben_Ebeta") )
 	{
-		nbins = 600/10;
+		nbins = 60;
 		xmin = 0.0;
 		xmax = 6000.0;
 		units = std::string("Scintillator Energy [keV]");
 		user_xmin = xmin;
 		user_xmax = 5100.0;
+	}
+	else if (type == std::string("Ben_Ebeta_4096") )
+	{
+		nbins = 4096;
+		xmin = -277.240646003795860;
+		xmax = 9997.69048521763943;
+		units = std::string("Scintillator Energy [keV]");
+		user_xmin = xmin;
+		user_xmax = 5100.0;
+	}
+	else if (type == std::string("Ben_Ebeta_256_t") )
+	{
+		nbins = 256;
+		xmin = -277.241;
+		xmax = 9997.69;
+		units = std::string("Scintillator Energy [keV] (Ben 256t)");
+		user_xmin = 0.0;
+		user_xmax = 5100.0;
+	}
+	else if (type == std::string("Ben_Ebeta_256_b") )
+	{
+		nbins = 256;
+		xmin = -336.62;
+		xmax = 9336.69;
+		units = std::string("Scintillator Energy [keV] (Ben 256b)");
+		user_xmin = 0.0;
+		user_xmax = 5100.0;
+	}
+	else if (type == std::string("Ben_SOE_tof_1200") )
+	{
+		nbins = 1200;
+		xmin = -14.49;
+		xmax = 571.447;
+		units = std::string("SOE TOF [ns]");
+		user_xmin = -5.0;
+		user_xmax = 40.0;
 	}
 	else if (type==std::string("beta_energy"))
 	{
@@ -590,6 +626,81 @@ TH1D * CreateHist(std::string title, std::string type, TColor my_color, int rebi
 	this_hist -> GetXaxis() -> SetRangeUser(my_hist_type.user_xmin, my_hist_type.user_xmax);
 
 	return this_hist;
+}
+
+// UnevenRebin:  the 'gift' from Ben.
+TH1D * UnevenRebin(TH1D * horig, TH1D * htofill)
+{
+//	TH1D * htofill = new TH1D();
+	int debug = 0;
+	if (debug == 1)
+	{
+		printf("htofill: nbins = %d, low = %f, high = %f\n", htofill->GetNbinsX(),
+			htofill->GetBinLowEdge(1), htofill->GetBinLowEdge(htofill->GetNbinsX()) 
+			+ htofill->GetBinWidth(htofill->GetNbinsX()) );
+	}
+	//
+	int bmax = horig->GetNbinsX();
+	double xlo, xup;
+	double cont;
+	int b, b1, b2;
+	double edge;
+	double frac1, frac2;
+	// for i in range(0, bmax+1) :
+	for(int i=0; i<= bmax; i++)
+	{
+		xlo = horig->GetBinLowEdge(i);
+		xup = xlo + horig->GetBinWidth(i);
+		cont = horig->GetBinContent(i);
+		if (cont == 0) { continue; }
+		if (debug > 0 && cont > 0) 
+			{ printf("Source bin %d: lo edge = %f\thi edge = %f\tcontent = %f\n", i, xlo, xup, cont); }
+		if (htofill->FindBin(xlo) == htofill->FindBin(xup)) // all in one bin
+		// MJA:  I don't think this (above) is the correct condition...
+		{
+			b = htofill->FindBin(xlo);
+			htofill->SetBinContent(b, htofill->GetBinContent(b) + cont);
+			if (debug > 0) { printf("Dest bin %d incremented by %f\n", b, cont); }
+		//	if (debug > 0) { printf("Dest bin %f incremented by %f\n", b, cont); }
+		}
+		else // split it up (linearly)
+		{
+			b1 = htofill->FindBin(xlo);
+			b2 = htofill->FindBin(xup);
+			if ( !(b2 == b1 + 1) ) 
+			{
+				cout << "Uhoh, unsupported UnevenRebin!!" << endl;
+				return htofill;
+			}
+			edge = htofill->GetBinLowEdge(b2);
+			frac1 = (edge - xlo) / (xup - xlo);
+			frac2 = 1.0 - frac1;
+			
+			htofill->SetBinContent(b1, htofill->GetBinContent(b1) + cont*frac1);
+			htofill->SetBinContent(b2, htofill->GetBinContent(b2) + cont*frac2);
+			if (debug > 0)
+			{
+				printf( "Dest bin %d incremented by %f\n", b1, cont*frac1);
+				printf( "Dest bin %d incremented by %f\n", b2, cont*frac2);
+				printf( "Total increment: %f\n", cont*(frac1+frac2));
+			//	raw_input("e");
+			}
+		}
+	}
+	if (abs(horig->Integral(0, bmax) - htofill->Integral(0, bmax)) > 0.1)
+	{
+		cout << "Entries not conserved!" << endl;
+		cout << "Source:      " << horig->Integral(0, bmax) << endl;
+		cout << "Destination: " << htofill->Integral(0, bmax) << endl;
+	}
+	else
+	{
+		cout << "Entries conserved" << endl;
+		printf("Integral = %f\n", htofill->Integral(0, bmax) );
+		//for i in range(100) :
+		//print "%f\t%f" % (htofill.GetBinError(i), sqrt(htofill.GetBinContent(i)))
+	}
+	return htofill;
 }
 
 

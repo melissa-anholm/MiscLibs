@@ -103,6 +103,25 @@ string get_datafriendname(string path, int runno, bool use_blinded=false)
 	return fname;
 }
 
+string get_dataasymname(string path, int runno, bool use_blinded=false)
+{	
+	string fname;
+	std::stringstream ss;
+	ss.str( std::string() );
+	ss.clear();
+	
+	ss << path << "/AsymTree/asymtree00" << runno;
+	if (use_blinded)
+	{
+		ss << "_blinded";
+	} 
+	ss << ".root";
+
+	fname = ss.str();
+	
+	return fname;
+}
+
 TChain * get_single_datatree(int runno, bool use_blinded=false)
 {
 	TFile * file;
@@ -301,6 +320,72 @@ TChain * get_electron_chain_from_letter(string runset_letter, bool use_blinded=f
 	return tree_chain;
 }
 
+TChain * get_electron_asym_chain_from_letter(string runset_letter, bool use_blinded=false) // case sensitive.
+{
+	set_of_runs runs;
+	
+	string filename;
+	string friendname;
+	TChain * tree_chain = new TChain("ntuple");
+	TChain * friend_chain = new TChain("friendtuple");
+	string other_friendname;
+	TChain * other_friend_chain = new TChain("cycle_counters");
+	TChain * asym_chain = new TChain("use_eq_time");
+	
+	string path;
+	string friendpath;
+	
+	if( !( runset_letter.compare(string("A"))==0 || runset_letter.compare(string("B"))==0 || runset_letter.compare(string("C"))==0 || runset_letter.compare(string("D"))==0 ) )
+	{
+		cout << "Nope.  \"" << runset_letter << "\" is not a recognized electron runset."  << endl;
+		return tree_chain;
+	}
+	else
+	{
+		cout << "* Using electron runset " << runset_letter << endl;
+	}
+	
+	if(use_blinded==true)
+	{
+		cout << "* Using blinded dataset." << endl;
+		path = be_path;
+		friendpath = bf_path;
+	}
+	else
+	{
+		cout << "* Using un-blinded dataset." << endl;
+		path = ue_path;
+		friendpath = uf_path;
+	}
+	
+	for(int i=302; i<runs.N_runs; i++)
+	{
+		if(runs.good_electron[i] == true)
+		{
+			if( runset_letter.compare( runs.runset_letter[i] )==0 )
+			{
+				cout << "Using run " << i;// << endl;
+				cout << ":  runset_letter[i] = " << runs.runset_letter[i] << endl;
+				filename = get_datafilename(path, i, use_blinded);
+				tree_chain -> Add(filename.c_str());
+			
+				friendname = get_datafriendname(friendpath, i, use_blinded);
+				friend_chain -> Add(friendname.c_str());
+				
+				other_friendname = get_dataasymname(friendpath, i, use_blinded);
+				other_friend_chain -> Add(other_friendname.c_str());
+				asym_chain -> Add(other_friendname.c_str());
+			}
+		}
+	}
+	
+	tree_chain -> AddFriend(friend_chain);
+	tree_chain -> AddFriend(other_friend_chain);
+	tree_chain -> AddFriend(asym_chain);
+	return tree_chain;
+}
+
+
 TChain * get_recoil_chain_from_letter(string runset_letter, bool use_blinded=false)  // case sensitive.
 {
 	set_of_runs runs;
@@ -417,6 +502,78 @@ TChain * get_electron_chain_from_runnos(vector<int> use_these_runs, bool use_bli
 	return tree_chain;
 }
 
+TChain * get_electron_asym_chain_from_runnos(vector<int> use_these_runs, bool use_blinded=false)
+{
+	string filename;
+	string friendname;
+	TChain * tree_chain = new TChain("ntuple");
+	TChain * friend_chain = new TChain("friendtuple");
+	
+	string other_friendname;
+	TChain * other_friend_chain = new TChain("cycle_counters");
+	TChain * asym_chain = new TChain("use_eq_time");
+
+	string path;
+	string friendpath;
+
+	set_of_runs runs;
+	int N_runs_to_use = use_these_runs.size();
+	
+	if(use_blinded==true)
+	{
+		cout << "* Using blinded electron dataset." << endl;
+		path = be_path;
+		friendpath = bf_path;
+	}
+	else
+	{
+		cout << "* Using un-blinded electron dataset." << endl;
+		path = ue_path;
+		friendpath = uf_path;
+	}
+
+	for(int i=302; i<runs.N_runs; i++)
+	{
+		for(int j=0; j<N_runs_to_use; j++)
+		{
+			if( use_these_runs[j] == i )
+			{
+				if(runs.good_electron[i] == true)
+				{
+					cout << "Using run " << i << endl;
+					filename = get_datafilename(path, i, use_blinded);
+					tree_chain -> Add(filename.c_str());
+					
+					friendname = get_datafriendname(friendpath, i, use_blinded);
+					friend_chain -> Add(friendname.c_str());
+					
+					other_friendname = get_dataasymname(friendpath, i, use_blinded);
+					other_friend_chain -> Add(other_friendname.c_str());
+					asym_chain -> Add(other_friendname.c_str());
+					
+					cout << "ntuple:  " << filename << "\nfriendtuple:  " << friendname;// << endl;
+					cout << "\tother_friend_chain/asym_chain:  " << other_friend_chain << endl;
+					
+					filename = string();
+					filename.clear();
+					friendname = string();
+					friendname.clear();
+					other_friendname = string();
+					other_friendname.clear();
+				}
+				else
+				{
+					cout << "Can't use run " << i << endl;
+				}
+			}
+		}
+	}	
+	tree_chain -> AddFriend(friend_chain);
+	tree_chain -> AddFriend(other_friend_chain);
+	tree_chain -> AddFriend(asym_chain);
+	return tree_chain;
+}
+
 TChain * get_electron_chain_for_all(bool use_blinded=false)
 {
 	set_of_runs runs;
@@ -457,6 +614,57 @@ TChain * get_electron_chain_for_all(bool use_blinded=false)
 	return tree_chain;
 
 }
+
+TChain * get_electron_asym_chain_for_all(bool use_blinded=false)
+{
+	set_of_runs runs;
+	
+	string filename;
+	string friendname;
+	TChain * tree_chain = new TChain("ntuple");
+	TChain * friend_chain = new TChain("friendtuple");
+	string other_friendname;
+	TChain * other_friend_chain = new TChain("cycle_counters");
+	TChain * asym_chain = new TChain("use_eq_time");
+
+	string path;
+	string friendpath;
+	if(use_blinded==true)
+	{
+		cout << "* Using blinded dataset." << endl;
+		path = be_path;
+		friendpath = bf_path;
+	}
+	else
+	{
+		cout << "* Using un-blinded dataset." << endl;
+		path = ue_path;
+		friendpath = uf_path;
+	}
+	cout << endl;
+	for(int i=302; i<runs.N_runs; i++)
+	{
+		if(runs.good_electron[i] == true)  // if compton edge is bad, the whole run is marked as bad now.
+		{
+			cout << "Adding run " << i << endl;
+			filename = get_datafilename(path, i, use_blinded);
+			tree_chain -> Add(filename.c_str());
+		
+			friendname = get_datafriendname(friendpath, i, use_blinded);
+			friend_chain -> Add(friendname.c_str());
+				
+			other_friendname = get_dataasymname(friendpath, i, use_blinded);
+			other_friend_chain -> Add(other_friendname.c_str());
+			asym_chain -> Add(other_friendname.c_str());
+		}
+	}
+	tree_chain -> AddFriend(friend_chain);
+	tree_chain -> AddFriend(other_friend_chain);
+	tree_chain -> AddFriend(asym_chain);
+
+	return tree_chain;
+}
+
 
 TChain * get_recoil_chain_for_all(bool use_blinded=false)
 {
@@ -652,7 +860,7 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 		MetaTree -> GetEntry(i);
 		if(this_rho == rho)
 		{
-			cout << "Using run " << run << "  (i=" << i << ")\tN_gen=" << this_neventsgenerated << ",\tN_saved=" << this_neventssaved << endl;
+			cout << "Using run " << run << "  (i=" << i << "),\trho=" << this_rho << "\tN_gen=" << this_neventsgenerated << ",\tN_saved=" << this_neventssaved << endl;
 			total_events_generated = total_events_generated + this_neventsgenerated;
 			total_events_recorded = total_events_recorded + this_neventssaved;
 			
@@ -668,7 +876,7 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 		}
 	}
 	
-	cout << "rho=" << this_rho << ", N_generated=" << total_events_generated << ", \tN_saved=" << total_events_recorded << endl;
+	cout << "rho=" << rho << ", N_generated=" << total_events_generated << ", \tN_saved=" << total_events_recorded << endl;
 	tree_chain -> AddFriend(friend_chain);
 	return tree_chain;
 }
