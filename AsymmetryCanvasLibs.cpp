@@ -159,7 +159,7 @@ double get_asymmetry_err(double r1p, double r1m, double r2p, double r2m)
 	return sqrt(DA2);
 }
 
-TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, string hist_title = string("A_beta"), int color=int(kBlack) )
+TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, string hist_title = string("A_beta"), int color=int(kBlack), int plotmarkerstyle=20)
 {
 	int N_bins = 0;
 	N_bins = r1p_hist->GetNbinsX();
@@ -169,6 +169,7 @@ TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_his
 	superratio -> SetTitle(hist_title.c_str());
 	superratio -> SetLineColor(color);
 	superratio -> SetMarkerColor(color);
+	superratio -> SetLineWidth(2);
 	superratio -> Sumw2(kFALSE);
 	superratio -> Sumw2();
 	
@@ -200,7 +201,10 @@ TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_his
 		cout << "Must use histograms with the same number of bins!" << endl;
 	}
 	
-	
+	superratio -> SetMarkerStyle(plotmarkerstyle);
+//	superratio -> SetMarkerStyle(20);  // 20:  big circles.
+//	superratio -> SetMarkerStyle(22);  // 22:  solid up-triangles.
+
 	return superratio;
 }
 
@@ -351,6 +355,7 @@ bool HistsHaveSameBinning(TH1D *a, TH1D *b, bool verbose=false)
 
 double justgetthedamnchisquared(TH1D * h1, TH1D * h2, bool use_weighted, int bmin=0, int bmax=0)
 {
+	int verbose = 0;
 	double chi2 = 0.0;
 	int nbins = 0;
 	
@@ -365,13 +370,16 @@ double justgetthedamnchisquared(TH1D * h1, TH1D * h2, bool use_weighted, int bmi
 	{
 		nbins = h1 -> GetNbinsX();
 		
-		cout << "nbins = " << nbins;// << endl;
 		if(bmax == 0 || bmax > nbins) { bmax = nbins; }
 		if(bmin < 0 || bmin > bmax ) { bmin=0; }
-		cout << "\tbins_in_use = " << bmax - bmin << endl;
-		cout << "E_min = " << h1->GetBinCenter(bmin) - h1->GetBinWidth(bmin);
-		cout << "\tE_max = " << h1->GetBinCenter(bmax) +  h1->GetBinWidth(bmax) << endl;
-		cout << endl;
+		if(verbose>0)
+		{
+			cout << "nbins = " << nbins;// << endl;
+			cout << "\tbins_in_use = " << bmax - bmin << endl;
+			cout << "E_min = " << h1->GetBinCenter(bmin) - 0.5*h1->GetBinWidth(bmin);
+			cout << "\tE_max = " << h1->GetBinCenter(bmax) +  0.5*h1->GetBinWidth(bmax) << endl;
+			cout << endl;
+		}
 		
 		for (int i = bmin; i <= bmax; i++) 
 		{
@@ -414,8 +422,10 @@ double justgetthedamnchisquared(TH1D * h1, TH1D * h2, bool use_weighted, int bmi
 	{
 		cout << "That's bad.  Hists should really have the same binning..." << endl;
 	}
-	
-	cout << endl;
+	if(verbose>0)
+	{
+		cout << endl;
+	}
 	return chi2;  // returns 0 if hists don't have the same binning.
 }
 
@@ -462,6 +472,11 @@ TH1D* get_residuals(TH1D* h1, TH1D* h2)
 	//	sig = 1.0;
 	//	cout << "i=" << i << ",\terrs1_2->At(i) = " << errs1_2->At(i) << ",\th1->GetBinError(i) = " << h1->GetBinError(i) << endl;
 		sig = sqrt( errs1_2->At(i) + errs2_2->At(i) );
+		if(sig==0)
+		{
+			cout << "bin " << i << " (" << h1->GetBinCenter(i) <<"):\tsig=" << sig << ", dif=" << dif << " -- setting sig=1:  res=" << dif << endl;
+			sig = 1.0;
+		}
 		res = dif / sig;
 		
 		new_hist -> SetBinContent(i, res);

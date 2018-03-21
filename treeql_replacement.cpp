@@ -7378,7 +7378,7 @@ void set_of_runs::init_runsetletter()
 			{
 				runset_letter[i] = string("A");
 			}
-			else if(i <= 435)
+			else if(i <= 445)
 			{
 				runset_letter[i] = string("B");
 			}
