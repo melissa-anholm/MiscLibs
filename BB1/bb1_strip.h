@@ -3,12 +3,14 @@
 #define INCLUDE_BB1_STRIP_H_
 #include <string>
 #include <vector>
+#include <TH1D.h>
 #include <TRandom.h>
 using std::string;
 using std::vector;
 
 enum Detector {upper, lower, D_undef};
 enum Plane {X, Y, P_undef};
+//string bb1_strip_version = "4.27.2";
 
 class BB1Strip {
  private :
@@ -19,11 +21,12 @@ class BB1Strip {
   double denergy;               /* keV */
   unsigned int maxT;                  /* chan */
   double pos;
+  TH1D *noise;
  public :
   BB1Strip();
   BB1Strip(int nn_, int sn_, double cal_, double dcal_, double res_,
-           double dres_, double* t_, double pos_);
-  double t[6];                  /* threshold for SN .25, .5, .75, 1, 2, 0.17 */
+           double dres_, double* t_, double pos);
+  double t[5];                  /* threshold for SN .25, .5, .75, 1, 2 */
   double CalcEnergy(double adc);
   double GetResolution() {return res;};
   double GetEnergy() {return energy;};
@@ -37,24 +40,33 @@ class BB1Strip {
   void SetNtupleNumber(int n) {nn = n;};
   void SetMaxT(unsigned int t) {maxT = t;}
   unsigned int GetMaxT() {return maxT;}
+  void SetNoise(TH1D *n) {noise = n; noise -> SetDirectory(0); std::cout << "Setting noise pointer = " << noise << std::endl;}
+  TH1D* GetNoise() {return noise;}
 };
 
 class BB1Detector {
  private:
   vector<BB1Strip> strip;
+  double double_hit_threshold;
  public :
+
 
   BB1Detector();
   BB1Detector(string fname);
-  vector<double> ApplyResolution(vector<double> adc, TRandom *r);
+  vector<double> ApplyResolution(vector<double> adc, TRandom *r,
+                                 bool doEmpirial = true);
   vector<double> CalcEnergy(vector<double> adc);
   void SetMaxT(vector<unsigned int> tvec);
   vector<double> GetResolution();
   double GetPositionForStrip(int sn);
   BB1Strip GetStripByNtupleN(int nn) {return strip[nn];}
   BB1Strip GetStripByStripN(int sn);
+  BB1Strip* GetStripByStripN_ptr(int sn);
   void SetTDiffSigWithFile(string fname);
   int GetNtupleNumberForStripN(int sn) {return GetStripByStripN(sn).GetNtupleNumber();}
+  void SetDoubleHitThreshold(double dht) {double_hit_threshold = dht;}
+  double GetDoubleHitThreshold() {return double_hit_threshold;}
+  void SetupNoiseFromFile(string fname);
   double tdiff_sig;
   Detector det;
   Plane pl;
@@ -63,9 +75,9 @@ class BB1Detector {
 class BB1Hit {
 public :
   double xpos, ypos, energy;
-  int nx, ny, smaxx, smaxy;  
-  // smaxx, smaxy:  strip with max in x plane, strip with max in y plane.
+  int nx, ny, smaxx, smaxy;
   bool passE, passT, pass;
+  double time_ch;
   BB1Hit();
 };
 

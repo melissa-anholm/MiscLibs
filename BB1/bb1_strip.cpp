@@ -3,6 +3,7 @@
 #include <iostream>
 #include <math.h>
 
+#include <TFile.h>
 #include <TRandom3.h>
 
 #include "bb1_strip.h"
@@ -10,6 +11,8 @@
 using std::cin;
 using std::cout;
 using std::endl;
+
+string bb1_strip_version = "4.27.2";
 
 BB1Result::BB1Result() {
   hit = BB1Hit();
@@ -27,9 +30,8 @@ BB1Strip::BB1Strip() {
   energy = 0.;
   denergy = 0.;
   maxT = 0;
-//pos = 32.45;
-pos = 0.0;
-  for (int i = 0; i < 6; i++) t[i] = 0.;
+  noise = 0;
+  for (int i = 0; i < 5; i++) t[i] = 0.;
 }
 
 BB1Strip::BB1Strip(int nn_, int sn_, double cal_, double dcal_, double res_,
@@ -42,7 +44,8 @@ BB1Strip::BB1Strip(int nn_, int sn_, double cal_, double dcal_, double res_,
   dres = dres_;
   maxT = 0;
   pos = pos_;
-  for (int i = 0; i < 6; i++) t[i] = 0.5*t_[i]; // srsly?!  ...but the one place where this happens in this code, it also corrects it immediately.
+  noise = 0;
+  for (int i = 0; i < 5; i++) t[i] = 0.5*t_[i];
 }
 
 double BB1Strip::CalcEnergy(double adc) {
@@ -58,33 +61,33 @@ void BB1Strip::Print() {
   cout << "Calibration: " << cal << " +/- " << dcal << " ch/keV" << endl;
   cout << "Resolution: " << res << " +/- " << dres << " keV" << endl;
   cout << "Thresholds for S/N: ";
-  for (int i = 0; i < 6; i++) cout << t[i] << "   ";
+  for (int i = 0; i < 4; i++) cout << t[i] << "   ";
   cout << " keV" << endl;
 }
 
 double BB1Strip::GetThresholdAtIndex(int i) {
-  if (i > 5 || i < 0) {
-    cout << "WARNING: Must supply index 0->5" << endl;
-    cout << "Assuming you meant i = 5" << endl;
-    i = 5;
+  if (i > 4 || i < 0) {
+    cout << "WARNING: Must supply index 0->4" << endl;
+    cout << "Assuming you meant i = 4" << endl;
+    i = 4;
   }
   return t[i];
-  //  return 30.0;                          // keV
+  //  return 60.0;                          // keV
 }
 
 
 BB1Detector::BB1Detector() {
-  double t[6] = {0, 0, 0, 0, 0, 0};
+  double t[5] = {0, 0, 0, 0, 0};
   strip = vector<BB1Strip>(40, BB1Strip());
   det = D_undef;
   pl = P_undef;
   tdiff_sig = 0.0;
 }
 
-BB1Detector::BB1Detector(string fname) : det(D_undef), pl(P_undef) 
-{
-//  cout << "Reading file " << fname << endl;
-  double t[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+BB1Detector::BB1Detector(string fname) : det(D_undef), pl(P_undef) {
+  cout << "Reading file " << fname << endl;
+  cout << "Initializing BB1Detector version " << bb1_strip_version << endl;
+  double t[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
   strip = vector<BB1Strip>(40, BB1Strip());
   for (unsigned int i = 0; i < 40; i++) strip[i].SetNtupleNumber(i);
   std::ifstream ifs(fname.c_str(), std::ifstream::in);
@@ -102,24 +105,22 @@ BB1Detector::BB1Detector(string fname) : det(D_undef), pl(P_undef)
   double pos;
   int count = 0;
   while (ifs >> nn >> sn >> pos >> cal >> dcal >> res >> dres >> t[0] >> t[1] >> t[2] >>
-         t[3] >> t[4] /*>> t[5]*/ && !ifs.eof() && ifs.good() && count < 40) {
+         t[3] >> t[4] && !ifs.eof() && ifs.good() && count < 40) {
     count++;
-
-//BB1Strip::BB1Strip(int nn_, int sn_, double cal_, double dcal_, double res_, double dres_, double* t_, double pos_)
-    strip[nn] = BB1Strip(nn, sn, cal, dcal, res, dres, t, pos);  // this initialization is defined stupidly.  therefore, t[i] gets re-initialized immediately after.  
-//	cout << "Defined:  BB1Strip(nn, sn, cal, dcal, res, dres, t, pos):" << endl;
-//	cout << nn << "\t" << sn  << "\t" << cal << "\t" << dcal << "\t"
-//	     << res << "\t" << dres << "\t" << t << "\t" << pos << endl;
-    for (int i = 0; i < 6; i++) 
+    strip[nn] = BB1Strip(nn, sn, cal, dcal, res, dres, t, pos);
+    for (int i = 0; i < 5; i++) 
       {
         strip[nn].t[i] = t[i];
+
       }
     //    cout << "Strip " << nn << " cal = " << cal << endl;
     //    cout << t[2] << "\t" << strip[nn].t[2] << endl;
+    
     //    strip[nn].Print();
   }
   cout << "Read " << count << " strips from " << fname << endl;
   ifs.close();
+  double_hit_threshold = 40.;           // keV
 }
 
 void BB1Detector::SetTDiffSigWithFile(string fname) {
@@ -136,22 +137,42 @@ void BB1Detector::SetTDiffSigWithFile(string fname) {
   ifs.close();  
 }
 
-vector<double> BB1Detector::ApplyResolution(vector<double> adc, TRandom *r) 
-{
+vector<double> BB1Detector::ApplyResolution(vector<double> adc, TRandom *r,
+                                            bool doEmpirical) {
+  // This function is always called for Geant only, therefore adc == energy
   vector<double> adc_with_res(adc.size(), 0.0);
 
   for (unsigned int i = 0; i < adc.size(); i++) {
     double orig = adc[i];
-    double sigm = GetStripByStripN(i).GetResolution();
-
     double g = -1;
-    if (sigm < 0.001) {
-      g = 0.0;
-    } else {
-      while (g < 0) {
-        g = r -> Gaus(orig, sigm);
+    
+    int signedi = static_cast<int>(i);
+    BB1Strip strip = GetStripByStripN(i);
+    if (strip.GetNtupleNumber() != signedi && strip.GetCalibration() > 0.) {
+      cout << "WARNING in ApplyResolution. Possible misalignment" << endl;
+      cout << "Det = " << det << "\tPlane = " << pl << "\ti = " << i << "\tS = "
+           << strip.GetStripNumber() << "\tN = " << strip.GetNtupleNumber()
+           << endl;
+    }
+
+    TH1D *n = strip.GetNoise();
+
+    if (doEmpirical && orig < 5.0 && n) { // E = 0, draw from noise
+      //      cout << "Throwing empirical noise" << endl;
+      g = n -> GetRandom();
+    } else {                    //  E > 0, apply gaussian resolution
+      // Since this is only used for Geant, Strip# == Ntuple# so either is okay
+      double sigm = strip.GetResolution();
+      
+      if (sigm < 0.001) {
+        g = 0.0;
+      } else {
+        while (g < 0) {
+          g = r -> Gaus(orig, sigm);
+        }
       }
     }
+
     adc_with_res[i] = g;
   }
   return adc_with_res;
@@ -160,7 +181,7 @@ vector<double> BB1Detector::ApplyResolution(vector<double> adc, TRandom *r)
 vector<double> BB1Detector::CalcEnergy(vector<double> adc) {
   vector<double> energy(strip.size(), 0.0);
   if (adc.size() != strip.size()) {
-    cout << "Size mismatch!" << endl;
+    cout << "BB1Detector::CalcEnergy Size mismatch!" << endl;
   } else {
     for (unsigned int i = 0; i < adc.size(); i++) {
       energy[i] = strip[i].CalcEnergy(adc[i]); // Also sets strip energy
@@ -174,7 +195,7 @@ vector<double> BB1Detector::CalcEnergy(vector<double> adc) {
 
 void BB1Detector::SetMaxT(vector<unsigned int> tvec) {
   if (tvec.size() != 40) {
-    cout << "Size mismatch!" << endl;
+    cout << "BB1Detector::SetMaxT Size mismatch!" << endl;
   } else {
     for (unsigned int i = 0; i < tvec.size(); i++) {
       strip[i].SetMaxT(tvec[i]);
@@ -190,11 +211,8 @@ vector<double> BB1Detector::GetResolution() {
   return res;
 }
 
-double BB1Detector::GetPositionForStrip(int sn) 
-{
-	double pos = GetStripByStripN(sn).GetPos();
-	return pos;
-//  return GetStripByStripN(sn).GetPos();
+double BB1Detector::GetPositionForStrip(int sn) {
+  return GetStripByStripN(sn).GetPos();
   // double pos = 0.0;
   // if (det == upper && pl == Y) {
   //   pos = 19.5 - double(sn);
@@ -206,11 +224,65 @@ double BB1Detector::GetPositionForStrip(int sn)
 
 BB1Strip BB1Detector::GetStripByStripN(int sn) {
   for (unsigned int i = 0; i < strip.size(); i++) {
-    if (strip[i].GetStripNumber() == sn) return strip[i];
+    if (strip[i].GetStripNumber() == sn) return strip[i]; // Pass by value
   }
   //  cout << "Strip number " << sn << " not found!" << endl;
   return BB1Strip();
 }
+
+BB1Strip *BB1Detector::GetStripByStripN_ptr(int sn) {
+  for (unsigned int i = 0; i < strip.size(); i++) {
+    if (strip[i].GetStripNumber() == sn) return &(strip[i]); // Pas by reference
+  }
+  //  cout << "Strip number " << sn << " not found!" << endl;
+  return new BB1Strip();
+}
+
+void BB1Detector::SetupNoiseFromFile(string fname) {
+  //  TFile *nfile = new TFile(fname.c_str());
+  TFile *nfile = TFile::Open(fname.c_str());
+  string uORl = "";
+  if (det == upper) {
+    uORl = "U";
+  } else if (det == lower) {
+    uORl = "L";
+  } else {
+    cout << "Detector " << det << " not found" << endl;
+  }
+  string xORy = "";
+  if (pl == X) {
+    xORy = "X";
+  } else if (pl == Y) {
+    xORy = "Y";
+  } else {
+    cout << "Plane " << pl << " not found" << endl;
+  }
+    
+  TH1D *noise_clone;
+  for (int i = 0; i < 40; i++) {
+    BB1Strip *strip = GetStripByStripN_ptr(i);
+
+    char hname[1024];
+    sprintf(hname, "%s%s_S%d_noise", uORl.c_str(), xORy.c_str(), i);
+    cout << hname << endl;
+    TH1D *noise = (TH1D*)nfile -> Get(hname);
+    if (noise) {
+      //      cout << noise << endl;
+      noise_clone = (TH1D*)noise -> Clone();
+      //      cout << noise_clone << endl;
+      //      cout << "Got noise with name " << noise -> GetName() << endl;
+      noise_clone -> SetDirectory(0);
+      //      cout << "Strip at " << strip << " setting noise" << endl;
+      strip -> SetNoise(noise_clone);
+      //      cout << strip -> GetNoise() << endl;
+      strip -> Print(); 
+    } else {
+      cout << "No noise" << endl; 
+    }    
+  }
+  nfile -> Close();
+}
+
 
 BB1Hit::BB1Hit() : xpos(0.), ypos(0.), energy(0.), nx(0), ny(0), smaxx(0),
                    smaxy(0), passE(false), passT(false), pass(false) {}
@@ -235,6 +307,12 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
   if (fabs(xDet.tdiff_sig-yDet.tdiff_sig) > 1E-6) {
     cout << "PLANES DO NOT HAVE SAME TDIFF_SIG" << endl;
     cout << "WILL USE X-DIRECTION, BUT SOMETHING IS WRONG" << endl;
+  }
+  if (fabs(xDet.GetDoubleHitThreshold() -
+           yDet.GetDoubleHitThreshold()) > 1E-6) {
+    cout << "WARNING: PLANES DO NOT HAVE SAME X2 HIT THRESHOLD" << endl;
+    cout << "WILL USE X-DIRECTION X2 HIT THRESHOLD = "
+         << xDet.GetDoubleHitThreshold() << endl;
   }
   // vector<BB1Strip> x = xDet.strip;
   // vector<BB1Strip> y = yDet.strip;
@@ -263,6 +341,9 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
         // cout << "Above threshold for n#: " << i << " ie s# "
         //      << x.GetStripNumber() << " E = " << x.GetEnergy()
         //      << " > " << x.GetThresholdAtIndex(t_index) << endl;
+        
+        
+        
       }
       if (x.GetEnergy() > maxx) {
         maxx = x.GetEnergy();
@@ -302,7 +383,7 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
         zmax = z;
       }
     }
-    xstrips_sorted.push_back(xstrips[zmax]);  // xstrips is a list of strip numbers ...
+    xstrips_sorted.push_back(xstrips[zmax]);
     xstrips.erase(xstrips.begin()+zmax);
   } while (xstrips.size() > 0);
   do {
@@ -323,66 +404,53 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
     for (int ii = 0; ii < 20; ii++) cout << "bb1";
     cout << endl;
     cout << "X-strips above individual thresholds:" << endl;
-    cout << "ntuple#, strip#, energy, resolution, xpos, xstrips_sorted[ii], cal" << endl;
-    for (unsigned int ii = 0; ii < xstrips_sorted.size(); ii++) 
-    {
+    cout << "ntuple#, strip#, energy, resolution" << endl;
+    for (unsigned int ii = 0; ii < xstrips_sorted.size(); ii++) {
       BB1Strip x = xDet.GetStripByStripN(xstrips_sorted[ii]);
-      cout << x.GetNtupleNumber() << "\t"  // GetNtupleNumber() returns nn
-           << x.GetStripNumber() << "\t"   // GetStripNumber() returns sn
+      cout << x.GetNtupleNumber() << "\t"
+           << x.GetStripNumber() << "\t"
            << x.GetEnergy() << "\t"
-           << x.GetResolution() << "\t"
-           << x.GetPos() << "="
-           << xDet.GetPositionForStrip(xstrips_sorted[ii]) << "\t"
-           << xstrips_sorted[ii] << "\t"
-           << x.GetCalibration() << endl;
-//     posx = xDet.GetPositionForStrip(smaxx);
-
+           << x.GetResolution() << endl;
     }
     cout << "Y-strips above individual thresholds:" << endl;
-    cout << "ntuple#, strip#, energy, resolution, ypos, ystrips_sorted[ii]" << endl;
-    for (unsigned int ii = 0; ii < ystrips_sorted.size(); ii++) 
-    {
+    cout << "ntuple#, strip#, energy, resolution" << endl;
+    for (unsigned int ii = 0; ii < ystrips_sorted.size(); ii++) {
       BB1Strip y = yDet.GetStripByStripN(ystrips_sorted[ii]);
       cout << y.GetNtupleNumber() << "\t"
            << y.GetStripNumber() << "\t"
            << y.GetEnergy() << "\t"
-           << y.GetResolution() << "\t" //<< endl;        
-           << y.GetPos() << "=" 
-           << yDet.GetPositionForStrip(ystrips_sorted[ii]) << "\t"
-           << ystrips_sorted[ii] << "\t"
-           << y.GetCalibration() << endl;
+           << y.GetResolution() << endl;        
     }
 
   }
   // Check for double hits
-  if (nx >= 2 && ny >= 2) 
-  {
+  if (nx >= 2 && ny >= 2) {
     //    cout << "Both >= 2!" << endl;
     BB1Strip xs[2] = {xDet.GetStripByStripN(xstrips_sorted[0]),
                       xDet.GetStripByStripN(xstrips_sorted[1])};
     BB1Strip ys[2] = {yDet.GetStripByStripN(ystrips_sorted[0]),
                       yDet.GetStripByStripN(ystrips_sorted[1])};
     bool pass = true;
-    for (int i = 0; i < 2; i++) 
-    {
+    for (int i = 0; i < 2; i++) {
       double r = sqrt(pow(xs[i].GetResolution(), 2) +
                       pow(ys[i].GetResolution(), 2));
       double d = fabs(xs[i].GetEnergy() - ys[i].GetEnergy());
-      double e = 0.5*(xs[i].GetEnergy() + ys[i].GetEnergy());  // bug??????  fixed ...
+      double e = 0.5*(xs[1].GetEnergy() + ys[i].GetEnergy());
       double t = fabs(static_cast<double>(xs[i].GetMaxT()) -
-                      static_cast<double>(ys[i].GetMaxT()));
-      pass = pass && (d < n_cut*r) && (t < n_cut*xDet.tdiff_sig) && e > 40.0;  // threshold ?!??
+                      static_cast<double>(ys[i].GetMaxT()));      
+      pass = pass
+          && d < n_cut*r
+          && t < n_cut*xDet.tdiff_sig
+          && e > xDet.GetDoubleHitThreshold();
     }
     
-    if (pass) 
-    {
-      if (verbose) 
-      {
+    if (pass) {
+      if (verbose) {
         cout << "Event satisfies multi-hit criteria" << endl;
       }
       r.twoHits = true;
 
-      h.xpos = xDet.GetPositionForStrip(xstrips_sorted[0]); // argument should be 'sn'
+      h.xpos = xDet.GetPositionForStrip(xstrips_sorted[0]);
       h.ypos = yDet.GetPositionForStrip(ystrips_sorted[0]);
       double enext = xs[0].GetEnergy();
       double eneyt = ys[0].GetEnergy();
@@ -390,6 +458,7 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
       double resyt = ys[0].GetResolution();
       double nt = (enext/(resxt*resxt)) + (eneyt/(resyt*resyt));
       double dt = (1.0 /(resxt*resxt)) + (1.0 /(resyt*resyt));
+      h.time_ch = 0.5*static_cast<double>(xs[0].GetMaxT() + ys[0].GetMaxT());
       h.energy = nt / dt;
       h.nx = 1;
       h.ny = 1;
@@ -414,6 +483,8 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
       r.secHit.ny = 1;
       r.secHit.smaxx = xstrips_sorted[1];
       r.secHit.smaxy = ystrips_sorted[1];
+      r.secHit.time_ch = 0.5*static_cast<double>(xs[1].GetMaxT() +
+                                                 ys[1].GetMaxT());
       r.secHit.passE = true;
       r.secHit.passT = true;
       r.secHit.pass = true;
@@ -438,7 +509,7 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
     unsigned int s1 = 0, s2 = 1;
     for (s1 = 0; s1 < xstrips_sorted.size() && !xadjacent; s1++) {
       for (s2 = s1 + 1; s2 < xstrips_sorted.size() && !xadjacent; s2++) {
-        if (fabs(xstrips_sorted[s1] - xstrips_sorted[s2]) == 1) {
+        if (abs(xstrips_sorted[s1] - xstrips_sorted[s2]) == 1) {
           xadjacent = true;
         }
       }
@@ -484,7 +555,7 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
     unsigned int s1 = 0, s2 = 1;
     for (s1 = 0; s1 < ystrips_sorted.size() && !yadjacent; s1++) {
       for (s2 = s1 + 1; s2 < ystrips_sorted.size() && !yadjacent; s2++) {
-        if (fabs(ystrips_sorted[s1] - ystrips_sorted[s2]) == 1) {
+        if (abs(ystrips_sorted[s1] - ystrips_sorted[s2]) == 1) {
           yadjacent = true;
         }
       }
@@ -529,12 +600,10 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
   // double d = (1.0 /(resx*resx)) + (1.0 /(resy*resy));
 
   bool finalPass = false;
-  if (verbose > 1) 
-  {
+  if (verbose > 1) {
     cout << "Comparing energies for A: " << enex << " and " << eney << endl;
   }
-  if (CompareXY(enex, resx, xT, eney, resy, yT, n_cut, xDet.tdiff_sig)) 
-  {
+  if (CompareXY(enex, resx, xT, eney, resy, yT, n_cut, xDet.tdiff_sig)) {
     double n = (enex/(resx*resx)) + (eney/(resy*resy));
     double d = (1.0 /(resx*resx)) + (1.0 /(resy*resy));
     h.energy = n / d;
@@ -543,20 +612,18 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
     finalPass = true;
     h.passE = true;
     h.passT = true;
+    h.time_ch = 0.5*(xT + yT);
     if (verbose > 0) cout << "Passed A (all adjacent strips, if any)" << endl;
   }
 
-  if (!finalPass) 
-  {
+  if (!finalPass) {
     double xE = xDet.GetStripByStripN(smaxx).GetEnergy();
     double xR = xDet.GetStripByStripN(smaxx).GetResolution();
     double xT_try = static_cast<double>(xDet.GetStripByStripN(smaxx).GetMaxT());
-    if (verbose > 1) 
-    {
+    if (verbose > 1) {
       cout << "Comparing energies for B: " << xE << " and " << eney << endl;
     }
-    if (CompareXY(xE, xR, xT_try, eney, resy, yT, n_cut, xDet.tdiff_sig)) 
-    {
+    if (CompareXY(xE, xR, xT_try, eney, resy, yT, n_cut, xDet.tdiff_sig)) {
       double n = (xE/(xR*xR)) + (eney/(resy*resy));
       double d = (1.0 /(xR*xR)) + (1.0 /(resy*resy));
       h.energy = n / d;
@@ -565,7 +632,9 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
       finalPass = true;
       h.passE = true;
       h.passT = true;
-      if (verbose > 0) cout << "Passed B (only y-adjacent strips, if any)" << endl;
+      h.time_ch = 0.5*(xT_try + yT);
+      if (verbose > 0) cout << "Passed B (only y-adjacent strips, if any)"
+                            << endl;
     }
   }
 
@@ -585,6 +654,7 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
       finalPass = true;
       h.passE = true;
       h.passT = true;
+      h.time_ch = 0.5*(xT + yT_try);
       if (verbose > 0) cout << "Passed C (only x-adjacent strips, if any)"
                             << endl;
     }
@@ -606,6 +676,7 @@ BB1Result GetResult(BB1Detector xDet, BB1Detector yDet,
     h.ypos = posy;
     h.passE = (ediff < res_tot*n_cut && xE > 0. && yE > 0.);
     h.passT = (fabs(xT_try - yT_try) < n_cut*xDet.tdiff_sig);
+    h.time_ch = 0.5*(xT_try + yT_try);
     if (h.passE && h.passT && verbose > 0) {
       cout << "Passed D (no adjacent strips)" << endl;
     }
