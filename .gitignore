@@ -5,6 +5,7 @@ ReTuple/cmake_install.cmake
 ReTuple/retuple
 ReTuple/Makefile
 ReTuple/libbb1_strip.a
+BB1_old/*
 ReTuple/._*
 ._*
 .fuse_*
