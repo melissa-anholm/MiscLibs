@@ -433,7 +433,7 @@ bool HistsHaveSameBinning(TH1D *a, TH1D *b, bool verbose=false)
 	return same;
 }
 
-double justgetthedamnchisquared(TH1D * h1, TH1D * h2, bool use_weighted, int bmin=0, int bmax=0)
+double justgetthedamnchisquared(TH1D * h1, TH1D * h2, bool already_weighted=true, int bmin=0, int bmax=0)
 {
 	int verbose = 0;
 	double chi2 = 0.0;
@@ -446,6 +446,11 @@ double justgetthedamnchisquared(TH1D * h1, TH1D * h2, bool use_weighted, int bmi
 	double combined_berr = 1.0;
 	double chi_contribution = 0.0;
 	
+	if(!already_weighted)
+	{
+		h1 -> Sumw2();
+		h2 -> Sumw2();
+	}
 	if(HistsHaveSameBinning(h1, h2))
 	{
 		nbins = h1 -> GetNbinsX();
@@ -478,24 +483,19 @@ double justgetthedamnchisquared(TH1D * h1, TH1D * h2, bool use_weighted, int bmi
 			h1_berr  = h1 -> GetBinError(i);   // this is the literal size of the error bars.
 			h2_bcont = h2 -> GetBinContent(i);
 			h2_berr  = h2 -> GetBinError(i);
-			if(use_weighted)
-			{
-			//	cout << "bin " << i << ":\tBinError1 = " << h1_berr << ",\tBinError2 = " << h2_berr << endl;
-		//		cout << ";\tBinContent1 = " << h1_bcont << ",  \tBinContent2 = " << h2_bcont << endl;
-				// The sumw2 are squared, but the bin error is not.
 			
-				combined_berr = sqrt(h1_berr*h1_berr + h2_berr*h2_berr);
-			
-				// or ... is it???
-			//	combined_berr = sqrt(h1_berr + h2_berr);
-				
-				if (combined_berr <= 0) { combined_berr = 1.0; }
-		//		cout << "i=" << i << "\th1-h2=" << h1_bcont - h2_bcont << "\tcombined_berr = " << combined_berr << "\th1_berr = " << h1_berr << "\th2_berr = " << h2_berr << endl;
+			combined_berr = sqrt(h1_berr*h1_berr + h2_berr*h2_berr);
+			if (combined_berr <= 0) 
+			{ 
+				combined_berr = 1.0; 
+				if(verbose>0)
+				{
+					cout << "* bin " << i << ":  setting combined bin err to 1." << endl;
+				}
 			}
+			
 			chi_contribution = (h1_bcont - h2_bcont)/combined_berr;
 			chi2 = chi2 + chi_contribution*chi_contribution;
-			
-		//	cout << "i=" << i << "\th1-h2 = " << h1_bcont - h2_bcont << "  \tcombined_err = " << combined_berr << "  \tdchi2 = " << chi_contribution*chi_contribution << endl;
 			if(verbose>0)
 			{
 				cout << "bin " << i;
@@ -514,6 +514,11 @@ double justgetthedamnchisquared(TH1D * h1, TH1D * h2, bool use_weighted, int bmi
 	if(verbose>0)
 	{
 		cout << endl;
+	}
+	if(!already_weighted)
+	{
+		h1 -> Sumw2(kFALSE);
+		h2 -> Sumw2(kFALSE);
 	}
 	return chi2;  // returns 0 if hists don't have the same binning.
 }
