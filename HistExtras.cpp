@@ -695,7 +695,7 @@ TH1D * UnevenRebin(TH1D * horig, TH1D * htofill)
 	}
 	else
 	{
-		cout << "Entries conserved" << endl;
+		cout << "Entries conserved.  \t";// << endl;
 		printf("Integral = %f\n", htofill->Integral(0, bmax) );
 		//for i in range(100) :
 		//print "%f\t%f" % (htofill.GetBinError(i), sqrt(htofill.GetBinContent(i)))
