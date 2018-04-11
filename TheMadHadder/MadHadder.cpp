@@ -90,7 +90,7 @@ int can_hadd(int run1, int run2)
 int can_hadd(string filename1, int run1, string filename2, int run2, string filename3)
 {
 	int verbose = 2;
-//	Run/I:Filename/C:BadFlag/I:Efield/D:Rho/D:EventsGenerated/I:EventsSaved/I:SaveEventTypes/C:Polarization/D:Alignment/D:MinCosTheta/D:Efield_Uniformity/O:StepperType/I:StepperName/C:StepMax_mm/D:PhysicsListName/C:is_summed/I:Trap_x_mm/D:Trap_y_mm/D:Trap_z_mm/D:Trap_sigma_x/D:Trap_sigma_y/D:Trap_sigma_z/D:Temperature/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:SailVelocity_x_mm_per_ms/D:SailVelocity_y_mm_per_ms/D:SailVelocity_z_mm_per_ms/D:ChargeState/I
+//	Run/I:Filename/C:has_been_summed/I:Efield/D:Rho/D:EventsGenerated/I:EventsSaved/I:SaveEventTypes/C:Polarization/D:Alignment/D:MinCosTheta/D:Efield_Uniformity/O:StepperType/I:StepperName/C:StepMax_mm/D:PhysicsListName/C:is_a_sum/I:Trap_x_mm/D:Trap_y_mm/D:Trap_z_mm/D:Trap_sigma_x/D:Trap_sigma_y/D:Trap_sigma_z/D:Temperature/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:SailVelocity_x_mm_per_ms/D:SailVelocity_y_mm_per_ms/D:SailVelocity_z_mm_per_ms/D:ChargeState/I
 	if(verbose>1)
 	{
 		cout << "File 1:  " << filename1 << endl;
@@ -165,10 +165,10 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	//
 	int isbad1, isbad2;
 	int issummed1, issummed2;
-	MetaTree1 -> SetBranchAddress("BadFlag", &isbad1);
-	MetaTree2 -> SetBranchAddress("BadFlag", &isbad2);
-	MetaTree1 -> SetBranchAddress("is_summed", &issummed1);
-	MetaTree2 -> SetBranchAddress("is_summed", &issummed2);
+	MetaTree1 -> SetBranchAddress("has_been_summed", &isbad1);
+	MetaTree2 -> SetBranchAddress("has_been_summed", &isbad2);
+	MetaTree1 -> SetBranchAddress("is_a_sum", &issummed1);
+	MetaTree2 -> SetBranchAddress("is_a_sum", &issummed2);
 	
 	//
 	double Efield1, Efield2;
@@ -237,7 +237,7 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	MetaTree2 -> SetBranchAddress("SailVelocity_y_mm_per_ms",   &sail_y2);
 	MetaTree2 -> SetBranchAddress("SailVelocity_z_mm_per_ms",   &sail_z2);
 
-//	/C:BadFlag/I/D:/D:Efield_Uniformity/O:/C:is_summed/I:/D:/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:
+//	/C:has_been_summed/I/D:/D:Efield_Uniformity/O:/C:is_a_sum/I:/D:/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:
 
 	// Now check to see whether *all* of the things are the same..
 	MetaTree1 -> GetEntry(i_run1);
@@ -291,15 +291,15 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	TTree * MetaTree3 = load_metadata_tree(filename3);
 	int this_runno;
 	MetaTree3 -> SetBranchAddress("Run", &this_runno);
-	int is_summed;
-	MetaTree3 -> SetBranchAddress("is_summed", &is_summed);
+	int is_a_sum;
+	MetaTree3 -> SetBranchAddress("is_a_sum", &is_a_sum);
 	
 	int newrunno = 0;
 	for(int i=0; i<nentries1; i++)
 	{
 		MetaTree3 -> GetEntry(i);
 	//	cout << "i=" << i << ",\tthis_runno=" << this_runno << ",\tnewrunno=" << newrunno << endl;
-		if( (newrunno == this_runno || newrunno == this_runno-extrafilenum ) && is_summed==1)
+		if( (newrunno == this_runno || newrunno == this_runno-extrafilenum ) && is_a_sum==1)
 		{
 			newrunno++;
 			i=-1;
@@ -322,7 +322,7 @@ bool do_the_hadding(int run1, int run2, int newrunno=0)
 	int position_of_issummed = -1;
 	int position_of_isbad = -1;
 	int position_of_filename = -1;
-//	Run/I:Filename/C:BadFlag/I:Efield/D:Rho/D:EventsGenerated/I:EventsSaved/I:SaveEventTypes/C:Polarization/D:Alignment/D:MinCosTheta/D:Efield_Uniformity/O:StepperType/I:StepperName/C:StepMax_mm/D:PhysicsListName/C:is_summed/I:Trap_x_mm/D:Trap_y_mm/D:Trap_z_mm/D:Trap_sigma_x/D:Trap_sigma_y/D:Trap_sigma_z/D:Temperature/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:SailVelocity_x_mm_per_ms/D:SailVelocity_y_mm_per_ms/D:SailVelocity_z_mm_per_ms/D:ChargeState/I
+//	Run/I:Filename/C:has_been_summed/I:Efield/D:Rho/D:EventsGenerated/I:EventsSaved/I:SaveEventTypes/C:Polarization/D:Alignment/D:MinCosTheta/D:Efield_Uniformity/O:StepperType/I:StepperName/C:StepMax_mm/D:PhysicsListName/C:is_a_sum/I:Trap_x_mm/D:Trap_y_mm/D:Trap_z_mm/D:Trap_sigma_x/D:Trap_sigma_y/D:Trap_sigma_z/D:Temperature/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:SailVelocity_x_mm_per_ms/D:SailVelocity_y_mm_per_ms/D:SailVelocity_z_mm_per_ms/D:ChargeState/I
 
 	
 	string this_line;
@@ -334,8 +334,8 @@ bool do_the_hadding(int run1, int run2, int newrunno=0)
 	int n_found = 0;
 	vector<int> delimiter_positions;
 //	EventsGenerated/I:EventsSaved/I:
-//	Run/I:Filename/C:BadFlag/I:
-//	is_summed/I:
+//	Run/I:Filename/C:has_been_summed/I:
+//	is_a_sum/I:
 	
 	std::ifstream this_ifilestream;
 	this_ifilestream.open(metadata_name.c_str());
@@ -402,7 +402,7 @@ bool do_the_hadding(int run1, int run2, int newrunno=0)
 	positioncounter = 0;
 	while (positioncounter<size_of_string)
 	{
-		positioncounter = this_line.find("BadFlag", 0);
+		positioncounter = this_line.find("has_been_summed", 0);
 		last_position = positioncounter;
 		if(positioncounter<size_of_string)
 		{
@@ -413,7 +413,7 @@ bool do_the_hadding(int run1, int run2, int newrunno=0)
 	positioncounter = 0;
 	while (positioncounter<size_of_string)
 	{
-		positioncounter = this_line.find("is_summed", 0);
+		positioncounter = this_line.find("is_a_sum", 0);
 		last_position = positioncounter;
 		if(positioncounter<size_of_string)
 		{
@@ -439,7 +439,7 @@ bool do_the_hadding(int run1, int run2, int newrunno=0)
 	if(verbose) cout << "--" << endl;
 	
 	// ok, we know where the EventsGenerated and EventsSaved entries are.  
-	// also Run, BadFlag, and is_summed.
+	// also Run, has_been_summed, and is_a_sum.
 	// now figure out where they go wrt the delimiters.
 	int branchpos_eventsgenerated = 0;
 	int branchpos_eventssaved = 0;
