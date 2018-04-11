@@ -9,3 +9,7 @@ BB1_old/*
 ReTuple/._*
 ._*
 .fuse_*
+TheMadHadder/cmake_install.cmake
+TheMadHadder/madhadder
+TheMadHadder/Makefile
+TheMadHadder/CMakeCache.txt

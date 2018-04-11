@@ -2,10 +2,14 @@
 #define INCLUDE_METACHAIN 1
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <sstream>
+//#include <stdlib.h>
+//#include <stdio.h>
+//#include <ios.h>
 
 using std::cout;
 using std::endl;
@@ -795,6 +799,7 @@ TChain * get_single_simtree(int runno)
 	return tree_chain;
 }
 
+
 vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 {
 	vector<int> set_of_runs;
@@ -825,6 +830,31 @@ vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 	}
 
 	return set_of_runs;
+}
+
+
+
+void printout_list(double rho)
+{
+	TTree * MetaTree = load_metadata_tree(metadata_name);
+	vector<int> list = get_runlist_from_rho(MetaTree, rho);
+	
+	int length = list.size();
+	for(int i=0; i<length; i++)
+	{
+		cout << list.at(i) << endl;
+	}
+	return;
+}
+
+void printout(vector<int> list)
+{
+	int length = list.size();
+	for(int i=0; i<length; i++)
+	{
+		cout << list.at(i) << endl;
+	}
+	return;
 }
 
 TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
@@ -881,18 +911,762 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 	return tree_chain;
 }
 
-
 /*
-string int_to_string(int x)
+string int_to_string(int this_int)
 {
-	std::ostringstream o;
-	if (!(o << x))
-		cout << "Bad conversion!" << endl;
-	return o.str();
+	string this_string;
+	std::stringstream ss;
+	ss.str( std::string() );
+	ss.clear();
+	
+	ss << this_int;
+	this_string = ss.str();
+	return this_string;
+}
+
+// No friends in this one.
+// Combine by explicit runno.
+int can_hadd(int run1, int run2)
+{
+	int verbose = 2;
+//	Run/I:Filename/C:BadFlag/I:Efield/D:Rho/D:EventsGenerated/I:EventsSaved/I:SaveEventTypes/C:Polarization/D:Alignment/D:MinCosTheta/D:Efield_Uniformity/O:StepperType/I:StepperName/C:StepMax_mm/D:PhysicsListName/C:is_summed/I:Trap_x_mm/D:Trap_y_mm/D:Trap_z_mm/D:Trap_sigma_x/D:Trap_sigma_y/D:Trap_sigma_z/D:Temperature/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:SailVelocity_x_mm_per_ms/D:SailVelocity_y_mm_per_ms/D:SailVelocity_z_mm_per_ms/D:ChargeState/I
+	if(verbose>1)
+	{
+		cout << "Looking at " << metadata_name << endl;
+	}
+	
+	TTree * MetaTree1 = load_metadata_tree(metadata_name);
+	TTree * MetaTree2 = load_metadata_tree(metadata_name);
+	int this_run1 = 0;
+	int this_run2 = 0;
+	MetaTree1 -> SetBranchAddress("Run", &this_run1);
+	MetaTree2 -> SetBranchAddress("Run", &this_run2);
+	
+	// more parameters that I'll care about later, but don't care about now.
+//Trap_x_mm/D:Trap_y_mm/D:Trap_z_mm/D:Trap_sigma_x/D:Trap_sigma_y/D:Trap_sigma_z/D:Temperature/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:SailVelocity_x_mm_per_ms/D:SailVelocity_y_mm_per_ms/D:SailVelocity_z_mm_per_ms/D:ChargeState/I	
+	int nentries1 = MetaTree1 -> GetEntries();
+	int i_run1 = -1;
+	int i_run2 = -1;
+	bool foundrun_1 = false;
+	bool foundrun_2 = false;
+	for(int i=0; i<nentries1; i++)
+	{
+		MetaTree1 -> GetEntry(i);
+		if( this_run1 == run1 && !foundrun_1 )
+		{
+			i_run1 = i;
+			foundrun_1 = true;
+		}
+		else if( this_run1 == run1 && foundrun_1)
+		{
+			cout << "This is bad.  Multiple runs with run number " << this_run1 << endl;
+			return -1;
+		}
+	}
+	for(int j=0; j<nentries1; j++)
+	{
+		MetaTree2 -> GetEntry(j);
+		if( this_run2 == run2 && !foundrun_2 )
+		{
+			i_run2 = j;
+			foundrun_2 = true;
+		}
+		else if( this_run2 == run2 && foundrun_2)
+		{
+			cout << "This is bad.  Multiple runs with run number " << this_run2 << endl;
+			return -1;
+		}
+	}
+	if(i_run1 == -1 || i_run2 == -1)
+	{
+		cout << "Bad!  Can't find runs to add." << endl;
+		return -1;
+	}
+	else if(i_run1 == i_run2)
+	{
+		cout << "Bad!  You know those are literally the same run, right?" << endl;
+		return -1;
+	}
+	// 
+	// Load up the rest of the branches...
+	char this_filename1[256];
+	char this_filename2[256];
+	MetaTree1 -> SetBranchAddress("Filename", &this_filename1);
+	MetaTree2 -> SetBranchAddress("Filename", &this_filename2);
+	int n_eventsgenerated1, n_eventsgenerated2;
+	int n_eventssaved1, n_eventssaved2;
+	MetaTree1 -> SetBranchAddress("EventsGenerated", &n_eventsgenerated1);
+	MetaTree1 -> SetBranchAddress("EventsSaved",     &n_eventssaved1);
+	MetaTree2 -> SetBranchAddress("EventsGenerated", &n_eventsgenerated2);
+	MetaTree2 -> SetBranchAddress("EventsSaved",     &n_eventssaved2);
+	//
+	int isbad1, isbad2;
+	int issummed1, issummed2;
+	MetaTree1 -> SetBranchAddress("BadFlag", &isbad1);
+	MetaTree2 -> SetBranchAddress("BadFlag", &isbad2);
+	MetaTree1 -> SetBranchAddress("is_summed", &issummed1);
+	MetaTree2 -> SetBranchAddress("is_summed", &issummed2);
+	
+	//
+	double Efield1, Efield2;
+	double rho1, rho2;
+	double pol1, pol2;
+	double align1, align2;
+	MetaTree1 -> SetBranchAddress("Efield",         &Efield1);
+	MetaTree1 -> SetBranchAddress("Rho",            &rho1);
+	MetaTree1 -> SetBranchAddress("Polarization",   &pol1);
+	MetaTree1 -> SetBranchAddress("Alignment",      &align1);
+	MetaTree2 -> SetBranchAddress("Efield",         &Efield2);
+	MetaTree2 -> SetBranchAddress("Rho",            &rho2);
+	MetaTree2 -> SetBranchAddress("Polarization",   &pol2);
+	MetaTree2 -> SetBranchAddress("Alignment",      &align2);
+	//
+	double stepmax1, stepmax2;
+	double mincostheta1, mincostheta2;
+	int steppertype1, steppertype2;
+	int chargestate1, chargestate2;
+	MetaTree1 -> SetBranchAddress("StepMax_mm",      &stepmax1);
+	MetaTree1 -> SetBranchAddress("MinCosTheta",     &mincostheta1);
+	MetaTree1 -> SetBranchAddress("StepperType",     &steppertype1);
+	MetaTree1 -> SetBranchAddress("ChargeState",     &chargestate1);
+	MetaTree2 -> SetBranchAddress("StepMax_mm",      &stepmax2);
+	MetaTree2 -> SetBranchAddress("MinCosTheta",     &mincostheta2);
+	MetaTree2 -> SetBranchAddress("StepperType",     &steppertype2);
+	MetaTree2 -> SetBranchAddress("ChargeState",     &chargestate2);
+	char this_StepperName1[256];
+	char this_SaveEventTypes1[256];
+	char this_PhysicsListName1[256];
+	char this_StepperName2[256];
+	char this_SaveEventTypes2[256];
+	char this_PhysicsListName2[256];
+	MetaTree1 -> SetBranchAddress("StepperName",     &this_StepperName1);
+	MetaTree1 -> SetBranchAddress("SaveEventTypes",  &this_SaveEventTypes1);
+	MetaTree1 -> SetBranchAddress("PhysicsListName", &this_PhysicsListName1);
+	MetaTree2 -> SetBranchAddress("StepperName",     &this_StepperName2);
+	MetaTree2 -> SetBranchAddress("SaveEventTypes",  &this_SaveEventTypes2);
+	MetaTree2 -> SetBranchAddress("PhysicsListName", &this_PhysicsListName2);
+	//
+	double trap_x1, trap_y1, trap_z1;
+	double trap_x2, trap_y2, trap_z2;
+	MetaTree1 -> SetBranchAddress("Trap_x_mm",       &trap_x1);
+	MetaTree1 -> SetBranchAddress("Trap_y_mm",       &trap_y1);
+	MetaTree1 -> SetBranchAddress("Trap_z_mm",       &trap_z1);
+	MetaTree2 -> SetBranchAddress("Trap_x_mm",       &trap_x2);
+	MetaTree2 -> SetBranchAddress("Trap_y_mm",       &trap_y2);
+	MetaTree2 -> SetBranchAddress("Trap_z_mm",       &trap_z2);
+	double temp1, temp2;
+	MetaTree1 -> SetBranchAddress("Temperature",     &temp1);
+	MetaTree2 -> SetBranchAddress("Temperature",     &temp2);
+	double trap_sigmax1, trap_sigmay1, trap_sigmaz1;
+	double trap_sigmax2, trap_sigmay2, trap_sigmaz2;
+	MetaTree1 -> SetBranchAddress("Trap_sigma_x",    &trap_sigmax1);
+	MetaTree1 -> SetBranchAddress("Trap_sigma_y",    &trap_sigmay1);
+	MetaTree1 -> SetBranchAddress("Trap_sigma_z",    &trap_sigmaz1);
+	MetaTree2 -> SetBranchAddress("Trap_sigma_x",    &trap_sigmax2);
+	MetaTree2 -> SetBranchAddress("Trap_sigma_y",    &trap_sigmay2);
+	MetaTree2 -> SetBranchAddress("Trap_sigma_z",    &trap_sigmaz2);
+	double sail_x1, sail_y1, sail_z1;
+	double sail_x2, sail_y2, sail_z2;
+	MetaTree1 -> SetBranchAddress("SailVelocity_x_mm_per_ms",   &sail_x1);
+	MetaTree1 -> SetBranchAddress("SailVelocity_y_mm_per_ms",   &sail_y1);
+	MetaTree1 -> SetBranchAddress("SailVelocity_z_mm_per_ms",   &sail_z1);
+	MetaTree2 -> SetBranchAddress("SailVelocity_x_mm_per_ms",   &sail_x2);
+	MetaTree2 -> SetBranchAddress("SailVelocity_y_mm_per_ms",   &sail_y2);
+	MetaTree2 -> SetBranchAddress("SailVelocity_z_mm_per_ms",   &sail_z2);
+
+//	/C:BadFlag/I/D:/D:Efield_Uniformity/O:/C:is_summed/I:/D:/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:
+
+	// Now check to see whether *all* of the things are the same..
+	MetaTree1 -> GetEntry(i_run1);
+	MetaTree2 -> GetEntry(i_run2);
+	bool match = true;
+	//
+	if(isbad1 || isbad2)       {match = false;}
+		if(verbose>1 && !match) { cout << "One or more of the runs is 'bad'." << endl;         return match;}
+	if(issummed1 || issummed2) {match = false;}
+		if(verbose>1 && !match) { cout << "One or more of the runs is already a sum." << endl; return match;}
+	//
+	if( Efield1 != Efield2) {match = false;}
+		if(verbose>1 && !match) { cout << "Efields are inconsistent." << endl;       return match;}
+	if( rho1    != rho2)    {match = false;}
+		if(verbose>1 && !match) { cout << "rho values are inconsistent." << endl;    return match;}
+	if( pol1    != pol1)    {match = false;}
+		if(verbose>1 && !match) { cout << "polarizations are inconsistent." << endl; return match;}
+	if( align1  != align2)  {match = false;}
+		if(verbose>1 && !match) { cout << "alignments are inconsistent." << endl;    return match;}
+	//
+	if( stepmax1     != stepmax2)     {match = false;}
+	if( mincostheta1 != mincostheta2) {match = false;}
+	if( steppertype1 != steppertype2) {match = false;}
+	if( chargestate1 != chargestate2) {match = false;}
+	//
+	if( strcmp(this_StepperName1,    this_StepperName2)     !=0 ) {match=false;}
+	if( strcmp(this_SaveEventTypes1, this_SaveEventTypes2)  !=0 ) {match=false;}
+	if( strcmp(this_PhysicsListName1,this_PhysicsListName2) !=0 ) {match=false;}
+	//
+	if( trap_x1      != trap_x2)      {match = false;}
+	if( trap_y1      != trap_y2)      {match = false;}
+	if( trap_z1      != trap_z2)      {match = false;}
+	if( temp1        != temp2)        {match = false;}
+	if( trap_sigmax1 != trap_sigmax2) {match = false;}
+	if( trap_sigmay1 != trap_sigmay2) {match = false;}
+	if( trap_sigmaz1 != trap_sigmaz2) {match = false;}
+	
+	if (match && verbose>0)
+	{
+		cout << "Runs " << run1 << " and " << run2 << " are compatible and may be added!" << endl;
+	}
+	else if(!match && verbose>0)
+	{
+		cout << "Runs " << run1 << " and " << run2 << " are not compatible.  :(" << endl;
+	}
+	if (!match) { return -1; }
+	
+	
+	// if it matches, figure out what new run number to use:
+	// MELISSA LOOK HERE!!!  
+	TTree * MetaTree3 = load_metadata_tree(metadata_name);
+	int this_runno;
+	MetaTree3 -> SetBranchAddress("Run", &this_runno);
+	int is_summed;
+	MetaTree3 -> SetBranchAddress("is_summed", &is_summed);
+	
+	int newrunno = 0;
+	int maxcalls = 10000;
+	bool match_this_loop = true;
+	for(int j=0; j<nentries1; j++)  // I think n^2 is enough...
+	{
+		if(match_this_loop == true)
+		{
+			for(int i=0; i<nentries1; i++)
+			{
+				MetaTree3 -> GetEntry(i);
+				match_this_loop = false;
+				if(newrunno == this_runno && is_summed==1)
+				{
+					newrunno++;
+					match_this_loop = true;
+					break; // breaks out of the 'i' for-loop.  I think.
+				}
+			}
+		}
+		else
+		{
+			break;
+		//	match_this_loop = false;
+		}
+	}
+	cout << "Files will be hadded into a new file with run number:\t" << newrunno << endl;
+	// MELISSA, FIX THE THING ABOVE!  
+	// THIS IS 'PROBABLY' FINE, BUT NEEDS TO ACTUALLY BE TESTED.
+	
+	
+//	if(match) { return newrunno; }
+//	is_summed/I
+//	else { return -1; }
+//	return match;
+//	return true;
+	return newrunno;
+}
+
+bool do_the_hadding(int run1, int run2, int newrunno=0)
+{ 
+// run1 and run2 are the run numbers, not the i_line for the metadata file.
+// this function breaks if run number isn't the first entry in every line.
+	int position_of_eventsgenerated = -1;
+	int position_of_eventssaved = -1;
+	int position_of_runno = -1;
+	int position_of_issummed = -1;
+	int position_of_isbad = -1;
+	int position_of_filename = -1;
+//	Run/I:Filename/C:BadFlag/I:Efield/D:Rho/D:EventsGenerated/I:EventsSaved/I:SaveEventTypes/C:Polarization/D:Alignment/D:MinCosTheta/D:Efield_Uniformity/O:StepperType/I:StepperName/C:StepMax_mm/D:PhysicsListName/C:is_summed/I:Trap_x_mm/D:Trap_y_mm/D:Trap_z_mm/D:Trap_sigma_x/D:Trap_sigma_y/D:Trap_sigma_z/D:Temperature/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:SailVelocity_x_mm_per_ms/D:SailVelocity_y_mm_per_ms/D:SailVelocity_z_mm_per_ms/D:ChargeState/I
+
+	
+	string this_line;
+//	string this_miniline;
+	int this_runno;
+	
+	// Figure out the position where the event counts are kept.
+	size_t positioncounter = 0;
+	size_t last_position = 0;
+	int n_found = 0;
+	vector<int> delimiter_positions = 0;
+//	EventsGenerated/I:EventsSaved/I:
+//	Run/I:Filename/C:BadFlag/I:
+//	is_summed/I:
+	
+	std::ifstream this_ifilestream;
+	this_ifilestream.open(metadata_name.c_str());
+	if( !this_ifilestream.is_open() )
+	{
+		cout << "Couldn't open the file for reading." << endl;
+		return false;
+	}
+	
+	std::getline(this_ifilestream, this_line);
+	std::istringstream iss(this_line);
+	cout << "this_line:  " << endl << this_line << endl;
+	int size_of_string = this_line.size();
+	cout << "size_of_string = " << size_of_string << endl;
+	
+	while (positioncounter<size_of_string)
+	{
+		positioncounter = this_line.find(":", last_position+1);
+		if(positioncounter<size_of_string)
+		{
+			last_position = positioncounter;
+			delimiter_positions.push_back(last_position);
+			n_found++;
+		}
+	}
+	cout << "** delimiter n_found = " << n_found << ",\tlast_position = " << last_position << endl;
+	
+	// ok, we know where the delimiters are.
+	positioncounter = 0;
+	while (positioncounter<size_of_string)
+	{
+		positioncounter = this_line.find("EventsGenerated", 0);
+		last_position = positioncounter;
+		if(positioncounter<size_of_string)
+		{
+			position_of_eventsgenerated = positioncounter;
+			break;
+		}
+	}
+	positioncounter = 0;
+	while (positioncounter<size_of_string)
+	{
+		positioncounter = this_line.find("EventsSaved", 0);
+		last_position = positioncounter;
+		if(positioncounter<size_of_string)
+		{
+			position_of_eventssaved = positioncounter;
+			break;
+		}
+	}
+	cout << "position_of_eventsgenerated = " << position_of_eventsgenerated << endl;
+	cout << "position_of_eventssaved = " << position_of_eventssaved << endl;
+	positioncounter = 0;
+	while (positioncounter<size_of_string)
+	{
+		positioncounter = this_line.find("Run", 0);
+		last_position = positioncounter;
+		if(positioncounter<size_of_string)
+		{
+			position_of_runno = positioncounter;
+			break;
+		}
+	}
+	positioncounter = 0;
+	while (positioncounter<size_of_string)
+	{
+		positioncounter = this_line.find("BadFlag", 0);
+		last_position = positioncounter;
+		if(positioncounter<size_of_string)
+		{
+			position_of_isbad = positioncounter;
+			break;
+		}
+	}
+	positioncounter = 0;
+	while (positioncounter<size_of_string)
+	{
+		positioncounter = this_line.find("is_summed", 0);
+		last_position = positioncounter;
+		if(positioncounter<size_of_string)
+		{
+			position_of_issummed = positioncounter;
+			break;
+		}
+	}
+	cout << "position_of_runno = " << position_of_runno << endl;
+	cout << "position_of_isbad = " << position_of_isbad << endl;
+	cout << "position_of_issummed = " << position_of_issummed << endl;
+	positioncounter = 0;
+	while (positioncounter<size_of_string)
+	{
+		positioncounter = this_line.find("Filename", 0);
+		last_position = positioncounter;
+		if(positioncounter<size_of_string)
+		{
+			position_of_filename = positioncounter;
+			break;
+		}
+	}
+	cout << "position_of_filename = " << position_of_filename << endl;
+	cout << "--" << endl;
+	
+	// ok, we know where the EventsGenerated and EventsSaved entries are.  
+	// also Run, BadFlag, and is_summed.
+	// now figure out where they go wrt the delimiters.
+	int branchpos_eventsgenerated = 0;
+	int branchpos_eventssaved = 0;
+	int branchpos_runno = 0;
+	int branchpos_isbad = 0;
+	int branchpos_issummed = 0;
+	int branchpos_filename = 0;
+	for(int i=0; i<size_of_string; i++)
+	{
+		if( position_of_eventsgenerated > delimiter_positions.at(i) ) { branchpos_eventsgenerated++; }
+		else { break; }
+	}
+	for(int i=0; i<size_of_string; i++)
+	{
+		if( position_of_eventssaved > delimiter_positions.at(i) ) { branchpos_eventssaved++; }
+		else { break; }
+	}
+	for(int i=0; i<size_of_string; i++)
+	{
+		if( position_of_runno > delimiter_positions.at(i) ) { branchpos_runno++; }
+		else { break; }
+	}
+	for(int i=0; i<size_of_string; i++)
+	{
+		if( position_of_isbad > delimiter_positions.at(i) ) { branchpos_isbad++; }
+		else { break; }
+	}
+	for(int i=0; i<size_of_string; i++)
+	{
+		if( position_of_issummed > delimiter_positions.at(i) ) { branchpos_issummed++; }
+		else { break; }
+	}
+	for(int i=0; i<size_of_string; i++)
+	{
+		if( position_of_filename > delimiter_positions.at(i) ) { branchpos_filename++; }
+		else { break; }
+	}
+	cout << "branchpos_eventsgenerated = " << branchpos_eventsgenerated << endl;
+	cout << "branchpos_eventssaved = " << branchpos_eventssaved << endl;
+	cout << "branchpos_runno = " << branchpos_runno << endl;
+	cout << "branchpos_isbad = " << branchpos_isbad << endl;
+	cout << "branchpos_issummed = " << branchpos_issummed << endl;
+	cout << "branchpos_filename = " << branchpos_filename << endl;
+	cout << "--" << endl;
+	// numbering starts at "0".
+	// k, we're done fucking around with the first line.
+	
+	//
+	// Look for the line with info on "run1", and also the line with info on "run2".
+	string firstrunline  = "";
+	string secondrunline = "";
+	int i_line1 = 0;
+	int i_line2 = 0;
+	int i_line = 1;  // already getline-ed the first line.
+	while ( std::getline(this_ifilestream, this_line) )
+	{
+		i_line++;
+		std::istringstream iss(this_line);
+		iss >> this_runno;
+		if(this_runno == run1)
+		{
+			i_line1 = i_line;
+			firstrunline = this_line;
+			cout << "i_line1=" << i_line1 << "\tfirstrunline:  " << endl;
+			cout << firstrunline << endl;
+		}
+		if(this_runno == run2)
+		{
+			i_line2 = i_line;
+			secondrunline = this_line;
+			cout << "i_line2=" << i_line2 << "\tsecondrunline:  " << endl;
+			cout << secondrunline << endl;
+		}
+	}
+	
+	cout << "final i_line = " << i_line << endl;
+	cout << endl;
+	this_ifilestream.close();
+
+	// this_ifilestream.close();
+	// ok.  I've gotten the info that I need out of this file.  I'm done with it for now.  
+	// Later, I'll have to open that file back up to do things to it, but not now.
+	
+	// ok, now read out the info from those lines, and put them into a new line.
+	std::stringstream ss1;
+	ss1.str( std::string() );
+	ss1.clear();
+	ss1 << firstrunline;
+//	cout << "ss1:  " << endl; 
+//	cout << firstrunline << endl;
+	std::stringstream ss2;
+	ss2.str( std::string() );
+	ss2.clear();
+	ss2 << secondrunline;
+//	cout << "ss2:  " << endl; 
+//	cout << secondrunline << endl;
+	cout << "--" << endl;
+	
+	string throwparam = "";
+	for(int i=0; i<branchpos_eventsgenerated; i++)
+	{
+		ss1 >> throwparam;
+		ss2 >> throwparam;
+	//	cout << "i = " << i << ",\tthrowparam=" << throwparam << endl;
+	}
+	int n_eventsgenerated1;
+	int n_eventsgenerated2;
+	ss1 >> n_eventsgenerated1;
+	cout << "n_eventsgenerated1 = " << n_eventsgenerated1 << endl;
+	ss2 >> n_eventsgenerated2;
+	cout << "n_eventsgenerated2 = " << n_eventsgenerated2 << endl;
+	
+	ss1.str( std::string() );
+	ss1.clear();
+	ss1 << firstrunline;
+//	cout << "ss1:  " << endl; 
+//	cout << firstrunline << endl;
+	ss2.str( std::string() );
+	ss2.clear();
+	ss2 << secondrunline;
+//	cout << "ss2:  " << endl; 
+//	cout << secondrunline << endl;
+	for(int i=0; i<branchpos_eventssaved; i++)
+	{
+		ss1 >> throwparam;
+		ss2 >> throwparam;
+	//	cout << "i = " << i << ",\tthrowparam=" << throwparam << endl;
+	}
+	int n_eventssaved1;
+	int n_eventssaved2;
+	ss1 >> n_eventssaved1;
+	cout << "n_eventssaved1 = " << n_eventssaved1 << endl;
+	ss2 >> n_eventssaved2;
+	cout << "n_eventssaved2 = " << n_eventssaved2 << endl;
+	
+	int total_ngenerated = n_eventsgenerated1 + n_eventsgenerated2;
+	int total_nsaved = n_eventssaved1 + n_eventssaved2;
+	cout << "--" << endl;
+	cout << "total_ngenerated = " << total_ngenerated << endl;
+	cout << "total_nsaved = " << total_nsaved << endl;
+	
+	std::stringstream ss_out;
+	ss_out.str( std::string() );
+	ss_out.clear();
+	ss_out << firstrunline;
+	
+	std::stringstream ss_tmp;
+	ss_tmp.str( std::string() );
+	ss_tmp.clear();
+	
+	// assign a new run number?  somehow?!
+	cout << "newrunno = " << newrunno << endl;
+
+	string newstringterm = "";
+	string newstringline = "";
+	int i=0; 
+	while( ss_out.good() )
+	{
+		ss_out >> newstringterm;
+		if( !ss_out.good() ) { break; }
+		
+		if(i == branchpos_eventsgenerated)
+		{
+			newstringterm = "";
+			ss_tmp.str( std::string() );
+			ss_tmp.clear();
+			ss_tmp << total_ngenerated;
+			ss_tmp >> newstringterm;
+		}
+		if(i == branchpos_eventssaved)
+		{
+			newstringterm = "";
+			ss_tmp.str( std::string() );
+			ss_tmp.clear();
+			ss_tmp << total_nsaved;
+			ss_tmp >> newstringterm;
+		}
+		if(i == branchpos_runno)
+		{
+			newstringterm = "";
+			ss_tmp.str( std::string() );
+			ss_tmp.clear();
+			ss_tmp << newrunno;
+			ss_tmp >> newstringterm;
+		}
+//		if(i == branchpos_isbad)
+//		{
+//			
+//		}
+		if(i == branchpos_issummed)
+		{
+			newstringterm = "";
+			ss_tmp.str( std::string() );
+			ss_tmp.clear();
+			ss_tmp << 1;
+			ss_tmp >> newstringterm;
+		}
+		if(i == branchpos_filename)
+		{
+			newstringterm = "";
+			ss_tmp.str( std::string() );
+			ss_tmp.clear();
+			ss_tmp << "summedoutput_" << newrunno << ".root";
+			ss_tmp >> newstringterm;
+		}
+		if( i != 0 )
+		{
+			newstringline = newstringline+"\t";
+		}
+		newstringline = newstringline+newstringterm;
+		i++;
+	}
+	newstringline = newstringline+"\n";
+
+	cout << endl;
+	cout << "newstringline:" << endl; 
+	cout << newstringline;// << endl;
+	
+	//
+	this_ifilestream.open(metadata_name.c_str());
+	if( !this_ifilestream.is_open() )
+	{
+		cout << "Couldn't open the file for reading the second time around.." << endl;
+		return false;
+	}
+	// read in the whole file into a .... buffer of some sort.
+	string filecontents = "";
+	std::getline(this_ifilestream, this_line);
+	filecontents = filecontents+this_line+"\n";
+	
+	string this_new_line = "";
+	string this_term = "";
+	cout << "* got here!  run1 = " << run1 << ",\trun2 = " << run2 << endl;
+	while ( std::getline(this_ifilestream, this_line) )
+	{
+		std::istringstream iss(this_line);
+		iss >> this_runno;
+		cout << "* here?" << endl;
+		if( !(this_runno == run1 || this_runno == run2) )
+		{
+		//	cout << "* here??  this_runno = " << this_runno << endl;
+			filecontents = filecontents+this_line+"\n";
+		}
+		
+		else
+		{
+		//	cout << "* blarg. ... this_runno = " << this_runno << endl;
+			
+			std::istringstream iss2(this_line);
+			iss2 >> this_term;
+			cout << "this_term = " << this_term << endl;
+			this_new_line = string(this_term);
+			
+			for(int i=1; i<branchpos_isbad; i++)
+			{
+				iss2 >> this_term;
+				cout << "this_term = " << this_term << endl;
+				//int_to_string(int this_int)
+			//	this_new_line = this_new_line+"\t"+int_to_string(this_term);
+				this_new_line = this_new_line+"\t"+this_term;
+				cout << "this_new_line:\n" << this_new_line << endl;
+			}
+		//	ss_tmp << 1;
+			this_new_line = this_new_line+"\t"+this_term;
+			cout << "ok?" << endl;
+			for(int i=branchpos_isbad+1; i<n_found-1; i++)
+			{
+		//		ss_tmp << iss << "\t";
+				iss2 >> this_term;
+				cout << "i=" << i << ", this_term = " << this_term << ", this_new_line=" << this_new_line << endl;
+				cout << << "i=" << i << ", this_new_line:\n" << this_new_line << endl;
+			//	this_new_line = this_new_line+"\t"+int_to_string(this_term);
+				cout << << "i=" << i << ", this_new_line:\n" << this_new_line << endl;
+			}
+			ss_tmp << iss;
+			this_new_line = ss_tmp.str();
+			cout << "this_new_line:" << endl;
+			cout << this_new_line << endl;
+		}
+		cout << "so did I get here or what?" << endl;
+		filecontents = filecontents+this_new_line+"\n";
+	//	cout << "maybe now?" << endl;
+		//
+	}
+
+	this_ifilestream.close();
+
+	//
+	std::ofstream this_ofilestream;
+	this_ofilestream.open(metadata_name.c_str(), ios::app);
+	if( !this_ofilestream.is_open() )
+	{
+		cout << "Couldn't open the file for writing." << endl;
+		return false;
+	}
+	else
+	{
+		cout << "Yay, the file's open for writing!" << endl;
+	}
+	
+//	string newstringline = "";
+//	newstringline = "This is a new string line!\n";
+	this_ofilestream << newstringline;
+	
+		
+//	FILE *io_file;
+//	io_file = fopen(metadata_name.c_str(), "r+");
+//	char * delim = ":";
+//	cout << "delim = " << delim << endl;
+//	while ( (std::getline(this_filestream, this_line, "D") && positioncounter < 200) )
+//	{
+//		cout << positioncounter << ":\t" << this_line << endl;
+//		positioncounter++;
+//	}
+//	fclose(io_file);
+//	
+//	std::ifstream this_filestream;
+//	this_filestream.open(metadata_name.c_str());
+
+
+//	fclose(io_file);
+//	io_file = fopen(GetConfigurationFileName(), "a+");
+//	// put the new entry here.
+//	fclose(io_file);
+
+//	
+//	this_line = "";
+////	if(this_ifilestream.seekg(std::ios::beg))
+//	if(this_ifilestream.seekg(this_ifilestream.beg))
+//	{
+//		std::getline(this_ifilestream, this_line))
+//		cout << "this_line:  " << endl << this_line << endl;
+//	}
+//	else 
+//	{
+//		if( this_ifilestream.good() ) {cout << "Good." << endl; }
+//		else { cout << "Not good." << endl; }
+//		//
+//		if(this_ifilestream.seekg(this_ifilestream.beg)==std::ios::eof) {cout << "eofbit" << endl;}
+//		if(this_ifilestream.seekg(this_ifilestream.beg)==failbit) {cout << "failbit" << endl;}
+//		cout << ":(\n";
+//	}
+//	std::getline(this_ifilestream, this_line);
+//	cout << "this_line:  " << endl << this_line << endl;
+//	
+
+	this_ofilestream.close();
+	return true;
+}
+
+bool try_to_hadd(int run1, int run2)
+{
+	int can_hadd = -1;
+//	bool can_hadd = false;
+	bool is_hadded = false;
+	
+	can_hadd = can_hadd(run1, run2);
+	if(can_hadd>=0) 
+	{ 
+		is_hadded = do_the_hadding(run1, run2, can_hadd); 
+	}
+	else
+	{
+		cout << "Can't hadd." << endl;
+	}
+	return is_hadded;
 }
 */
-
-
+// in hadder.cpp ??
 void meta_hadd_physlist(string use_this_physlist)  // this function is just a kludge.  Still.
 {
 	string original_fname = metadata_name;//g4_path+metadata_namestub;
@@ -955,7 +1729,6 @@ void meta_hadd_physlist(string use_this_physlist)  // this function is just a kl
 	}
 	cout << endl;
 }
-
 
 // ====================================== //
 // TChains for Simulations (do I ever even use these?):
