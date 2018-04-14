@@ -280,6 +280,9 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	int this_run2 = 0;
 	MetaTree1 -> SetBranchAddress("Run", &this_run1);
 	MetaTree2 -> SetBranchAddress("Run", &this_run2);
+	int isbad1, isbad2;
+	MetaTree1 -> SetBranchAddress("has_been_summed", &isbad1);
+	MetaTree2 -> SetBranchAddress("has_been_summed", &isbad2);
 	
 	// more parameters that I'll care about later, but don't care about now.
 //ExpandBeforePolarized_s/D:OP_CycleTime_s/D:SailVelocity_x_mm_per_ms/D:SailVelocity_y_mm_per_ms/D:SailVelocity_z_mm_per_ms/D:ChargeState/I	
@@ -291,12 +294,17 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	for(int i=0; i<nentries1; i++)
 	{
 		MetaTree1 -> GetEntry(i);
-		if( this_run1 == run1 && !foundrun_1 )
+		if( this_run1 == run1 && !foundrun_1 && !isbad1)
 		{
 			i_run1 = i;
 			foundrun_1 = true;
+		//	if(isbad1)
+		//	{ // this shouldn't happen if it's called from check_hadd_multi(...)
+		//		cout << "No, run " << run1 << " has already been summed." << endl;
+		//		return -1;
+		//	}
 		}
-		else if( this_run1 == run1 && foundrun_1)
+		else if( this_run1 == run1 && foundrun_1 && !isbad1)
 		{
 			cout << "This is bad.  Multiple runs with run number " << this_run1 << endl;
 			return -1;
@@ -305,12 +313,17 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	for(int j=0; j<nentries1; j++)
 	{
 		MetaTree2 -> GetEntry(j);
-		if( this_run2 == run2 && !foundrun_2 )
+		if( this_run2 == run2 && !foundrun_2 && !isbad2)
 		{
 			i_run2 = j;
 			foundrun_2 = true;
+		//	if(isbad2)
+		//	{ // this shouldn't happen if it's called from check_hadd_multi(...)
+		//		cout << "No, run " << run1 << " has already been summed." << endl;
+		//		return -1;
+		//	}
 		}
-		else if( this_run2 == run2 && foundrun_2)
+		else if( this_run2 == run2 && foundrun_2 && !isbad2)
 		{
 			cout << "This is bad.  Multiple runs with run number " << this_run2 << endl;
 			return -1;
@@ -339,12 +352,12 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	MetaTree2 -> SetBranchAddress("EventsGenerated", &n_eventsgenerated2);
 	MetaTree2 -> SetBranchAddress("EventsSaved",     &n_eventssaved2);
 	//
-	int isbad1, isbad2;
+//	int isbad1, isbad2;
 	int issummed1, issummed2;
 	MetaTree1 -> SetBranchAddress("has_been_summed", &isbad1);
 	MetaTree2 -> SetBranchAddress("has_been_summed", &isbad2);
-	MetaTree1 -> SetBranchAddress("is_a_sum", &issummed1);
-	MetaTree2 -> SetBranchAddress("is_a_sum", &issummed2);
+//	MetaTree1 -> SetBranchAddress("is_a_sum", &issummed1);
+//	MetaTree2 -> SetBranchAddress("is_a_sum", &issummed2);
 	
 	//
 	double Efield1, Efield2;

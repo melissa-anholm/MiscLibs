@@ -6,6 +6,9 @@
 #ifndef include_location
 #define include_location 1
 
+#include <cstdlib>
+#include <sstream>
+
 /*
 //#define weareontrinatdaq 1
 
@@ -50,6 +53,7 @@ string g4_path  = "/home1/trinat/anholm/K37/build/Output/";
 
 
 #else  // not on trinatdaq or trinat02
+/*
 string br_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
 string be_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
 string bf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Friends_2014/";
@@ -59,6 +63,9 @@ string ue_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons_2014/";
 string uf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
 
 string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
+*/
+string g4_path  = "/pool/anholm/Output/";
+
 #endif
 #endif
 
@@ -71,6 +78,21 @@ void set_g4_path(string newpath)
 	g4f_path = g4_path+"Friends/";
 	metadata_name = g4_path+"MetaData.txt";
 }
+
+const char* env_path = std::getenv("PATH");
+
+string char_to_string(const char* input)
+{
+	string output;
+	std::stringstream ss;
+	ss.str( std::string() );
+	ss.clear();
+	ss << input;
+	output = ss.str();
+	return output;
+}
+
+string env_path_string = char_to_string(env_path);
 
 /*
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
