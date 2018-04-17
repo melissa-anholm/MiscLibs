@@ -121,6 +121,21 @@ bool setup_location()
 		g4_path  = g4_path_fifteen;
 		return true;
 	}
+	else if(strcmp(this_location, "trinat01")==0)
+	{
+		cout << "Location is trinat01." << endl;
+		//
+		br_path = br_path_trinat01;
+		be_path = be_path_trinat01;
+		bf_path = bf_path_trinat01;
+		
+		ur_path = ur_path_trinat01;
+		ue_path = ue_path_trinat01;
+		uf_path = uf_path_trinat01;
+		
+		g4_path  = g4_path_trinat01;
+		return true;
+	}
 	else
 	{
 		cout << "Did not recognize your location." << endl;
