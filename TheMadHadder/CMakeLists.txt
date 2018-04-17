@@ -32,7 +32,7 @@ add_executable (madhadder MadHadder.cpp)  # inherits from loadgraph_Ecompare2.cp
 #to pop up a windows with the plots at the end
 target_link_libraries (madhadder
              #          bb1_strip  
-                       minuit
+              ##         minuit   # trinat01 can't find minuit, even though it's right there...
                        Gui
                        Core
                        Cint #doesn't work with rootv6.  I can comment it out, but then does root still work?!

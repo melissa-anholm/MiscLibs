@@ -27,7 +27,7 @@ using std::stringstream;
 //#include "MetaChain.cpp"
 #include "ChainG4.cpp"
 
-int extrafilenum = 0;
+int extrafilenum = 1000;
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 struct hadder_runlist
@@ -353,9 +353,9 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	MetaTree2 -> SetBranchAddress("EventsSaved",     &n_eventssaved2);
 	//
 //	int isbad1, isbad2;
-	int issummed1, issummed2;
-	MetaTree1 -> SetBranchAddress("has_been_summed", &isbad1);
-	MetaTree2 -> SetBranchAddress("has_been_summed", &isbad2);
+//	int issummed1, issummed2;
+//	MetaTree1 -> SetBranchAddress("has_been_summed", &isbad1);
+//	MetaTree2 -> SetBranchAddress("has_been_summed", &isbad2);
 //	MetaTree1 -> SetBranchAddress("is_a_sum", &issummed1);
 //	MetaTree2 -> SetBranchAddress("is_a_sum", &issummed2);
 	
