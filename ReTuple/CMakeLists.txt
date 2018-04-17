@@ -13,7 +13,17 @@ ELSE()
 	INCLUDE($ENV{MISC_INCLUDE_DIR}/FindROOT.cmake)        # Home.
 ENDIF() 
 
+#blarg.
 INCLUDE_DIRECTORIES (${ROOT_INCLUDE_DIR})
+INCLUDE_DIRECTORIES (/home/trinat/anholm/MiscLibs)
+INCLUDE($ENV{MISC_INCLUDE_DIR}/FindROOT.cmake)  # because findroot.cmake now lives in *this* directory.
+INCLUDE_DIRECTORIES (SYSTEM ${ROOT_INCLUDE_DIR})  # ??????
+INCLUDE_DIRECTORIES (${ROOT_INCLUDE_DIR})
+INCLUDE_DIRECTORIES ($ENV{MISC_INCLUDE_DIR})  # Do I need this for anything?  maybe not right now.
+LINK_DIRECTORIES(${ROOT_LIBRARY_DIR})
+LINK_DIRECTORIES (/usr/local/lib)  # for trinatdaq
+
+
 
 #Linking Things =========================
 LINK_DIRECTORIES(${ROOT_LIBRARY_DIR})
@@ -36,7 +46,11 @@ IF( $ENV{USER} STREQUAL "trinat")  #
 		add_library (bb1_strip /home/trinat/anholm/MiscLibs/BB1/bb1_strip.cpp)
 	ENDIF()
 ELSE()
+	IF($ENV{LOCATION} STREQUAL "trinat01")
+	add_library (bb1_strip /home/anholm/MiscLibs/BB1/bb1_strip.cpp)  # 
+	ELSE()
 	add_library (bb1_strip $ENV{MISC_INCLUDE_DIR}/BB1/bb1_strip.cpp)  # Home.
+	ENDIF()
 ENDIF()
 
 #Linking the Executable ================

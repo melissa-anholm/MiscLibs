@@ -59,7 +59,17 @@ int version = 7;
 //#define XSTR(x) #x
 //#define STR(x) XSTR(x)
 
+#include "location.cpp"
 
+#include "MetaChain.cpp"
+#include "treeql_replacement.cpp"
+#include "BB1/bb1_strip.h"
+#include "mini_cal_maker.cpp"
+
+//string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
+
+
+/*
 //
 #ifdef on_trinatdaq
 	#include "/home/trinat/anholm/MiscLibs/location.cpp"
@@ -93,20 +103,21 @@ int version = 7;
 	string bb1_prefix = "/Users/spiffyzha/Packages/MiscLibs/BB1/";  // 
 #endif
 #endif
-
+*/
 
 // import the old variable names from how they're defined in MetaChain.cpp:
-string blind_r_path = br_path;
-string blind_e_path = be_path;
-string blind_o_path = bf_path;
-
-string unblind_r_path = ur_path;
-string unblind_e_path = ue_path;
-string unblind_o_path = uf_path;
-
-string g4_tree_path     = g4_path;
-string g4_friend_path   = g4f_path;
-string metadatafilename = metadata_name;
+//setup_location();  // will this work??
+//string blind_r_path = br_path;
+//string blind_e_path = be_path;
+//string blind_o_path = bf_path;
+//
+//string unblind_r_path = ur_path;
+//string unblind_e_path = ue_path;
+//string unblind_o_path = uf_path;
+//
+//string g4_tree_path     = g4_path;
+//string g4_friend_path   = g4f_path;
+//string metadatafilename = metadata_name;
 
 
 string make_rootfilename(string name, int parameter, string name2=string(""))

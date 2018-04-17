@@ -51,7 +51,7 @@ using std::min;
 
 //
 bool is_blinded      = false;
-bool is_g4           = false;
+bool is_g4           = true;
 bool use_g4_metadata = true;
 
 int version = 7;
@@ -59,8 +59,18 @@ int version = 7;
 //#define XSTR(x) #x
 //#define STR(x) XSTR(x)
 
+#include "location.cpp"
+
+#include "MetaChain.cpp"
+#include "treeql_replacement.cpp"
+#include "BB1/bb1_strip.h"
+#include "mini_cal_maker.cpp"
+
+//string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
+
 
 //
+/*
 #ifdef on_trinatdaq
 	#include "/home/trinat/anholm/MiscLibs/location.cpp"
 	
@@ -93,20 +103,21 @@ int version = 7;
 	string bb1_prefix = "/Users/spiffyzha/Packages/MiscLibs/BB1/";  // 
 #endif
 #endif
-
+*/
 
 // import the old variable names from how they're defined in MetaChain.cpp:
-string blind_r_path = br_path;
-string blind_e_path = be_path;
-string blind_o_path = bf_path;
-
-string unblind_r_path = ur_path;
-string unblind_e_path = ue_path;
-string unblind_o_path = uf_path;
-
-string g4_tree_path     = g4_path;
-string g4_friend_path   = g4f_path;
-string metadatafilename = metadata_name;
+//setup_location();  // will this work??
+//string blind_r_path = br_path;
+//string blind_e_path = be_path;
+//string blind_o_path = bf_path;
+//
+//string unblind_r_path = ur_path;
+//string unblind_e_path = ue_path;
+//string unblind_o_path = uf_path;
+//
+//string g4_tree_path     = g4_path;
+//string g4_friend_path   = g4f_path;
+//string metadatafilename = metadata_name;
 
 
 string make_rootfilename(string name, int parameter, string name2=string(""))
@@ -546,6 +557,20 @@ int main(int argc, char *argv[])
 	cout << "For BB1s, we use SNR threshold \'index\' " << threshold_index << "." << endl;
 	cout << "For BB1s, we use an energy threshold of " << bb1_energy_threshold << " keV." << endl;
 
+
+	setup_location();  // will this work??
+	string blind_r_path = br_path;
+	string blind_e_path = be_path;
+	string blind_o_path = bf_path;
+
+	string unblind_r_path = ur_path;
+	string unblind_e_path = ue_path;
+	string unblind_o_path = uf_path;
+
+	string g4_tree_path     = g4_path;
+	string g4_friend_path   = g4f_path;
+	string metadatafilename = metadata_name;
+
 	
 	string fname;
 	string friend_fname;
@@ -762,8 +787,14 @@ int main(int argc, char *argv[])
 		tree -> SetBranchAddress("BB1_LY_PEAKTIME", &strip_T[b][y]);
 	}
 
+	vector<double> *electron_events = 0;
+	tree -> SetBranchAddress("TDC_ELECTRON_MCP", &electron_events);
 	UInt_t emcp_count;
-	tree -> SetBranchAddress("TDC_ELECTRON_MCP_Count", &emcp_count);
+	if(!is_g4)
+	{
+		tree -> SetBranchAddress("TDC_ELECTRON_MCP_Count", &emcp_count);
+	}
+	
 	
 	// 
 	// Friend Tree:
@@ -809,6 +840,7 @@ int main(int argc, char *argv[])
 		TBranch *photodiode_count_branch = friend_tree -> Branch("TDC_PHOTO_DIODE_Count", &photodiode_count);
 		TBranch *photodiode_vec_branch = friend_tree -> Branch("TDC_PHOTO_DIODE",&tdc_photodiode);
 		TBranch *led_vec_branch = friend_tree -> Branch("TDC_PULSER_LED",&tdc_pulser_led);
+		TBranch *emcp_count_branch = friend_tree -> Branch("TDC_ELECTRON_MCP_Count", &emcp_count);
 	}
 	
 	// BB1s:  
@@ -1055,6 +1087,7 @@ int main(int argc, char *argv[])
 			photodiode_count = 0;
 			tdc_photodiode -> clear();
 			tdc_pulser_led -> clear();
+			emcp_count = electron_events -> size();
 		}
 		
 		upper_E = get_upper_E(upper_qdc_int, runno, is_g4);
@@ -1085,7 +1118,6 @@ int main(int argc, char *argv[])
 		else // if(is_g4)
 		{
 			all_okay = kTRUE;
-			
 			x_count = prev_dlx->size();
 			z_count = prev_dlz->size();
 			nhits = min( ion_count, min(x_count, z_count) );
