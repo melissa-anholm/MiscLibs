@@ -219,12 +219,9 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 	string filename;
 	string friendname;
 	cout << "nentries = " << nentries << endl;
-//	int current_run = 0;
 	for(int i=0; i<nentries; i++)
 	{
 		MetaTree -> GetEntry(i);
-	//	current_run = run;
-	//	cout << "i = " << i << ";\tRun = " << run << "\tEventsSaved=" << this_neventssaved << endl;
 		if(this_rho == rho && has_been_summed==0)
 		{
 			if(has_been_summed==0)

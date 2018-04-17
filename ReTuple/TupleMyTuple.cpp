@@ -51,7 +51,7 @@ using std::min;
 
 //
 bool is_blinded      = false;
-bool is_g4           = false;
+bool is_g4           = true;
 bool use_g4_metadata = true;
 
 int version = 7;
@@ -500,6 +500,19 @@ double get_r(double x, double y)
 //
 int main(int argc, char *argv[]) 
 {
+	setup_location();  // will this work??
+	string blind_r_path = br_path;
+	string blind_e_path = be_path;
+	string blind_o_path = bf_path;
+
+	string unblind_r_path = ur_path;
+	string unblind_e_path = ue_path;
+	string unblind_o_path = uf_path;
+
+	string g4_tree_path     = g4_path;
+	string g4_friend_path   = g4f_path;
+	string metadatafilename = metadata_name;
+
 	int runno;
 	if(argc==2)
 	{
