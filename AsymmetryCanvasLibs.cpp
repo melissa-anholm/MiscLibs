@@ -28,9 +28,12 @@ using std::string;
 using std::stringstream;
 using std::vector;
 
-#include "/Users/spiffyzha/Packages/MiscLibs/HistExtras.cpp"
-#include "/Users/spiffyzha/Packages/MiscLibs/ColorExtras.cpp"
-#include "/Users/spiffyzha/Packages/MiscLibs/treeql_replacement.cpp"
+//#include "/Users/spiffyzha/Packages/MiscLibs/HistExtras.cpp"
+//#include "/Users/spiffyzha/Packages/MiscLibs/ColorExtras.cpp"
+//#include "/Users/spiffyzha/Packages/MiscLibs/treeql_replacement.cpp"
+#include "HistExtras.cpp"
+#include "ColorExtras.cpp"
+#include "treeql_replacement.cpp"
 
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
