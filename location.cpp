@@ -49,6 +49,7 @@ string ue_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons
 string uf_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
 
 string g4_path_fifteen  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
+string bb1_prefix_fifteen = "/home1/trinat/anholm/Packages/MiscLibs/BB1/";
 //
 string br_path_trinatdaq = "/data/trinat/S1188_2014_blinded/";
 string be_path_trinatdaq = "/data/trinat/S1188_2014_blinded/";
@@ -59,6 +60,7 @@ string ue_path_trinatdaq = "/home/trinat/online/analyzedFiles_2014/";
 string uf_path_trinatdaq = "/home/trinat/anholm/Friends/";  
 
 string g4_path_trinatdaq  = "/home/trinat/anholm/G4_Output/";
+string bb1_prefix_trinatdaq = "/home/trinat/anholm/MiscLibs/BB1/";
 //
 string br_path_trinat02 = "/data/trinat/S1188_2014_blinded/";  // bad
 string be_path_trinat02 = "/data/trinat/S1188_2014_blinded/";  // bad
@@ -69,6 +71,7 @@ string ue_path_trinat02 = "/home1/trinat/anholm/online/analyzedFiles_2014/";  //
 string uf_path_trinat02 = "/home1/trinat/anholm/Friends/";  // bad.
 
 string g4_path_trinat02  = "/home1/trinat/anholm/K37/build/Output/";
+string bb1_prefix_trinat02;
 //
 string br_path_trinat01 = "/pool/anholm/Data_2014/Blinded_Recoils_2014/";  // bad
 string be_path_trinat01 = "/pool/anholm/Data_2014/Blinded_Electrons_2014/";  // bad
@@ -79,6 +82,7 @@ string ue_path_trinat01 = "/pool/anholm/Data_2014/Unblinded_Electrons_2014/";
 string uf_path_trinat01 = "/pool/anholm/Data_2014/Unblinded_Friends_2014/";  
 
 string g4_path_trinat01  = "/pool/anholm/Output/";
+string bb1_prefix_trinat01 = "/home/anholm/MiscLibs/BB1/";
 
 /*
 string br_path;
@@ -92,6 +96,7 @@ string uf_path;
 string g4_path;
 */
 
+//
 string br_path = br_path_fifteen;
 string be_path = be_path_fifteen;
 string bf_path = bf_path_fifteen;
@@ -101,6 +106,27 @@ string ue_path = ue_path_fifteen;
 string uf_path = uf_path_fifteen;
 
 string g4_path  = g4_path_fifteen;
+
+string g4f_path = g4_path+"Friends/";
+string metadata_name = g4_path+"MetaData.txt";
+
+string bb1_prefix = bb1_prefix_fifteen;
+
+//
+
+
+const char* env_location = std::getenv("LOCATION");
+string char_to_string(const char* input)
+{
+	string output;
+	std::stringstream ss;
+	ss.str( std::string() );
+	ss.clear();
+	ss << input;
+	output = ss.str();
+	return output;
+}
+string env_location_string = char_to_string(env_location);
 //
 bool setup_location()
 {
@@ -119,6 +145,10 @@ bool setup_location()
 		uf_path = uf_path_fifteen;
 		
 		g4_path  = g4_path_fifteen;
+		g4f_path = g4_path+"Friends/";
+		metadata_name = g4_path+"MetaData.txt";
+
+		bb1_prefix = bb1_prefix_fifteen;
 		return true;
 	}
 	else if(strcmp(this_location, "trinat01")==0)
@@ -134,6 +164,10 @@ bool setup_location()
 		uf_path = uf_path_trinat01;
 		
 		g4_path  = g4_path_trinat01;
+		g4f_path = g4_path+"Friends/";
+		metadata_name = g4_path+"MetaData.txt";
+
+		bb1_prefix = bb1_prefix_trinat01;
 		return true;
 	}
 	else
@@ -142,6 +176,15 @@ bool setup_location()
 	}
 	return false;
 }
+
+void set_g4_path(string newpath)
+{
+	g4_path = newpath;
+	g4f_path = g4_path+"Friends/";
+	metadata_name = g4_path+"MetaData.txt";
+}
+
+
 /*
 #ifdef on_trinatdaq
 string br_path = "/data/trinat/S1188_2014_blinded/";
@@ -186,30 +229,7 @@ string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
 #endif
 */
 
-string g4f_path = g4_path+"Friends/";
-string metadata_name = g4_path+"MetaData.txt";
 
-void set_g4_path(string newpath)
-{
-	g4_path = newpath;
-	g4f_path = g4_path+"Friends/";
-	metadata_name = g4_path+"MetaData.txt";
-}
-
-const char* env_path = std::getenv("PATH");
-
-string char_to_string(const char* input)
-{
-	string output;
-	std::stringstream ss;
-	ss.str( std::string() );
-	ss.clear();
-	ss << input;
-	output = ss.str();
-	return output;
-}
-
-string env_path_string = char_to_string(env_path);
 
 /*
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //

@@ -157,13 +157,10 @@ vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 	
 	int run = 0;
 	MetaTree -> SetBranchAddress("Run", &run);
-//	char*  filename = new char[256];
-//	MetaTree -> SetBranchAddress("Filename", filename);
 	double this_rho = 0.0;
 	MetaTree -> SetBranchAddress("Rho", &this_rho);
-//	TChain * tree_chain = new TChain("ntuple");
-	int is_a_sum = 0;
-	MetaTree -> SetBranchAddress("is_a_sum", &is_a_sum);
+	int has_been_summed = 0;
+	MetaTree -> SetBranchAddress("has_been_summed", &has_been_summed);
 
 	int nentries = MetaTree -> GetEntries();
 	if(maxrun != 0)
@@ -175,12 +172,10 @@ vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 		MetaTree -> GetEntry(i);
 		if(this_rho == rho)
 		{
-			if(is_a_sum==0)
+			if(has_been_summed==0)
 			{
-			//	cout << "Using run " << run << "  (i=" << i << ")" << endl;
-			//	filename = get_datafilename(g4_path, run);
-			//	tree_chain -> Add(filename.c_str());
 				set_of_runs.push_back(run);
+				cout << "adding " << run << " to the runlist vector." << endl;
 			}
 			else
 			{
@@ -191,6 +186,7 @@ vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 
 	return set_of_runs;
 }
+
 
 TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 {
@@ -220,21 +216,24 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 
 	TChain * tree_chain   = new TChain("ntuple");
 	TChain * friend_chain = new TChain("friendtuple");
-	string filename;// = get_simfilename(path, run);
-	string friendname;// = get_simfilename(path, run);
+	string filename;
+	string friendname;
+	cout << "nentries = " << nentries << endl;
+//	int current_run = 0;
 	for(int i=0; i<nentries; i++)
 	{
 		MetaTree -> GetEntry(i);
-		if(this_rho == rho)
+	//	current_run = run;
+	//	cout << "i = " << i << ";\tRun = " << run << "\tEventsSaved=" << this_neventssaved << endl;
+		if(this_rho == rho && has_been_summed==0)
 		{
 			if(has_been_summed==0)
 			{
 				cout << "Using run " << run << "  (i=" << i << "),\trho=" << this_rho << "\tN_gen=" << this_neventsgenerated << ",\tN_saved=" << this_neventssaved << endl;
 				total_events_generated = total_events_generated + this_neventsgenerated;
 				total_events_recorded = total_events_recorded + this_neventssaved;
-			
-			//	filename   = get_simfilename(path, run);
-				filename   = get_simfilename(MetaTree, run);
+				
+				filename   = get_simfilename( (TChain*)MetaTree->Clone(), run);
 				friendname = get_simfriendname(friendpath, run);
 				tree_chain -> Add(filename.c_str());
 				friend_chain -> Add(friendname.c_str());
