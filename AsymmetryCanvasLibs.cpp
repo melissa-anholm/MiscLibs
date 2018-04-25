@@ -4,6 +4,10 @@
 // 
 // 
 // ==================================================================== //
+#ifndef INCLUDE_ASYMCANLIB
+#define INCLUDE_ASYMCANLIB 1
+
+
 #include <stdlib.h>
 #include <fstream>
 #include <string>
@@ -614,4 +618,55 @@ TH1D* get_residuals(TH1D* h1, TH1D* h2, double ymin=0, double ymax=0)
 	return new_hist;  // ...
 }
 
+double get_v_over_c(double Escint_keV)
+{
+	// E_beta = E_scint + mc^2
+	// v/c = pc/E_beta = [1 - (m^2 c^4)/E_beta^2]^(1/2)
+	
+	double m_electron = 510.9989461;  // keV/c^2
+	double pc_E = 0;
+	if(Escint_keV != 0.0)
+	{
+		pc_E = sqrt(1.0 - m_electron*m_electron/pow(Escint_keV+m_electron, 2.0) );
+	} // else:  it's already zero.
+	return pc_E;
+}
+
+TH1D* makehist_A_v_over_c_like(double Abeta, TH1D* oldhist)
+{
+	string newname = "A_beta*v/c";
+	int newcolor = kBlack;
+	TH1D * newhist = (TH1D*)oldhist -> Clone(newname.c_str());
+	
+	newhist -> Sumw2(kFALSE);
+	newhist -> SetName(newname.c_str());
+	newhist -> SetTitle(newname.c_str());
+	newhist -> SetLineColor(newcolor);
+	newhist -> SetMarkerColor(newcolor);
+	
+	int n_bins = newhist->GetNbinsX();
+	newhist -> SetBinContent(n_bins,0);
+	newhist -> SetBinContent(0,0);
+	
+	double bincenter = 0;
+	double v_over_c = 0;
+	for (int i=1; i<n_bins; i++)  // Bins i=0, i=n_bins are the underflow and overflow?
+	{
+		bincenter = newhist->GetBinCenter(i);
+		if(bincenter>=0)
+		{
+			v_over_c = get_v_over_c(bincenter);
+			newhist -> SetBinContent(i,Abeta*v_over_c);
+		}
+		else
+		{
+			newhist -> SetBinContent(i,0);
+		}
+	//	newhist -> SetBinContent(i, this_tf1->Eval(this_hist->GetBinCenter(i)) );
+	}
+	return newhist;
+}
+
+
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+#endif
