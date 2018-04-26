@@ -42,6 +42,44 @@ using std::vector;
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 
+string fake_to_string(double thisnumber)  // This thing super doesn't work!!!  :( 
+{
+	string mynumberstring;// = "";
+	
+	std::stringstream ss;
+	ss.str( std::string() );
+	ss.clear();
+	
+	ss << thisnumber;
+	
+	mynumberstring = ss.str();
+	return mynumberstring;
+}
+
+
+double get_Abeta_fromrho(double rho)
+{
+	// this function is specific to 37K-->37Ar decay.
+	
+	if(rho<0)
+	{
+		cout << "Rho shouldn't be negative!  Returning nonsense." << endl;
+		return 0;
+	}
+	double numerator = 2.0/5.0*rho*rho - 2.0*sqrt(3.0/5.0)*rho;
+	double denominator = 1.0 + rho*rho;
+
+	double Abeta = numerator / denominator;
+	return Abeta;
+}
+
+//double get_rho_fromAbeta(double Abeta)
+//{
+//	
+//}
+
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+
 TH1D * get_hist_sqrt(TH1D* input_hist, string title = string("Histogram") )
 {
 	TH1D * manip_hist = (TH1D*)input_hist -> Clone( title.c_str() );
@@ -267,6 +305,38 @@ TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_his
 //	superratio -> SetMarkerStyle(22);  // 22:  solid up-triangles.
 
 	return superratio;
+}
+
+TH1D * make_asymcounts_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, string hist_title = string("Counts for A_beta"), int color=int(kGray), int plotmarkerstyle=20)
+{
+	TH1D * counts_hist = (TH1D*)r1p_hist -> Clone( hist_title.c_str() );
+	counts_hist -> SetName(hist_title.c_str());
+	counts_hist -> SetTitle(hist_title.c_str());
+	counts_hist -> SetLineColor(color);
+	counts_hist -> SetMarkerColor(color);
+	counts_hist -> Sumw2(kFALSE);
+	counts_hist -> SetMarkerStyle(plotmarkerstyle);
+
+	if( r1p_hist->GetNbinsX()==r1m_hist->GetNbinsX() && r2p_hist->GetNbinsX()==r2m_hist->GetNbinsX() && r1p_hist->GetNbinsX()==r2p_hist->GetNbinsX() )
+	{
+		for (int i=1; i<N_bins; i++)  // Bins i=0, i=N_bins are the underflow and overflow?
+	//	for (int i=0; i<=N_bins; i++)  // Bins i=0, i=N_bins are the underflow and overflow?
+		{
+			counts_hist -> SetBinContent(i, 0.0);
+			r1p = r1p_hist -> GetBinContent(i);
+			r1m = r1m_hist -> GetBinContent(i);
+			r2p = r2p_hist -> GetBinContent(i);
+			r2m = r2m_hist -> GetBinContent(i);
+			
+			counts_hist -> SetBinContent(i, r1p+r1m+r2p+r2m );
+		//	superratio -> SetBinError(i, get_asymmetry_err(r1p, r1m, r2p, r2m) );
+		}
+	}
+	else
+	{
+		cout << "Must use histograms with the same number of bins!" << endl;
+	}
+	return counts_hist;
 }
 
 vector<TPad *> make_residupad(TH1D* top_hist, TH1D* bottom_hist, string top_draw_option=string("") )
