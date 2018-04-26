@@ -23,7 +23,14 @@
 // 
 // 11.12.2017:  version 7:  use overall BB1 threshold too!  60 keV.
 // 
+// 26.4.2018:  version 8:  added scintillator resolution 'blur' to g4 
+// output.  At some point during version 7, backscatter classifications 
+// were also added.  Also at some point the setup_location() function
+// was added specifically to manage the clusterfuck that arose from 
+// trying to use this code from multiple different computers.
+// 
 // ==================================================================== //
+
 #include <stdlib.h>
 #include <fstream>
 #include <string>
@@ -35,6 +42,7 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TObjString.h>
+#include <TRandom3.h>
 
 using std::cout;
 using std::cin;
@@ -46,64 +54,24 @@ using std::make_pair;  // unused?
 using std::pair;
 using std::min;
 
-//#define on_trinatdaq 1
-//#define on_trinat02 1
-
 //
-bool is_blinded      = false;
-bool is_g4           = true;
-bool use_g4_metadata = true;
+bool is_blinded            = false;
+bool is_g4                 = true;
+bool use_g4_metadata       = true;
+bool apply_scint_res_on_g4 = true;
 
-int version = 7;
+int version = 8;
 
 //#define XSTR(x) #x
 //#define STR(x) XSTR(x)
 
 #include "location.cpp"
-
 #include "MetaChain.cpp"
 #include "treeql_replacement.cpp"
 #include "BB1/bb1_strip.h"
 #include "mini_cal_maker.cpp"
 
 //string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
-
-
-/*
-//
-#ifdef on_trinatdaq
-	#include "/home/trinat/anholm/MiscLibs/location.cpp"
-	
-	#include "/home/trinat/anholm/MiscLibs/MetaChain.cpp"
-	#include "/home/trinat/anholm/MiscLibs/treeql_replacement.cpp"
-	#include "/home/trinat/anholm/MiscLibs/BB1/bb1_strip.h"
-	#include "/home/trinat/anholm/MiscLibs/mini_cal_maker.cpp"
-	
-	string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
-//
-#else  // NOT on trinatdaq.
-#ifdef on_trinat02
-	#include "/home1/trinat/anholm/Packages/MiscLibs/location.cpp"
-	
-	#include "/home1/trinat/anholm/Packages/MiscLibs/MetaChain.cpp"
-	#include "/home1/trinat/anholm/Packages/MiscLibs/treeql_replacement.cpp"
-	#include "/home1/trinat/anholm/Packages/MiscLibs/BB1/bb1_strip.h"
-	#include "/home1/trinat/anholm/Packages/MiscLibs/mini_cal_maker.cpp"
-	
-	string bb1_prefix = "/home1/trinat/anholm/Packages/MiscLibs/BB1/";
-//
-#else // not on trinat02 (and also not on trinatdaq)
-	#include "/Users/spiffyzha/Packages/MiscLibs/location.cpp"
-	
-	#include "/Users/spiffyzha/Packages/MiscLibs/MetaChain.cpp"
-	#include "/Users/spiffyzha/Packages/MiscLibs/treeql_replacement.cpp"
-	#include "/Users/spiffyzha/Packages/MiscLibs/BB1/bb1_strip.h"
-	#include "/Users/spiffyzha/Packages/MiscLibs/mini_cal_maker.cpp"
-	
-	string bb1_prefix = "/Users/spiffyzha/Packages/MiscLibs/BB1/";  // 
-#endif
-#endif
-*/
 
 // import the old variable names from how they're defined in MetaChain.cpp:
 //setup_location();  // will this work??
@@ -219,35 +187,18 @@ Double_t get_upper_E(double qdc, int run, bool g4data=false)
 	else
 	{
 		E = qdc;
+		/*
+		if(!apply_scint_res_on_g4)
+		{
+			E = qdc;
+		}
+		else
+		{
+		// do something else here.
+			E = qdc;
+		}
+		*/
 	}
-	
-//	if (run <= 449) 
-//	{
-//		offset = 109.7;  // +/- 0.3
-//		slope = 0.3991;  // +/- 0.0004
-//	}
-//	else // if (run <= 513) 
-//	{
-//		offset = 110.5;  // +/- 0.3
-//		slope = 0.3890;  // +/- 0.0004
-//	}
-//	double E = (qdc - offset) / slope;
-//
-//	//	double offset = 107.48;
-//	//	double slope;
-//	//	if (run < 450) 
-//	//	{
-//	//		slope = 395.0;
-//	//	} 
-//	//	else if (run < 483) 
-//	//	{
-//	//		slope = 386.0;
-//	//	} 
-//	//	else 
-//	//	{
-//	//		slope = 385.0;
-//	//	}
-//	//	double E = 1000.0*(qdc - offset) / slope;
 	return E;
 }
 Double_t get_lower_E(double qdc, int run, bool g4data=false)
@@ -272,34 +223,18 @@ Double_t get_lower_E(double qdc, int run, bool g4data=false)
 	else
 	{
 		E = qdc;
+		/*
+		if(!apply_scint_res_on_g4)
+		{
+			E = qdc;
+		}
+		else
+		{
+		//	do something else here.
+			E = qdc;
+		}
+		*/
 	}
-//	if (run <= 449) 
-//	{
-//		offset = 141.8;  // +/- 0.3
-//		slope = 0.4242;  // +/- 0.0005
-//	}
-//	else // if (run <= 513) 
-//	{
-//		offset = 142.7;  // +/- 0.3
-//		slope = 0.4139;  // +/- 0.0004
-//	}
-//	double E = (qdc - offset) / slope;
-//
-//	//	double offset = 143.4;
-//	//	double slope;
-//	//	if (run < 450) 
-//	//	{
-//	//		slope = 419.2;
-//	//	} 
-//	//	else if (run < 483) 
-//	//	{
-//	//		slope = 410.8;
-//	//	} 
-//	//	else 
-//	//	{
-//	//		slope = 409.1;
-//	//	}
-//	//	double E = 1000.0*(qdc - offset) / slope;
 	return E;
 }
 
@@ -322,20 +257,19 @@ Double_t get_upper_E_res(double upper_E, int run, bool g4data=false)
 	else
 	{
 		E_res = 0.0;
+		/*
+		if(!apply_scint_res_on_g4)
+		{
+			E_res = 0.0;
+		}
+		else
+		{
+		//	Do something else here.
+			E_res = 0.0;
+		}
+		*/
 	}
 	return E_res;
-	
-//	double res;
-//	if (run <= 449) 
-//	{
-//		res = 1.61;  // +/- 0.09
-//	}
-//	else // if (run <= 513) 
-//	{
-//		res = 1.45;  // +/- 0.08
-//	}
-//	double sigma = sqrt(res*E);
-//	return sigma;
 }
 Double_t get_lower_E_res(double lower_E, int run, bool g4data=false)  
 { // E is in units of keV.
@@ -356,22 +290,38 @@ Double_t get_lower_E_res(double lower_E, int run, bool g4data=false)
 	else
 	{
 		E_res = 0.0;
+		/*
+		if(!apply_scint_res_on_g4)
+		{
+			E_res = 0.0;
+		}
+		else
+		{
+		//	Do something else here.
+			E_res = 0.0;
+		}
+		*/
 	}
 	return E_res;
-
-//	double res;
-//	if (run <= 449) 
-//	{
-//		res = 1.32;  // +/- 0.08
-//	}
-//	else // if (run <= 513) 
-//	{
-//		res = 1.33;  // +/- 0.07
-//	}
-//	double sigma = sqrt(res*E);
-//	return sigma;
 }
 
+Double_t getE_withresolution(double E, double lambda)
+{
+	double better_E =-1.0;
+	double E_res = sqrt(lambda*E);
+	while(better_E<0)
+	{
+		better_E = gRandom->Gaus(E, E_res);
+	}
+	return better_E;
+}
+
+Double_t getres_withresolution(double E, double lambda)  
+// call this function *after* you've applied the resolution to "E"
+{
+	double E_res = sqrt(lambda*E);
+	return E_res;
+}
 
 // Cycle Counter:
 double time_to_polarize = 100.0;   // microsec.
@@ -533,7 +483,11 @@ int main(int argc, char *argv[])
 	string fname;
 	string friend_fname;
 	double this_opdelay;
+	string matched_runset = "";
+	double lambda_g4_res_t = 0.0;
+	double lambda_g4_res_b = 0.0;
 	TTree * MetaTree;
+	gRandom = new TRandom3();
 	// = load_metadata_tree(metadatafilename);
 	if(!is_g4)
 	{
@@ -586,6 +540,9 @@ int main(int argc, char *argv[])
 	}
 	else // 
 	{
+		cout << "Rand. Seed:  " << endl;
+		cout << gRandom->GetSeed() << endl;
+		
 		is_blinded = false; 
 		this_opdelay = 0.0;
 		// FIX THESE.
@@ -598,6 +555,25 @@ int main(int argc, char *argv[])
 			{
 				cout << "Exiting..." << endl;
 				return 0;
+			}
+			
+			// also, check what runset it's supposed to match.
+			matched_runset = get_matched_runletter(MetaTree, runno);  //
+			if( matched_runset==string("EA") || matched_runset==string("EB") || matched_runset==string("RA") || matched_runset==string("RB") )
+			{
+				lambda_g4_res_t = 1.55;  // +/- 0.09
+				lambda_g4_res_b = 1.28;  // +/- 0.08
+			}
+			else if( matched_runset==string("EC") || matched_runset==string("ED") || matched_runset==string("RC") || matched_runset==string("RD") || matched_runset==string("RE") )
+			{
+				lambda_g4_res_t = 1.42;  // +/- 0.08
+				lambda_g4_res_b = 1.32;  // +/- 0.08
+			}
+			else
+			{
+				cout << "Could not find matched runset:  " << matched_runset << endl;
+				cout << "Scintillator resolution will not be applied." << endl;
+				apply_scint_res_on_g4 = false;
 			}
 		}
 		else
@@ -766,7 +742,6 @@ int main(int argc, char *argv[])
 	TBranch *lower_e_b = friend_tree -> Branch("lower_scint_E", &lower_E);
 	TBranch *upper_e_res_branch = friend_tree -> Branch("upper_scint_E_res", &upper_E_res);
 	TBranch *lower_e_res_branch = friend_tree -> Branch("lower_scint_E_res", &lower_E_res);
-
 
 	vector<double> *dl_x_pos = 0;
 	vector<double> *dl_z_pos = 0;
@@ -1058,20 +1033,20 @@ int main(int argc, char *argv[])
 		}
 		else // if(is_g4)
 		{
-			all_okay = kTRUE;
+			all_okay = kTRUE;	
 			
 			upper_E = get_upper_E(upper_qdc_d, runno, is_g4);
 			lower_E = get_lower_E(lower_qdc_d, runno, is_g4);
 			upper_E_res = get_upper_E_res(upper_E, runno, is_g4);
 			lower_E_res = get_lower_E_res(lower_E, runno, is_g4);
 			
-			x_count = prev_dlx->size();
-			z_count = prev_dlz->size();
-			nhits = min( ion_count, min(x_count, z_count) );
-			for(int j=0; j<nhits; j++)  // 
+			if(is_g4 && apply_scint_res_on_g4)
 			{
-				dl_x_pos -> push_back((*prev_dlx)[j]);
-				dl_z_pos -> push_back((*prev_dlz)[j]);
+				// apply a scint resolution on the G4 data.
+				upper_E = getE_withresolution(upper_E, lambda_g4_res_t);
+				lower_E = getE_withresolution(lower_E, lambda_g4_res_b);
+				upper_E_res = getres_withresolution(upper_E, lambda_g4_res_t);
+				lower_E_res = getres_withresolution(lower_E, lambda_g4_res_b);
 			}
 		}
 		

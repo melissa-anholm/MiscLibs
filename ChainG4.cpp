@@ -96,6 +96,7 @@ string get_simfilename(TTree * MetaTree, int runno)  // from the MetaTree.
 		if(runno==this_run)
 		{
 			namestub = string(this_filename);
+			break;
 		}
 	}
 	fname = g4_path + namestub;
@@ -109,6 +110,34 @@ string get_simfilename(TTree * MetaTree, int runno)  // from the MetaTree.
 		return namestub;
 	}
 }
+
+string get_matched_runletter(TTree * MetaTree, int runno)  //
+{
+	string this_set = "";
+	
+	int this_run = 0;
+	MetaTree -> SetBranchAddress("Run", &this_run);
+	char this_matchedset[256];
+	MetaTree -> SetBranchAddress("matches_runset", &this_matchedset);
+	
+	int nentries = MetaTree -> GetEntries();
+	for(int i=0; i<nentries; i++)
+	{
+		MetaTree -> GetEntry(i);
+		if(runno==this_run)
+		{
+			this_set = string(this_matchedset);
+			break;
+		}
+	}
+	//
+	if(this_set==string(""))
+	{
+		cout << "ERROR:  Couldn't find run number " << runno << " in the metadata." << endl;
+	}
+	return this_set;
+}
+
 
 string get_simfriendname(string path, int runno)
 {	
