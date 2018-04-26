@@ -317,6 +317,9 @@ TH1D * make_asymcounts_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hi
 	counts_hist -> Sumw2(kFALSE);
 	counts_hist -> SetMarkerStyle(plotmarkerstyle);
 
+	double r1p, r1m, r2p, r2m;
+	double bin_content;
+	
 	if( r1p_hist->GetNbinsX()==r1m_hist->GetNbinsX() && r2p_hist->GetNbinsX()==r2m_hist->GetNbinsX() && r1p_hist->GetNbinsX()==r2p_hist->GetNbinsX() )
 	{
 		for (int i=1; i<N_bins; i++)  // Bins i=0, i=N_bins are the underflow and overflow?
