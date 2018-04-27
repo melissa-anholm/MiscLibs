@@ -1,4 +1,4 @@
-for i in {1013..1024}; 
+for i in {1001..1012}; 
 do
 	./retuple $i;
 done

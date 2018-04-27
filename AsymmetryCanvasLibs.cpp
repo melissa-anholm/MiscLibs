@@ -277,7 +277,8 @@ TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_his
 	
 	if( r1p_hist->GetNbinsX()==r1m_hist->GetNbinsX() && r2p_hist->GetNbinsX()==r2m_hist->GetNbinsX() && r1p_hist->GetNbinsX()==r2p_hist->GetNbinsX() )
 	{
-		for (int i=1; i<N_bins; i++)  // Bins i=0, i=N_bins are the underflow and overflow?
+	//	for (int i=1; i<N_bins; i++)  // Bins i=0, i=N_bins are the underflow and overflow?
+		for (int i=0; i<=N_bins; i++)  // Bins i=0, i=N_bins are the underflow and overflow?
 		{
 			superratio -> SetBinContent(i, 0.0);
 			r1p = r1p_hist -> GetBinContent(i);
@@ -323,8 +324,8 @@ TH1D * make_asymcounts_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hi
 	int N_bins = r1p_hist->GetNbinsX();
 	if( r1p_hist->GetNbinsX()==r1m_hist->GetNbinsX() && r2p_hist->GetNbinsX()==r2m_hist->GetNbinsX() && r1p_hist->GetNbinsX()==r2p_hist->GetNbinsX() )
 	{
-		for (int i=1; i<N_bins; i++)  // Bins i=0, i=N_bins are the underflow and overflow?
-	//	for (int i=0; i<=N_bins; i++)  // Bins i=0, i=N_bins are the underflow and overflow?
+	//	for (int i=1; i<N_bins; i++)  // Bins i=0, i=N_bins are the underflow and overflow?
+		for (int i=0; i<=N_bins; i++)  // Bins i=0, i=N_bins are the underflow and overflow?
 		{
 			counts_hist -> SetBinContent(i, 0.0);
 			r1p = r1p_hist -> GetBinContent(i);
