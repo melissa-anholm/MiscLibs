@@ -406,9 +406,14 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	MetaTree2 -> SetBranchAddress("Trap_x_mm",       &trap_x2);
 	MetaTree2 -> SetBranchAddress("Trap_y_mm",       &trap_y2);
 	MetaTree2 -> SetBranchAddress("Trap_z_mm",       &trap_z2);
-	double temp1, temp2;
-	MetaTree1 -> SetBranchAddress("Temperature",     &temp1);
-	MetaTree2 -> SetBranchAddress("Temperature",     &temp2);
+	double temp1x, temp1y, temp1z;
+	double temp2x, temp2y, temp2z;
+	MetaTree1 -> SetBranchAddress("Temperature_x_mK",     &temp1x);
+	MetaTree1 -> SetBranchAddress("Temperature_y_mK",     &temp1y);
+	MetaTree1 -> SetBranchAddress("Temperature_z_mK",     &temp1z);
+	MetaTree2 -> SetBranchAddress("Temperature_x_mK",     &temp2x);
+	MetaTree2 -> SetBranchAddress("Temperature_y_mK",     &temp2y);
+	MetaTree2 -> SetBranchAddress("Temperature_z_mK",     &temp2z);
 	double trap_sigmax1, trap_sigmay1, trap_sigmaz1;
 	double trap_sigmax2, trap_sigmay2, trap_sigmaz2;
 	MetaTree1 -> SetBranchAddress("Trap_sigma_x",    &trap_sigmax1);
@@ -425,6 +430,18 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	MetaTree2 -> SetBranchAddress("SailVelocity_x_mm_per_ms",   &sail_x2);
 	MetaTree2 -> SetBranchAddress("SailVelocity_y_mm_per_ms",   &sail_y2);
 	MetaTree2 -> SetBranchAddress("SailVelocity_z_mm_per_ms",   &sail_z2);
+	
+	double expansiontime1, expansiontime2;
+	MetaTree1 -> SetBranchAddress("ExapndBeforePolarized_ms",   &expansiontime1);
+	MetaTree2 -> SetBranchAddress("ExapndBeforePolarized_ms",   &expansiontime2);
+	double OP_cycletime1, OP_cycletime2;
+	MetaTree1 -> SetBranchAddress("OP_CycleTime_ms",   &OP_cycletime1);
+	MetaTree2 -> SetBranchAddress("OP_CycleTime_ms",   &OP_cycletime2);
+
+	char this_matchedrunset1[256];
+	char this_matchedrunset2[256];
+	MetaTree1 -> SetBranchAddress("matches_runset",     &this_matchedrunset1);
+	MetaTree2 -> SetBranchAddress("matches_runset",     &this_matchedrunset2);
 
 //	/C:has_been_summed/I/D:/D:Efield_Uniformity/O:/C:is_a_sum/I:/D:/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:
 
@@ -456,13 +473,19 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	if( strcmp(this_SaveEventTypes1, this_SaveEventTypes2)  !=0 ) {match=false;}
 	if( strcmp(this_PhysicsListName1,this_PhysicsListName2) !=0 ) {match=false;}
 	//
-	if( trap_x1      != trap_x2)      {match = false;}
-	if( trap_y1      != trap_y2)      {match = false;}
-	if( trap_z1      != trap_z2)      {match = false;}
-	if( temp1        != temp2)        {match = false;}
-	if( trap_sigmax1 != trap_sigmax2) {match = false;}
-	if( trap_sigmay1 != trap_sigmay2) {match = false;}
-	if( trap_sigmaz1 != trap_sigmaz2) {match = false;}
+	if( trap_x1        != trap_x2)        {match = false;}
+	if( trap_y1        != trap_y2)        {match = false;}
+	if( trap_z1        != trap_z2)        {match = false;}
+	if( temp1x         != temp2x)         {match = false;}
+	if( temp1y         != temp2y)         {match = false;}
+	if( temp1z         != temp2z)         {match = false;}
+	if( trap_sigmax1   != trap_sigmax2)   {match = false;}
+	if( trap_sigmay1   != trap_sigmay2)   {match = false;}
+	if( trap_sigmaz1   != trap_sigmaz2)   {match = false;}
+	//
+	if( expansiontime1 != expansiontime2) {match = false;}
+	if( OP_cycletime1  != OP_cycletime2)  {match = false;}
+	if( strcmp(this_matchedrunset1,this_matchedrunset2) !=0 ) {match=false;}
 	
 	if (match && verbose>0)
 	{
