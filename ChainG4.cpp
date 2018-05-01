@@ -22,6 +22,7 @@ using std::string;
 //#include "treeql_replacement.cpp"
 #include "location.cpp"
 
+bool use_only_summed_forchain = true;
 
 /*
 //#define metachain_on_trinatdaq 1
@@ -190,7 +191,11 @@ vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 	MetaTree -> SetBranchAddress("Rho", &this_rho);
 	int has_been_summed = 0;
 	MetaTree -> SetBranchAddress("has_been_summed", &has_been_summed);
+	int is_a_sum = 0;
+	MetaTree -> SetBranchAddress("is_a_sum", &is_a_sum);
 
+//	use_only_summed_forchain
+	
 	int nentries = MetaTree -> GetEntries();
 	if(maxrun != 0)
 	{ 
@@ -203,8 +208,15 @@ vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 		{
 			if(has_been_summed==0)
 			{
-				set_of_runs.push_back(run);
-				cout << "adding " << run << " to the runlist vector." << endl;
+				if( is_a_sum==1 || !use_only_summed_forchain )
+				{
+					set_of_runs.push_back(run);
+					cout << "adding " << run << " to the runlist vector." << endl;
+				}
+				else if(is_a_sum==0)
+				{
+					cout << "skipping " << run << ", since we're only looking at summed runs." << endl;
+				}
 			}
 			else
 			{
@@ -239,6 +251,8 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 	MetaTree -> SetBranchAddress("EventsSaved",     &this_neventssaved);
 	int has_been_summed = 0;
 	MetaTree -> SetBranchAddress("has_been_summed",  &has_been_summed);
+	int is_a_sum = 0;
+	MetaTree -> SetBranchAddress("is_a_sum", &is_a_sum);
 
 	int total_events_generated = 0;
 	int total_events_recorded = 0;
@@ -251,23 +265,30 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 	for(int i=0; i<nentries; i++)
 	{
 		MetaTree -> GetEntry(i);
-		if(this_rho == rho && has_been_summed==0)
+		if(this_rho == rho /* && has_been_summed==0 */ )
 		{
 			if(has_been_summed==0)
 			{
-				cout << "Using run " << run << "  (i=" << i << "),\trho=" << this_rho << "\tN_gen=" << this_neventsgenerated << ",\tN_saved=" << this_neventssaved << endl;
-				total_events_generated = total_events_generated + this_neventsgenerated;
-				total_events_recorded = total_events_recorded + this_neventssaved;
+				if(is_a_sum==1 || !use_only_summed_forchain)
+				{
+					cout << "Using run " << run << "  (i=" << i << "),\trho=" << this_rho << "\tN_gen=" << this_neventsgenerated << ",\tN_saved=" << this_neventssaved << endl;
+					total_events_generated = total_events_generated + this_neventsgenerated;
+					total_events_recorded = total_events_recorded + this_neventssaved;
 				
-				filename   = get_simfilename( (TChain*)MetaTree->Clone(), run);
-				friendname = get_simfriendname(friendpath, run);
-				tree_chain -> Add(filename.c_str());
-				friend_chain -> Add(friendname.c_str());
+					filename   = get_simfilename( (TChain*)MetaTree->Clone(), run);
+					friendname = get_simfriendname(friendpath, run);
+					tree_chain -> Add(filename.c_str());
+					friend_chain -> Add(friendname.c_str());
 		
-				filename = string();
-				filename.clear();
-				friendname = string();
-				friendname.clear();
+					filename = string();
+					filename.clear();
+					friendname = string();
+					friendname.clear();
+				}
+				else if(is_a_sum==0)
+				{
+					cout << "skipping " << run << "  (i=" << i << ",\trho=" << this_rho <<"), since we're only looking at summed runs." << endl;
+				}
 			}
 			else
 			{

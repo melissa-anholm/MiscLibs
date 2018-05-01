@@ -61,6 +61,8 @@ string make_filebuffer(vector<lineinfo>, string, string);
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 int main(int argc, char *argv[])
 {
+	setup_location();
+	
 	hadder_runlist this_hadder_runlist = check_hadd_multi();
 	
 	vector<int> result = this_hadder_runlist.runlist;

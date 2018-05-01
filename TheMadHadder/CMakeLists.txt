@@ -26,11 +26,11 @@ SET(CMAKE_BUILD_TYPE ReLWithDebInfo)
 #add_library (bb1_strip /Users/spiffyzha/Packages/MiscLibs/BB1/bb1_strip.cpp)
 
 #Linking the Executable ================
-add_executable (madhadder MadHadder.cpp)  # inherits from loadgraph_Ecompare2.cpp
+add_executable (madhadd MadHadder.cpp)  # inherits from loadgraph_Ecompare2.cpp
 
 #link this library with everything that is needed
 #to pop up a windows with the plots at the end
-target_link_libraries (madhadder
+target_link_libraries (madhadd
              #          bb1_strip  
               ##         minuit   # trinat01 can't find minuit, even though it's right there...
                        Gui

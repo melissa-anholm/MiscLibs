@@ -73,21 +73,6 @@ int version = 8;
 
 //string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
 
-// import the old variable names from how they're defined in MetaChain.cpp:
-//setup_location();  // will this work??
-//string blind_r_path = br_path;
-//string blind_e_path = be_path;
-//string blind_o_path = bf_path;
-//
-//string unblind_r_path = ur_path;
-//string unblind_e_path = ue_path;
-//string unblind_o_path = uf_path;
-//
-//string g4_tree_path     = g4_path;
-//string g4_friend_path   = g4f_path;
-//string metadatafilename = metadata_name;
-
-
 string make_rootfilename(string name, int parameter, string name2=string(""))
 {
 	string rootfname;
@@ -450,18 +435,19 @@ double get_r(double x, double y)
 //
 int main(int argc, char *argv[]) 
 {
-	setup_location();  // will this work??
-	string blind_r_path = br_path;
-	string blind_e_path = be_path;
-	string blind_o_path = bf_path;
+	setup_location();
+	
+//	string blind_r_path = br_path;
+//	string blind_e_path = be_path;
+//	string blind_o_path = bf_path;
 
-	string unblind_r_path = ur_path;
-	string unblind_e_path = ue_path;
-	string unblind_o_path = uf_path;
+//	string unblind_r_path = ur_path;
+//	string unblind_e_path = ue_path;
+//	string unblind_o_path = uf_path;
 
-	string g4_tree_path     = g4_path;
-	string g4_friend_path   = g4f_path;
-	string metadatafilename = metadata_name;
+//	string g4_tree_path     = g4_path;
+//	string g4_friend_path   = g4f_path;
+//	string metadatafilename = metadata_name;
 
 	int runno;
 	if(argc==2)
@@ -488,7 +474,7 @@ int main(int argc, char *argv[])
 	double lambda_g4_res_b = 0.0;
 	TTree * MetaTree;
 	gRandom = new TRandom3();
-	// = load_metadata_tree(metadatafilename);
+	// = load_metadata_tree(metadata_name);
 	if(!is_g4)
 	{
 		// polarization classification overhead:
@@ -500,13 +486,13 @@ int main(int argc, char *argv[])
 			if( runs.good_recoil[runno]==true )
 			{
 				cout << "Run " << runno << " is a recoil run." << endl;
-				fname  = make_rootfilename(blind_r_path+"output00", runno, "_blinded");
+				fname  = make_rootfilename(br_path+"output00", runno, "_blinded");
 				cout << "Using file:  " << fname << endl;
 			}
 			else if(runs.good_electron[runno]==true)
 			{
 				cout << "Run " << runno << " is an electron run." << endl;
-				fname  = make_rootfilename(blind_e_path+"output00", runno, "_blinded");
+				fname  = make_rootfilename(be_path+"output00", runno, "_blinded");
 				cout << "Using file:  " << fname << endl;
 			}
 			else
@@ -514,20 +500,20 @@ int main(int argc, char *argv[])
 				cout << "BAD.  Check run number." << endl;
 				return 0;
 			}
-			friend_fname = make_rootfilename(blind_o_path+"friend00",runno, "_blinded");
+			friend_fname = make_rootfilename(bf_path+"friend00",runno, "_blinded");
 		}
 		else
 		{
 			if( runs.good_recoil[runno]==true )
 			{
 				cout << "Run " << runno << " is a recoil run." << endl;
-				fname  = make_rootfilename(unblind_r_path+"output00", runno);
+				fname  = make_rootfilename(ur_path+"output00", runno);
 				cout << "Using file:  " << fname << endl;
 			}
 			else if(runs.good_electron[runno]==true)
 			{
 				cout << "Run " << runno << " is an electron run." << endl;
-				fname  = make_rootfilename(unblind_e_path+"output00", runno);
+				fname  = make_rootfilename(ue_path+"output00", runno);
 				cout << "Using file:  " << fname << endl;
 			}
 			else
@@ -535,7 +521,7 @@ int main(int argc, char *argv[])
 				cout << "BAD.  Check run number." << endl;
 				return 0;
 			}
-			friend_fname = make_rootfilename(unblind_o_path+"friend00",runno);
+			friend_fname = make_rootfilename(uf_path+"friend00",runno);
 		}
 	}
 	else // 
@@ -549,7 +535,7 @@ int main(int argc, char *argv[])
 		if(use_g4_metadata)
 		{
 			cout << "Looking at the metadata..." << endl;
-			MetaTree = load_metadata_tree(metadatafilename);
+			MetaTree = load_metadata_tree(metadata_name);
 			fname = get_simfilename(MetaTree, runno);
 			if(fname==string(""))
 			{
@@ -578,9 +564,9 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			fname  = make_rootfilename(g4_tree_path+"output_", runno);
+			fname  = make_rootfilename(g4_path+"output_", runno);
 		}
-		friend_fname = make_rootfilename(g4_friend_path+"friend_", runno);
+		friend_fname = make_rootfilename(g4f_path+"friend_", runno);
 	}
 	cout << "fname = " << fname << endl;
 	cout << "friend_fname = " << friend_fname << endl;
@@ -955,7 +941,7 @@ int main(int argc, char *argv[])
 	Double_t polarization = 0.0;
 	if(is_g4)
 	{
-		MetaTree = load_metadata_tree(metadatafilename);
+		MetaTree = load_metadata_tree(metadata_name);
 		int this_runno;
 		MetaTree -> SetBranchAddress("Run", &this_runno);
 		double this_pol;
