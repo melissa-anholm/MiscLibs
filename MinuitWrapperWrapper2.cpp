@@ -106,8 +106,8 @@ FitParameter::FitParameter()
 	double min_         = 0.0;
 	double max_         = 0.0;
 	bool is_fixed_      = false;
-//	FitParameter(name_, initial_val_, step_, min_, max_, is_fixed_);
-	FitParameter(TString(""), 0.0, 0.1, 0.0, 0.0, false);
+	FitParameter(name_, initial_val_, step_, min_, max_, is_fixed_);
+//	FitParameter(TString(""), 0.0, 0.1, 0.0, 0.0, false);
 }
 
 FitParameter::FitParameter(TString name_, double initial_val_, double step_, double min_, double max_, bool is_fixed_=false)
@@ -539,7 +539,7 @@ void SuperMinuit::OutputHeader1()
 		if(!logfilestream.is_open())
 		{
 			cout << "Opening file " << output_fname << " for log output." << endl;
-			logfilestream.open( output_fname.c_str(), std::ios::out);
+			logfilestream.open( output_fname.c_str(), std::ios::out);  // std::ios::out will overwrite.
 		} // it's open now.
 	
 		// do I need to do this?  .. yes, n_params (etc) probably aren't set yet.
@@ -552,6 +552,10 @@ void SuperMinuit::OutputHeader1()
 		logfilestream << "n_fixed_params: " << n_fixed_params << endl;
 		logfilestream << "n_free_params:  " << n_free_params << endl;
 		logfilestream << "n_bins:         " << fit_bmax - fit_bmin + 1 << endl;
+		logfilestream << "fit_bmin:       " << fit_bmin << endl;
+		logfilestream << "fit_bmax:       " << fit_bmax << endl;
+		logfilestream << "hist title:      " << hist1->GetTitle() << endl;  // GLOBAL hist1
+		
 		for (int i = 0; i < n_params; i++) 
 		{
 			// First dump the param summary for all params.

@@ -346,7 +346,7 @@ TH1D * make_asymcounts_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hi
 
 vector<TPad *> make_residupad(TH1D* top_hist, TH1D* bottom_hist, string top_draw_option=string("") )
 {
-	int verbose=1;
+	int verbose=0;
 	
 	TPad *pad2 = new TPad("pad2","pad2",0,0,1,0.3);  // pad2 is on bottom.
 	pad2->SetTopMargin(0.00001);
@@ -682,6 +682,7 @@ TH1D* get_residuals(TH1D* h1, TH1D* h2, double ymin=0, double ymax=0)
 	new_hist -> SetMarkerColor(kBlack);
 	new_hist -> SetLineColor(kBlack);
 	new_hist -> SetMarkerStyle(20);
+	new_hist -> SetMarkerSize(1.0);
 //	new_hist -> GetYaxis() -> SetRangeUser(-0.08, 0.08);
 //	new_hist -> GetYaxis() -> SetRangeUser(-2.0, 2.0);
 	if(ymin!=ymax)

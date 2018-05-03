@@ -360,5 +360,15 @@ void printout(vector<int> list)
 	return;
 }
 
+void printout(vector<double> list)
+{
+	int length = list.size();
+	for(int i=0; i<length; i++)
+	{
+		cout << list.at(i) << endl;
+	}
+	return;
+}
+
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 #endif

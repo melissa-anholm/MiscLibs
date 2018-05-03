@@ -185,6 +185,9 @@ TGraphErrors * make_TGraphErrors(int N_points, double * x_avg, double * y_avg, d
 	TGraphErrors * my_TGraphErrors;
 	my_TGraphErrors = new TGraphErrors(N_points, x_avg, y_avg, delta_x, delta_y);
 	
+	my_TGraphErrors->SetFillStyle(0);  // 0 =  not filled.
+	my_TGraphErrors->SetFillColor(kWhite);  // the box around the thing is white.
+
 	return my_TGraphErrors;
 }
 
@@ -204,6 +207,9 @@ TGraphErrors * make_TGraphErrors(vector<double> x_avg, vector<double> y_avg, vec
 	TGraphErrors * my_TGraphErrors;
 	my_TGraphErrors = new TGraphErrors(N_points, x, y, x_err, y_err);
 	
+	my_TGraphErrors->SetFillStyle(0);  // 0 =  not filled.
+	my_TGraphErrors->SetFillColor(kWhite);  // the box around the thing is white.
+
 	return my_TGraphErrors;
 }
 
@@ -233,7 +239,8 @@ TGraphErrors * make_sorted_TGraphErrors(vector<double> x_avg, vector<double> y_a
 	my_TGraphErrors->SetMarkerSize(0.4);
 	my_TGraphErrors->SetMarkerColor(color);
 	my_TGraphErrors->SetLineColor(color);
-	
+	my_TGraphErrors->SetFillStyle(0);  // 0 =  not filled.
+	my_TGraphErrors->SetFillColor(kWhite);  // the box around the thing is white.
 	return my_TGraphErrors;
 }
 
@@ -256,7 +263,9 @@ TGraph * make_TGraph(vector<double> x_avg, vector<double> y_avg, int color=int(k
 	my_TGraph->SetMarkerSize(0.4);
 	my_TGraph->SetMarkerColor(color);
 	my_TGraph->SetLineColor(color);
-	
+	my_TGraph->SetFillStyle(0);  // 0 =  not filled.
+	my_TGraph->SetFillColor(kWhite);  // the box around the thing is white.
+
 	return my_TGraph;
 }
 
@@ -290,7 +299,9 @@ TGraph * make_sorted_TGraph(vector<double> x_avg, vector<double> y_avg, int colo
 	my_TGraph->SetMarkerSize(0.4);
 	my_TGraph->SetMarkerColor(color);
 	my_TGraph->SetLineColor(color);
-	
+	my_TGraph->SetFillStyle(0);  // 0 =  not filled.
+	my_TGraph->SetFillColor(kWhite);  // the box around the thing is white.
+
 	return my_TGraph;
 }
 
