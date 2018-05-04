@@ -434,8 +434,8 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	MetaTree2 -> SetBranchAddress("SailVelocity_z_mm_per_ms",   &sail_z2);
 	
 	double expansiontime1, expansiontime2;
-	MetaTree1 -> SetBranchAddress("ExapndBeforePolarized_ms",   &expansiontime1);
-	MetaTree2 -> SetBranchAddress("ExapndBeforePolarized_ms",   &expansiontime2);
+	MetaTree1 -> SetBranchAddress("ExpandBeforePolarized_ms",   &expansiontime1);
+	MetaTree2 -> SetBranchAddress("ExpandBeforePolarized_ms",   &expansiontime2);
 	double OP_cycletime1, OP_cycletime2;
 	MetaTree1 -> SetBranchAddress("OP_CycleTime_ms",   &OP_cycletime1);
 	MetaTree2 -> SetBranchAddress("OP_CycleTime_ms",   &OP_cycletime2);
