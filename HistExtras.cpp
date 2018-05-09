@@ -261,21 +261,39 @@ int hist_type::set_other_parameters()
 		user_xmin = xmin;
 		user_xmax = 5100.0;
 	}
-	else if (type == std::string("Ben_Ebeta_256_t") )
+	else if (type == std::string("Ben_Ebeta_256_t_AB") )
 	{
 		nbins = 256;
 		xmin = -277.241;
 		xmax = 9997.69;
-		units = std::string("Scintillator Energy [keV] (Ben 256t)");
+		units = std::string("Scintillator Energy [keV] (Ben 256t - AB)");
 		user_xmin = 0.0;
 		user_xmax = 5100.0;
 	}
-	else if (type == std::string("Ben_Ebeta_256_b") )
+	else if (type == std::string("Ben_Ebeta_256_b_AB") )
 	{
 		nbins = 256;
 		xmin = -336.62;
 		xmax = 9336.69;
-		units = std::string("Scintillator Energy [keV] (Ben 256b)");
+		units = std::string("Scintillator Energy [keV] (Ben 256b - AB)");
+		user_xmin = 0.0;
+		user_xmax = 5100.0;
+	}
+	else if (type == std::string("Ben_Ebeta_256_t_CDE") )
+	{
+		nbins = 256;
+		xmin = -286.453;
+		xmax = 10261.3;
+		units = std::string("Scintillator Energy [keV] (Ben 256t - CDE)");
+		user_xmin = 0.0;
+		user_xmax = 5100.0;
+	}
+	else if (type == std::string("Ben_Ebeta_256_b_CDE") )
+	{
+		nbins = 256;
+		xmin = -347.27;
+		xmax = 9565.69;
+		units = std::string("Scintillator Energy [keV] (Ben 256b - CDE)");
 		user_xmin = 0.0;
 		user_xmax = 5100.0;
 	}
