@@ -157,12 +157,12 @@ Double_t get_upper_E(double qdc, int run, bool g4data=false)
 	double E;
 	if(!g4data)
 	{
-		if (run < 450) 
+		if (run < 450) // A, B
 		{
 			offset = 110.0;  // +/- 0.3
 			slope  = 398.5;  // +/- 0.4
 		} 
-		else 
+		else // C, D, (E)
 		{
 			offset = 110.7;  // +/- 0.2
 			slope  = 388.3;  // +/- 0.4
