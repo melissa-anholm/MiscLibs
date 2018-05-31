@@ -292,7 +292,7 @@ Double_t get_lower_E_res(double lower_E, int run, bool g4data=false)
 
 Double_t getE_withresolution(double E, double lambda)
 {
-//	verbose=1;
+//	int verbose=1;
 	
 	double better_E =-1.0;
 	double E_res = sqrt(lambda*E);
@@ -300,7 +300,7 @@ Double_t getE_withresolution(double E, double lambda)
 	{
 	//	double this_random = 0;
 		better_E = gRandom->Gaus(E, E_res);
-	//	if(verbose) {cout << "this random number:  " << better_E << endl; }
+//		if(verbose) {cout << "this random number:  " << better_E << endl; }
 	}
 	return better_E;
 }

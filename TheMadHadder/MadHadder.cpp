@@ -121,30 +121,47 @@ hadder_runlist check_hadd_multi()
 	int verbose = 0;
 	TTree * MetaTree = load_metadata_tree(metadata_name);
 	
-	bool found_unsummed = false;
+	bool found_unused = false;
+//	bool found_unused_notasum = false;
 	int firstrun = 0;
 	int run = 0;
 	MetaTree -> SetBranchAddress("Run", &run);
 	int has_been_summed = 0;
 	MetaTree -> SetBranchAddress("has_been_summed",  &has_been_summed);
+	int is_a_sum = 0;
+	MetaTree -> SetBranchAddress("is_a_sum",  &is_a_sum);
 	
 	vector<int> unsummed_runlist;
 	int nentries = MetaTree -> GetEntries();
 	for(int i=0; i<nentries; i++)
 	{
 		MetaTree -> GetEntry(i);
-		if(!has_been_summed && !found_unsummed)
+		if(!has_been_summed && !found_unused && !is_a_sum)
 		{
 			firstrun = run;
-			found_unsummed = true;
-			cout << "First run to look at:  " << firstrun << endl;
-		//	break;
+			found_unused = true;
+			cout << "First run to look at (not a sum):  " << firstrun << endl;
 		}
 		if(!has_been_summed)
 		{
 			unsummed_runlist.push_back(run);
 		}
 	}
+	if(!found_unused)
+	{
+		for(int i=0; i<nentries; i++)
+		{
+			MetaTree -> GetEntry(i);
+			if(!has_been_summed && !found_unused)
+			{
+				firstrun = run;
+				found_unused = true;
+				cout << "First run to look at (is a sum):  " << firstrun << endl;
+			}
+		}
+	}
+	// if !found_unused ..... no...
+	
 	//
 	int length_of_unsummedlist = unsummed_runlist.size();
 	if(length_of_unsummedlist <= 1)

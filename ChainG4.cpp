@@ -276,7 +276,7 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 					total_events_recorded = total_events_recorded + this_neventssaved;
 				
 					filename   = get_simfilename( (TChain*)MetaTree->Clone(), run);
-					friendname = get_simfriendname(friendpath, run);
+					friendname = get_simfriendname(friendpath, run);  // check if friend exists???
 					tree_chain -> Add(filename.c_str());
 					friend_chain -> Add(friendname.c_str());
 		
