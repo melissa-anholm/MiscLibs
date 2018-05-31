@@ -125,20 +125,10 @@ void readout_bincenters(TH1D * hist)
 	}
 	return;
 }
-
-double get_asymmetry(double r1p, double r1m, double r2p, double r2m)
+/*
+double get_polcorrected_asymmetry(double p1, double p2, double r1p, double r1m, double r2p, double r2m)
 {
 	double A;
-	/*
-	if(r1p==0 && (r1m==0 || r2p==0) )
-	{
-		A = 0.0;
-	}
-	else if(r2m==0 && (r1m==0 || r2p==0) )
-	{
-		A = 0.0;
-	}
-	*/
 	if(r1p==0 || r1m==0 || r2p==0 || r2m==0) // any zero.
 	{
 		A = 0.0;
@@ -149,94 +139,24 @@ double get_asymmetry(double r1p, double r1m, double r2p, double r2m)
 	}
 	return A;
 }
-/*
-double get_asymmetry2(double r1p, double r1m, double r2p, double r2m)
+*/
+
+double get_asymmetry(double r1p, double r1m, double r2p, double r2m)
 {
-	double A = 0;
-	if(r1p!=0 && r1m!=0 && r2p!=0 && r2m!=0) // easiest case.
+	double A;
+	if(r1p==0 || r1m==0 || r2p==0 || r2m==0) // any zero.
 	{
-		A = ( sqrt(r1p*r2m) - sqrt(r1m*r2p) ) / ( sqrt(r1p*r2m) + sqrt(r1m*r2p) );
-		return A;
+		A = 0.0;
 	}
 	else
 	{
-		if( (r1p*r2m)==0 && (r1m*r2p)!=0 ) // at least one non-zero, at least one zero in other combo.
-		{
-			A = -1.0;
-		}
-		else if( (r1p*r2m)!=0 && (r1m*r2p)==0 ) // at least one non-zero, at least one zero in other combo.
-		{
-			A = 1.0;
-		}
-		else if(r1p==0 && r1m==0 && r2p==0 && r2m==0) // all zero.
-		{
-			A = 0.0;
-		}
-		else // the complicated ones.
-		{
-			// one zero in each set, others non-zero.
-			if(r1p==0 && r1m==0 && r2p!=0 && r2m!=0) // first detector dead.
-			{
-				A = ( sqrt(r2m) - sqrt(r2p) ) / ( sqrt(r2m) + sqrt(r2p) );
-			}
-			else if(r1p!=0 && r1m!=0 && r2p==0 && r2m==0) // second detector dead.
-			{
-				A = ( sqrt(r1p) - sqrt(r1m) ) / ( sqrt(r1p) + sqrt(r1m) );
-			}
-			else if(r1p!=0 && r1m==0 && r2p!=0 && r2m==0) // one polarization state not trapped.
-			{
-				A = ( sqrt(r1p) - sqrt(r2p) ) / ( sqrt(r1p) + sqrt(r2p) );
-			}
-			else if(r1p==0 && r1m!=0 && r2p==0 && r2m!=0) // other polarization state not trapped.
-			{
-				A = ( sqrt(r2m) - sqrt(r1m) ) / ( sqrt(r2m) + sqrt(r1m) );
-			}
-			// MORE CASES GO HERE !!!
-		}
+		A = ( sqrt(r1p*r2m) - sqrt(r1m*r2p) ) / ( sqrt(r1p*r2m) + sqrt(r1m*r2p) );
 	}
 	return A;
 }
-*/
+
 double get_asymmetry_err(double r1p, double r1m, double r2p, double r2m)
 {
-	/*
-	double t1 = sqrt(r1p*r2m);
-	double t2 = sqrt(r1m*r2p);
-	double dAdt1 =  2.0*t2/( (t1+t2)*(t1+t2) );
-	double dAdt2 = -2.0*t1/( (t1+t2)*(t1+t2) );
-
-	double DA2;
-	if(t1==0)
-	{
-		dAdt2 = 0.0;
-	}
-	if(t2==0)
-	{
-		dAdt1 = 0.0;
-	}
-	DA2 = dAdt1*dAdt1*( 0.25*r2m + 0.25*r1p ) + dAdt2*dAdt2*( 0.25*r2p + 0.25*r1m );
-	return sqrt(DA2);
-	*/
-	/*
-	double s;
-	double DA2 = 0.0;
-	if(r1p!=0.0 && r1m!=0.0 && r2p!=0.0 && r2m!=0.0)
-	{
-		s = sqrt( (r1m*r2p) / (r1p*r2m) );
-		DA2 = ( s*s / ((1.0+s)*(1.0+s)) ) * (1.0/r1p + 1.0/r1m + 1.0/r2p + 1.0/r2m);
-	}
-	return sqrt(DA2);
-	*/
-	/*
-	double s;
-	double DA2 = 0.0;
-	if(r1p!=0.0 && r1m!=0.0 && r2p!=0.0 && r2m!=0.0)
-	{
-		s = sqrt( (r1m*r2p) / (r1p*r2m) );
-		DA2 = 1.0/4.0 * pow( (s-1.0)/(s+1.0), 2) * s*s * (1.0/r1p + 1.0/r1m + 1.0/r2p + 1.0/r2m);
-	}
-	return sqrt(DA2);
-	*/
 	double s;
 	double DA2 = 1.0;
 	if(r1p!=0.0 && r1m!=0.0 && r2p!=0.0 && r2m!=0.0)
