@@ -652,6 +652,12 @@ int main(int argc, char *argv[])
 		tree -> SetBranchAddress("QDC_UpperPMT", &upper_qdc_d);
 		tree -> SetBranchAddress("QDC_LowerPMT", &lower_qdc_d);
 	}
+	vector<double> * scint_time_t = 0;
+	vector<double> * scint_time_b = 0;
+	tree -> SetBranchAddress("TDC_SCINT_TOP",    &scint_time_t);  
+	tree -> SetBranchAddress("TDC_SCINT_BOTTOM", &scint_time_b);  
+
+
 	int acmot_count;
 	int dcmot_count;
 	
@@ -715,33 +721,26 @@ int main(int argc, char *argv[])
 	dl_x_pos -> clear();
 	dl_z_pos -> clear();
 	
-	// these are defined above, but only need to create new branches for g4 runs.
-//	UInt_t led_count = 0;
-//	UInt_t photodiode_count = 0;
+	UInt_t led_count = 0;
+	UInt_t photodiode_count = 0;
 	vector<double> *tdc_photodiode = 0;
 	vector<double> *tdc_pulser_led = 0;
+	if(!is_g4)
+	{
+		tree -> SetBranchAddress("TDC_PULSER_LED_Count",  &led_count);
+		tree -> SetBranchAddress("TDC_PHOTO_DIODE_Count", &photodiode_count);
+	}
 	if(is_g4)
 	{
-		TBranch *led_count_branch = friend_tree -> Branch("TDC_PULSER_LED_Count", &led_count);
+		// these are defined above, but only need to create new branches for g4 runs.
+		TBranch *led_count_branch        = friend_tree -> Branch("TDC_PULSER_LED_Count",  &led_count);
 		TBranch *photodiode_count_branch = friend_tree -> Branch("TDC_PHOTO_DIODE_Count", &photodiode_count);
-		TBranch *photodiode_vec_branch = friend_tree -> Branch("TDC_PHOTO_DIODE",&tdc_photodiode);
-		TBranch *led_vec_branch = friend_tree -> Branch("TDC_PULSER_LED",&tdc_pulser_led);
+		TBranch *photodiode_vec_branch   = friend_tree -> Branch("TDC_PHOTO_DIODE",       &tdc_photodiode);
+		TBranch *led_vec_branch          = friend_tree -> Branch("TDC_PULSER_LED",        &tdc_pulser_led);
 	}
 	
 	// ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // 
 	// BB1s:  
-	UInt_t led_count = 0;
-	UInt_t photodiode_count = 0;
-	if(!is_g4)
-	{
-		tree -> SetBranchAddress("TDC_PULSER_LED_Count", &led_count);
-		tree -> SetBranchAddress("TDC_PHOTO_DIODE_Count", &photodiode_count);
-	}
-
-	vector<double> * scint_time_t = 0;
-	vector<double> * scint_time_b = 0;
-	tree -> SetBranchAddress("TDC_SCINT_TOP",    &scint_time_t);  
-	tree -> SetBranchAddress("TDC_SCINT_BOTTOM", &scint_time_b);  
 	
 	BB1Detector stripdetector[2][2];
 	string tdiff_file[2] = {bb1_prefix+"bb1_u_tdiff.dat", bb1_prefix+"bb1_l_tdiff.dat"};  // WHAT DOES THIS SHIT EVEN DO FOR G4 DATA?  ... I think it's fine, because I'll just set everything to be the same.
@@ -785,10 +784,10 @@ int main(int argc, char *argv[])
 	{
 		// set noise file?  and load up the noise histograms.
 		// path?  same detector numbering?
-		det[t][x].SetupNoiseFromFile(bb1_prefix+"bb1_noise_UX.root");
-		det[t][y].SetupNoiseFromFile(bb1_prefix+"bb1_noise_UY.root");
-		det[b][x].SetupNoiseFromFile(bb1_prefix+"bb1_noise_LX.root");
-		det[b][y].SetupNoiseFromFile(bb1_prefix+"bb1_noise_LY.root");
+		stripdetector[t][x].SetupNoiseFromFile(bb1_prefix+"bb1_noise_UX.root");
+		stripdetector[t][y].SetupNoiseFromFile(bb1_prefix+"bb1_noise_UY.root");
+		stripdetector[b][x].SetupNoiseFromFile(bb1_prefix+"bb1_noise_LX.root");
+		stripdetector[b][y].SetupNoiseFromFile(bb1_prefix+"bb1_noise_LY.root");
 	}
 	vector<double> adc_with_res(40, 0.0);
 	
