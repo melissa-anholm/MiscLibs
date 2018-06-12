@@ -172,6 +172,12 @@ TGraphErrors * set_attributes_like(TGraphErrors * thisgraph, TH1D * hist)
 	thisgraph -> SetNameTitle( (string("Graph: ")+string(hist->GetName())).c_str(), hist->GetTitle());
 	thisgraph -> SetMarkerColor(hist->GetLineColor());
 	thisgraph -> SetLineColor(hist->GetLineColor());
+	
+	thisgraph -> SetMarkerStyle(hist->GetMarkerStyle());
+	thisgraph -> SetMarkerSize(hist->GetMarkerSize());
+	thisgraph -> SetLineStyle(hist->GetLineStyle());
+	thisgraph -> SetLineWidth(hist->GetLineWidth());
+	
 	thisgraph -> GetXaxis()->SetTitle(hist->GetXaxis()->GetTitle());
 	thisgraph -> GetYaxis()->SetTitle(hist->GetYaxis()->GetTitle());
 //	thisgraph -> GetXaxis()->SetRangeUser(hist->GetXaxis()->GetRangeUser());  // GetRangeUser isn't a thing.
