@@ -29,6 +29,8 @@
 // was added specifically to manage the clusterfuck that arose from 
 // trying to use this code from multiple different computers.
 // 
+// 12.6.2018:  version 9:  added BB1 detector noise and resolution to 
+// g4 data processing.
 // ==================================================================== //
 
 #include <stdlib.h>
@@ -59,8 +61,9 @@ bool is_blinded            = false;
 bool is_g4                 = true;
 bool use_g4_metadata       = true;
 bool apply_scint_res_on_g4 = true;
+bool doEmpirical           = true;  // empirical noise on BB1s.
 
-int version = 8;
+int version = 9;
 
 //#define XSTR(x) #x
 //#define STR(x) XSTR(x)
@@ -311,6 +314,33 @@ Double_t getres_withresolution(double E, double lambda)
 	double E_res = sqrt(lambda*E);
 	return E_res;
 }
+
+/*
+void K37StripDetectorDigitizer::ApplyResolution() 
+{
+	G4double res;
+	for (unsigned int i = 0; i < 40; i++) 
+	{
+		if (energy_dep_Xstrip_[i] > 0.0) 
+		{
+			// Blur energy from gaussian centered at true energy
+			// Require positive energy, but allow zero energy
+		
+			res = sqrt(energy_dep_Xstrip_[i] * resolution_Xstrip_[i]);
+			energy_dep_Xstrip_[i] = max(G4RandGauss::shoot(energy_dep_Xstrip_[i], res), 0.0);
+		}
+		if (energy_dep_Ystrip_[i] > 0.0) 
+		{
+			// Blur energy from gaussian centered at true energy
+			// Require positive energy, but allow zero energy
+
+			res = sqrt(energy_dep_Ystrip_[i] * resolution_Ystrip_[i]);
+			//      G4cout << moduleName << " strip " << i+1 << " res: " << res/keV << G4endl;
+			energy_dep_Ystrip_[i] = max(G4RandGauss::shoot(energy_dep_Ystrip_[i], res), 0.0);
+		}
+	}
+}
+*/
 
 // Cycle Counter:
 double time_to_polarize = 100.0;   // microsec.
@@ -654,7 +684,51 @@ int main(int argc, char *argv[])
 	int z2_count = 0;
 	int x_count = 0;
 	int z_count = 0;
+
+
+	// 
+	// Some Friend Tree Stuff:
+	Bool_t all_okay = kTRUE;
+	Bool_t is_polarized = kFALSE;
+	Bool_t is_unpolarized = kFALSE;
+	Bool_t is_ac = kFALSE;
+	TBranch *all_okay_b       = friend_tree -> Branch("all_okay", &all_okay);  
+	TBranch *is_polarized_b   = friend_tree -> Branch("is_polarized", &is_polarized);  
+	TBranch *is_unpolarized_b = friend_tree -> Branch("is_unpolarized", &is_unpolarized);  
+	TBranch *is_ac_b          = friend_tree -> Branch("is_ac", &is_ac);  
+	int cyclecount = 50;
+	TBranch * cyclecount_branch = friend_tree -> Branch("AC_CycleCount", &cyclecount);  
 	
+	Double_t upper_E;
+	Double_t lower_E;
+	Double_t upper_E_res;
+	Double_t lower_E_res;
+	TBranch *upper_e_b = friend_tree -> Branch("upper_scint_E", &upper_E);
+	TBranch *lower_e_b = friend_tree -> Branch("lower_scint_E", &lower_E);
+	TBranch *upper_e_res_branch = friend_tree -> Branch("upper_scint_E_res", &upper_E_res);
+	TBranch *lower_e_res_branch = friend_tree -> Branch("lower_scint_E_res", &lower_E_res);
+
+	vector<double> *dl_x_pos = 0;
+	vector<double> *dl_z_pos = 0;
+	TBranch *x_branch = friend_tree -> Branch("dl_x_pos", &dl_x_pos);
+	TBranch *z_branch = friend_tree -> Branch("dl_z_pos", &dl_z_pos);
+	dl_x_pos -> clear();
+	dl_z_pos -> clear();
+	
+	// these are defined above, but only need to create new branches for g4 runs.
+//	UInt_t led_count = 0;
+//	UInt_t photodiode_count = 0;
+	vector<double> *tdc_photodiode = 0;
+	vector<double> *tdc_pulser_led = 0;
+	if(is_g4)
+	{
+		TBranch *led_count_branch = friend_tree -> Branch("TDC_PULSER_LED_Count", &led_count);
+		TBranch *photodiode_count_branch = friend_tree -> Branch("TDC_PHOTO_DIODE_Count", &photodiode_count);
+		TBranch *photodiode_vec_branch = friend_tree -> Branch("TDC_PHOTO_DIODE",&tdc_photodiode);
+		TBranch *led_vec_branch = friend_tree -> Branch("TDC_PULSER_LED",&tdc_pulser_led);
+	}
+	
+	// ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // 
 	// BB1s:  
 	UInt_t led_count = 0;
 	UInt_t photodiode_count = 0;
@@ -707,6 +781,18 @@ int main(int argc, char *argv[])
 	tree -> SetBranchAddress("BB1_AMPLITUDE_LX", &strip_E[b][x]);
 	tree -> SetBranchAddress("BB1_AMPLITUDE_LY", &strip_E[b][y]);
 	
+	if(is_g4)
+	{
+		// set noise file?  and load up the noise histograms.
+		// path?  same detector numbering?
+		det[t][x].SetupNoiseFromFile(bb1_prefix+"bb1_noise_UX.root");
+		det[t][y].SetupNoiseFromFile(bb1_prefix+"bb1_noise_UY.root");
+		det[b][x].SetupNoiseFromFile(bb1_prefix+"bb1_noise_LX.root");
+		det[b][y].SetupNoiseFromFile(bb1_prefix+"bb1_noise_LY.root");
+	}
+	vector<double> adc_with_res(40, 0.0);
+	
+	
 	if(!is_g4)
 	{
 		tree -> SetBranchAddress("BB1_UX_PEAKTIME", &strip_T[t][x]);
@@ -714,49 +800,14 @@ int main(int argc, char *argv[])
 		tree -> SetBranchAddress("BB1_LX_PEAKTIME", &strip_T[b][x]);
 		tree -> SetBranchAddress("BB1_LY_PEAKTIME", &strip_T[b][y]);
 	}
-
-	// 
-	// Friend Tree:
-	Bool_t all_okay = kTRUE;
-	Bool_t is_polarized = kFALSE;
-	Bool_t is_unpolarized = kFALSE;
-	Bool_t is_ac = kFALSE;
-	TBranch *all_okay_b = friend_tree -> Branch("all_okay", &all_okay);  
-	TBranch *is_polarized_b = friend_tree -> Branch("is_polarized", &is_polarized);  
-	TBranch *is_unpolarized_b = friend_tree -> Branch("is_unpolarized", &is_unpolarized);  
-	TBranch *is_ac_b = friend_tree -> Branch("is_ac", &is_ac);  
-	int cyclecount = 50;
-	TBranch * cyclecount_branch = friend_tree -> Branch("AC_CycleCount", &cyclecount);  
-	
-	Double_t upper_E;
-	Double_t lower_E;
-	Double_t upper_E_res;
-	Double_t lower_E_res;
-	TBranch *upper_e_b = friend_tree -> Branch("upper_scint_E", &upper_E);
-	TBranch *lower_e_b = friend_tree -> Branch("lower_scint_E", &lower_E);
-	TBranch *upper_e_res_branch = friend_tree -> Branch("upper_scint_E_res", &upper_E_res);
-	TBranch *lower_e_res_branch = friend_tree -> Branch("lower_scint_E_res", &lower_E_res);
-
-	vector<double> *dl_x_pos = 0;
-	vector<double> *dl_z_pos = 0;
-	TBranch *x_branch = friend_tree -> Branch("dl_x_pos", &dl_x_pos);
-	TBranch *z_branch = friend_tree -> Branch("dl_z_pos", &dl_z_pos);
-	dl_x_pos -> clear();
-	dl_z_pos -> clear();
-	
-	// these are defined above, but only need to create new branches for g4 runs.
-//	UInt_t led_count = 0;
-//	UInt_t photodiode_count = 0;
-	vector<double> *tdc_photodiode = 0;
-	vector<double> *tdc_pulser_led = 0;
-	if(is_g4)
+	else if(is_g4)
 	{
-		TBranch *led_count_branch = friend_tree -> Branch("TDC_PULSER_LED_Count", &led_count);
-		TBranch *photodiode_count_branch = friend_tree -> Branch("TDC_PHOTO_DIODE_Count", &photodiode_count);
-		TBranch *photodiode_vec_branch = friend_tree -> Branch("TDC_PHOTO_DIODE",&tdc_photodiode);
-		TBranch *led_vec_branch = friend_tree -> Branch("TDC_PULSER_LED",&tdc_pulser_led);
+		TBranch * bb1_ux_time = friend_tree -> Branch("BB1_UX_PEAKTIME", &strip_T[t][x]);
+		TBranch * bb1_uy_time = friend_tree -> Branch("BB1_UY_PEAKTIME", &strip_T[t][y]);
+		TBranch * bb1_lx_time = friend_tree -> Branch("BB1_LX_PEAKTIME", &strip_T[b][x]);
+		TBranch * bb1_ly_time = friend_tree -> Branch("BB1_LY_PEAKTIME", &strip_T[b][y]);
 	}
-	
+
 	// BB1s:  
 	vector<double> * bb1_t_x = 0;
 	vector<double> * bb1_t_y = 0;
@@ -789,19 +840,11 @@ int main(int argc, char *argv[])
 //	TBranch *bb1_t_pass_b = friend_tree -> Branch("bb1_t_pass", &bb1_t_pass);  
 //	TBranch *bb1_b_pass_b = friend_tree -> Branch("bb1_b_pass", &bb1_b_pass);  
 	
-	
-	if(is_g4)
-	{
-		TBranch * bb1_ux_time = friend_tree -> Branch("BB1_UX_PEAKTIME", &strip_T[t][x]);
-		TBranch * bb1_uy_time = friend_tree -> Branch("BB1_UY_PEAKTIME", &strip_T[t][y]);
-		TBranch * bb1_lx_time = friend_tree -> Branch("BB1_LX_PEAKTIME", &strip_T[b][x]);
-		TBranch * bb1_ly_time = friend_tree -> Branch("BB1_LY_PEAKTIME", &strip_T[b][y]);
-	}
-	
-	BB1Hit bb1_hit[2] = {BB1Hit(), BB1Hit()};              // 2 detectors.
-	BB1Hit bb1_sechit[2] = {BB1Hit(), BB1Hit()};           // 2 detectors.
+	BB1Hit    bb1_hit[2] = {BB1Hit(), BB1Hit()};              // 2 detectors.
+	BB1Hit    bb1_sechit[2] = {BB1Hit(), BB1Hit()};           // 2 detectors.
 	BB1Result bb1_result[2] = {BB1Result(), BB1Result()};  // 2 detectors.
 	//
+
 	
 	// Backscatter Event Classification:
 	// is_type1_t:  
@@ -1091,13 +1134,25 @@ int main(int argc, char *argv[])
 						cout << "scint_time_t->size() = " << scint_time_t->size() << "; \tscint_time_b->size() = " << scint_time_b->size();
 						cout << ";\tStrip [" << detector << "][" << axis << "] has size " << strip_E[detector][axis] -> size() << endl;
 						continue;
-					}               
+					}
 					// calculate the energy for every single fucking strip.
-					stripdetector[detector][axis].CalcEnergy(*strip_E[detector][axis]);  
+					if(is_g4)
+					{
+						adc_with_res = stripdetector[detector][axis].ApplyResolution(*strip_E[detector][axis], gRandom, doEmpirical);
+						stripdetector[detector][axis].CalcEnergy(adc_with_res);  
+					}
+					else
+					{
+						stripdetector[detector][axis].CalcEnergy(*strip_E[detector][axis]);  
+						// strip_E[detector][axis] is a vector<double>*.
+					}
 					
-					// load up peak time for every fucking strip.
+					
+					// load up peak time for every fucking strip.  if it's real data.  
 					if(!is_g4)
-						{ stripdetector[detector][axis].SetMaxT(*strip_T[detector][axis]); }
+					{ 
+						stripdetector[detector][axis].SetMaxT(*strip_T[detector][axis]); 
+					}
 				//	else
 				//	{
 				//		// *set* the maxT time for each strip if it's a g4 thing too!  
