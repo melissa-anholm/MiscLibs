@@ -448,8 +448,10 @@ bool check_ac(int acmottime, double op_delay)
 
 enum detector_position
 {
-	t = 1,
-	b = 0
+//	t = 1,
+//	b = 0
+	t = 0,
+	b = 1
 };
 enum bb1_axis
 {
@@ -771,6 +773,7 @@ int main(int argc, char *argv[])
 			strip_E[detector][axis] = 0;
 			strip_T[detector][axis] = 0;
 			stripdetector[detector][axis].SetTDiffSigWithFile(tdiff_file[detector]);
+			// below:  sets in stone the t/b, x/y convention, as a point of calibration.
 			stripdetector[detector][axis].det = Detector(detector);  // t or b.
 			stripdetector[detector][axis].pl = Plane(axis);          // x or y.
 		}
