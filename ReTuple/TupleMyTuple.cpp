@@ -315,33 +315,6 @@ Double_t getres_withresolution(double E, double lambda)
 	return E_res;
 }
 
-/*
-void K37StripDetectorDigitizer::ApplyResolution() 
-{
-	G4double res;
-	for (unsigned int i = 0; i < 40; i++) 
-	{
-		if (energy_dep_Xstrip_[i] > 0.0) 
-		{
-			// Blur energy from gaussian centered at true energy
-			// Require positive energy, but allow zero energy
-		
-			res = sqrt(energy_dep_Xstrip_[i] * resolution_Xstrip_[i]);
-			energy_dep_Xstrip_[i] = max(G4RandGauss::shoot(energy_dep_Xstrip_[i], res), 0.0);
-		}
-		if (energy_dep_Ystrip_[i] > 0.0) 
-		{
-			// Blur energy from gaussian centered at true energy
-			// Require positive energy, but allow zero energy
-
-			res = sqrt(energy_dep_Ystrip_[i] * resolution_Ystrip_[i]);
-			//      G4cout << moduleName << " strip " << i+1 << " res: " << res/keV << G4endl;
-			energy_dep_Ystrip_[i] = max(G4RandGauss::shoot(energy_dep_Ystrip_[i], res), 0.0);
-		}
-	}
-}
-*/
-
 // Cycle Counter:
 double time_to_polarize = 100.0;   // microsec.
 long rollover_count = 1073741824;  // acmot/op seems to loop at ~1038e6.  "Usually."
