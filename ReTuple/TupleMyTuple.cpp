@@ -1409,6 +1409,7 @@ int main(int argc, char *argv[])
 	}
 	
 	friend_tree -> GetCurrentFile() -> Write("",TObject::kOverwrite);  
+	friendfile -> cd();
 	version_string -> Write();
 	friend_tree -> GetCurrentFile() -> Close();
 	
