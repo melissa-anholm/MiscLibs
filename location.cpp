@@ -49,7 +49,7 @@ string ue_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons
 string uf_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
 
 string g4_path_fifteen  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
-string bb1_prefix_fifteen = "/home1/trinat/anholm/Packages/MiscLibs/BB1/";
+string bb1_prefix_fifteen = "/Users/spiffyzha/Packages/MiscLibs/BB1/";
 //
 string br_path_trinatdaq = "/data/trinat/S1188_2014_blinded/";
 string be_path_trinatdaq = "/data/trinat/S1188_2014_blinded/";
