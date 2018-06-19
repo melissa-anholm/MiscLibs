@@ -500,7 +500,15 @@ int main(int argc, char *argv[])
 	cout << "For BB1s, we use a " << sigma_cut << " sigma energy agreement cut." << endl;
 	cout << "For BB1s, we use SNR threshold \'index\' " << threshold_index << "." << endl;
 	cout << "For BB1s, we use an energy threshold of " << bb1_energy_threshold << " keV." << endl;
-
+	
+	if(is_g4)
+	{
+		cout << "We are using simulated data." << endl;
+	}
+	else
+	{
+		cout << "We are using experimental data." << endl;
+	}
 	
 	string fname;
 	string friend_fname;

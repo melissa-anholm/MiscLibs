@@ -181,9 +181,10 @@ TChain * get_single_simtree(int runno)
 }
 
 
-vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, int maxrun=0)
+vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, string runset_string, int maxrun=0)
 {
 	vector<int> set_of_runs;
+	const char * this_runset = runset_string.c_str();
 	
 	int run = 0;
 	MetaTree -> SetBranchAddress("Run", &run);
@@ -193,8 +194,9 @@ vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 	MetaTree -> SetBranchAddress("has_been_summed", &has_been_summed);
 	int is_a_sum = 0;
 	MetaTree -> SetBranchAddress("is_a_sum", &is_a_sum);
-
-//	use_only_summed_forchain
+	char runset[256];
+	MetaTree -> SetBranchAddress("matches_runset", &runset);
+//	if( strcmp(this_matchedrunset1,this_matchedrunset2) !=0 ) {match=false;}	
 	
 	int nentries = MetaTree -> GetEntries();
 	if(maxrun != 0)
@@ -204,7 +206,7 @@ vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 	for(int i=0; i<nentries; i++)
 	{
 		MetaTree -> GetEntry(i);
-		if(this_rho == rho)
+		if(this_rho == rho && !strcmp(this_runset, runset))
 		{
 			if(has_been_summed==0)
 			{
@@ -224,16 +226,18 @@ vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 			}
 		}
 	}
-
 	return set_of_runs;
 }
 
 
-TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
+TChain * get_chain_from_rho(TTree * MetaTree, double rho, string runset_string, int maxrun=0)
 {
 	cout << "rho = " << rho << endl;
 	string path       = g4_path;
 	string friendpath = g4f_path;
+	
+	const char * this_runset = runset_string.c_str();
+//	if( strcmp(this_matchedrunset1,this_matchedrunset2) !=0 ) {match=false;}	
 	
 	int nentries = MetaTree -> GetEntries();
 	if(maxrun != 0)
@@ -253,6 +257,8 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 	MetaTree -> SetBranchAddress("has_been_summed",  &has_been_summed);
 	int is_a_sum = 0;
 	MetaTree -> SetBranchAddress("is_a_sum", &is_a_sum);
+	char runset[256];
+	MetaTree -> SetBranchAddress("matches_runset", &runset);
 
 	int total_events_generated = 0;
 	int total_events_recorded = 0;
@@ -265,7 +271,7 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, int maxrun=0)
 	for(int i=0; i<nentries; i++)
 	{
 		MetaTree -> GetEntry(i);
-		if(this_rho == rho /* && has_been_summed==0 */ )
+		if(this_rho == rho /* && has_been_summed==0 */ && !strcmp(this_runset, runset) )
 		{
 			if(has_been_summed==0)
 			{
@@ -337,10 +343,10 @@ TTree * MetaTuple::LoadMetaData()
 // ====================================== //
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 
-void printout_list(double rho)
+void printout_list(double rho, string runset_string)
 {
 	TTree * MetaTree = load_metadata_tree(metadata_name);
-	vector<int> list = get_runlist_from_rho(MetaTree, rho);
+	vector<int> list = get_runlist_from_rho(MetaTree, rho, runset_string);
 	
 	int length = list.size();
 	for(int i=0; i<length; i++)
