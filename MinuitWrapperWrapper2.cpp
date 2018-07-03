@@ -24,7 +24,6 @@ using std::setw;
 #include <TMinuit.h>
 #include <TString.h>
 
-
 //
 #include "AsymmetryCanvasLibs.cpp" // HistsHaveSameBinning(...)
 
@@ -35,18 +34,13 @@ TH1D * hist2;
 class SuperMinuit;
 SuperMinuit * global_minuit;  // Create a global instance.
 
+
 //
 double get_chi2_thisbin(double h1_bincontent, double h2_bincontent, double h1_berr=0, double h2_berr=0)
 {
-	double combined_berr = 1.0;
-	if(h1_berr==0 && h2_berr==0)
-	{
-		combined_berr = 1.0;
-	}
-	else
-	{
-		combined_berr = sqrt(h1_berr*h1_berr + h2_berr*h2_berr);
-	}
+	double combined_berr;
+	if(h1_berr==0 && h2_berr==0) { combined_berr = 1.0; }
+	else { combined_berr = sqrt(h1_berr*h1_berr + h2_berr*h2_berr); }
 	
 	double this_chi = 0.0;
 	this_chi = (h1_bincontent - h2_bincontent)/combined_berr;
@@ -299,7 +293,6 @@ public:
 	{
 		int binno = h->GetXaxis()->FindBin(xmin);
 		double bin_minx = h->GetBinCenter(binno) - 0.5*h->GetBinWidth(binno);
-	//	double bin_maxx = h->GetBinCenter(binno) + 0.5*h->GetBinWidth(binno);
 		if(bin_minx<xmin)
 		{
 			binno++;
@@ -310,7 +303,6 @@ public:
 	int set_xmax(double xmax, TH1D*h)
 	{
 		int binno = h->GetXaxis()->FindBin(xmax);
-	//	double bin_minx = h->GetBinCenter(binno) - 0.5*h->GetBinWidth(binno);
 		double bin_maxx = h->GetBinCenter(binno) + 0.5*h->GetBinWidth(binno);
 		if(bin_maxx>xmax)
 		{
@@ -415,6 +407,40 @@ int SuperMinuit::DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_t
 	{
 		// hist1 is the original.
 		// hist2 is the A*v/c histogram where we vary A.
+	//	TH1D* this_h2 = makehist_A_v_over_c_like(this_Abeta, hist1);
+		
+		double tmp_result = 0.0;
+	//	int n_bins = hist1->GetNbinsX();
+	//	fit_bmin
+		for(int i=fit_bmin; i<=fit_bmax; i++)
+		{
+			tmp_result =  get_chi2_thisbin(hist1->GetBinContent(i), parameters_[0]*hist2->GetBinContent(i), hist1->GetBinError(i), 0);
+			result_to_minimize_ = result_to_minimize_ + tmp_result;
+		}
+	}
+	
+	n_params_i         = n_params_;  // really? 
+	gin                = gin_;
+	result_to_minimize = result_to_minimize_;
+	parameters         = parameters_;
+	ierflg             = ierflg_;
+	
+	this -> DumpToOutput();
+	n_calls++;
+	
+	return 1;
+}
+/*
+int SuperMinuit::DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
+{
+	result_to_minimize_ = 0;
+	double this_Abeta = parameters_[0];
+	
+	// Which thing?
+	if(which_thing==1 && n_params==1)  // chi^2 fit to A_beta*v/c
+	{
+		// hist1 is the original.
+		// hist2 is the A*v/c histogram where we vary A.
 		TH1D* this_h2 = makehist_A_v_over_c_like(this_Abeta, hist1);
 		
 		double tmp_result = 0.0;
@@ -438,7 +464,7 @@ int SuperMinuit::DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_t
 	
 	return 1;
 }
-
+*/
 void SuperMinuit::init()
 {
 	fit_parameters = vector<FitParameter>(25);

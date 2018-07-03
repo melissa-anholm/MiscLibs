@@ -24,9 +24,9 @@ using std::setw;
 #include <TMinuit.h>
 #include <TString.h>
 
-
 //
-#include "AsymmetryCanvasLibs.cpp" // HistsHaveSameBinning(...)
+#include "AsymmetryCanvasLibs.cpp"   // HistsHaveSameBinning(...)
+//#include "MinuitWrapperWrapper2.cpp"  // No, don't.
 
 TH1D * hist1;
 TH1D * hist2;
@@ -35,18 +35,17 @@ TH1D * hist2;
 class SuperMinuit;
 SuperMinuit * global_minuit;  // Create a global instance.
 
+//class FitParameter;
+
+//class combo_histfitter;
+//combo_histfitter global_histfitter;
+
 //
 double get_chi2_thisbin(double h1_bincontent, double h2_bincontent, double h1_berr=0, double h2_berr=0)
 {
-	double combined_berr = 1.0;
-	if(h1_berr==0 && h2_berr==0)
-	{
-		combined_berr = 1.0;
-	}
-	else
-	{
-		combined_berr = sqrt(h1_berr*h1_berr + h2_berr*h2_berr);
-	}
+	double combined_berr;
+	if(h1_berr==0 && h2_berr==0) { combined_berr = 1.0; }
+	else { combined_berr = sqrt(h1_berr*h1_berr + h2_berr*h2_berr); }
 	
 	double this_chi = 0.0;
 	this_chi = (h1_bincontent - h2_bincontent)/combined_berr;
@@ -213,11 +212,6 @@ public:
 		{ init(); };
 	SuperMinuit(int n):n_params(n), TMinuit(n) 
 		{ init(); };
-//	SuperMinuit(histfitter * a_histfitter):n_params(0),TMinuit() 
-//		{this_histfitter = a_histfitter; init(); };
-	
-//	void AssociateHistograms(histfitter * a_histfitter) {this_histfitter = a_histfitter;};
-//	histfitter * get_this_histfitter() {return this_histfitter; };
 
 	int SetupParam(int c_paramnumber, FitParameter   fitpar);
 	int SetupParam(int c_paramnumber, FitParameter * fitpar);
@@ -289,7 +283,8 @@ public:
 	void ClosedownOutput() { logfilestream.close(); };
 	
 	int DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_);
-	int which_thing;
+	int histfitter_MemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_);
+//	int which_thing;
 	
 	void set_bmin(int newbin) { fit_bmin = newbin; }
 	void set_bmax(int newbin) { fit_bmax = newbin; }
@@ -299,7 +294,6 @@ public:
 	{
 		int binno = h->GetXaxis()->FindBin(xmin);
 		double bin_minx = h->GetBinCenter(binno) - 0.5*h->GetBinWidth(binno);
-	//	double bin_maxx = h->GetBinCenter(binno) + 0.5*h->GetBinWidth(binno);
 		if(bin_minx<xmin)
 		{
 			binno++;
@@ -310,7 +304,6 @@ public:
 	int set_xmax(double xmax, TH1D*h)
 	{
 		int binno = h->GetXaxis()->FindBin(xmax);
-	//	double bin_minx = h->GetBinCenter(binno) - 0.5*h->GetBinWidth(binno);
 		double bin_maxx = h->GetBinCenter(binno) + 0.5*h->GetBinWidth(binno);
 		if(bin_maxx>xmax)
 		{
@@ -334,21 +327,20 @@ public:
 	}
 	
 	int get_n_fitbins() { return fit_bmax - fit_bmin + 1; }
+	void increment_n_calls() { n_calls++; }
 	
+//	combo_histfitter chf;
 private:
 	int fit_bmin;
 	int fit_bmax;
 //	int n_fitbins;
 	
 	void SetupOutputType(string);  // private!
-	void OutputHeader();  // private?
-	void OutputHeader1();  // private?
-	void OutputHeader2();  // private?
-	void DumpFitResults();  // ...private??
+	void OutputHeader();           // private?
+	void OutputHeader1();          // private?
+	void OutputHeader2();          // private?
+	void DumpFitResults();         // ...private??
 
-//	histfitter * this_histfitter;
-	
-//	this -> mnstat(fmin_val, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
 	double fmin_val;        //
 	double fedm;            // Huh?  some sort of fit error.
 	double errdef;          // Huh?  some sort of fit error.
@@ -393,6 +385,7 @@ public:
 	
 };
 
+
 void NonMemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
 {
 	global_minuit -> DoTheThing(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
@@ -411,7 +404,7 @@ int SuperMinuit::DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_t
 	double this_Abeta = parameters_[0];
 	
 	// Which thing?
-	if(which_thing==1 && n_params==1)  // chi^2 fit to A_beta*v/c
+	if(/*which_thing==1 &&*/ n_params==1)  // chi^2 fit to A_beta*v/c
 	{
 		// hist1 is the original.
 		// hist2 is the A*v/c histogram where we vary A.
@@ -438,41 +431,9 @@ int SuperMinuit::DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_t
 	
 	return 1;
 }
-/*
-int SuperMinuit::DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
-{
-	result_to_minimize_ = 0;
-	double this_Abeta = parameters_[0];
-	
-	// Which thing?
-	if(which_thing==1 && n_params==1)  // chi^2 fit to A_beta*v/c
-	{
-		// hist1 is the original.
-		// hist2 is the A*v/c histogram where we vary A.
-		TH1D* this_h2 = makehist_A_v_over_c_like(this_Abeta, hist1);
-		
-		double tmp_result = 0.0;
-	//	int n_bins = hist1->GetNbinsX();
-	//	fit_bmin
-		for(int i=fit_bmin; i<=fit_bmax; i++)
-		{
-			tmp_result =  get_chi2_thisbin(hist1->GetBinContent(i), this_h2->GetBinContent(i), hist1->GetBinError(i), 0);
-			result_to_minimize_ = result_to_minimize_ + tmp_result;
-		}
-	}
-	
-	n_params_i         = n_params_;  // really? 
-	gin                = gin_;
-	result_to_minimize = result_to_minimize_;
-	parameters         = parameters_;
-	ierflg             = ierflg_;
-	
-	this -> DumpToOutput();
-	n_calls++;
-	
-	return 1;
-}
-*/
+
+
+
 void SuperMinuit::init()
 {
 	fit_parameters = vector<FitParameter>(25);
@@ -483,7 +444,7 @@ void SuperMinuit::init()
 	
 	n_fits = 0;
 	n_calls = 0;
-	which_thing = 1;
+//	which_thing = 1;
 
 	is_finished = false;
 	SetupOutput("file");
@@ -548,7 +509,6 @@ void SuperMinuit::SetupOutputType(string o_type)
 		}
 	}
 }
-
 void SuperMinuit::SetupOutput(string o_type, string o_fname, int o_verbosity)
 {
 	SetupOutputType(o_type);
@@ -559,13 +519,11 @@ void SuperMinuit::SetupOutput(string o_type, string o_fname, int o_verbosity)
 	cout << "output_verbosity set to:  " << output_verbosity << endl;
 }
 
-
 void SuperMinuit::OutputHeader()
 {
 	OutputHeader1();
 	OutputHeader2();
 }
-
 void SuperMinuit::OutputHeader1()
 {
 	if(output_type_to_file==true)
@@ -731,11 +689,8 @@ void SuperMinuit::DumpFitResults()
 {
 	logfilestream << endl;
 	logfilestream << "Final results from " << current_fittype << endl;
-//	logfilestream << "n_params = " << n_params << endl;
 	OutputHeader2();
-//	logfilestream << "n_params = " << n_params << endl;
 	DumpToOutput();
-//	logfilestream << "n_params = " << n_params << endl;
 	
 	int this_paramnumber = 0;
 	this_paramnumber = 0;
@@ -752,7 +707,6 @@ void SuperMinuit::DumpFitResults()
 	logfilestream << endl;
 	logfilestream << endl;
 }
-
 void SuperMinuit::DumpCurrentFitParams()
 {
 	// For the overall fit;
@@ -998,38 +952,197 @@ int SuperMinuit::get_errmatrix_quality_best()
 
 // 
 
-/*
-struct OAS // OverArchingStructure
+
+// --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
+
+
+
+TH1D* makehist_zeroslike(TH1D* oldhist)
 {
-	OAS(SuperMinuit*);
-	SuperMinuit * instance_of_superminuit;
-	void this_fcn(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_);
-	void set_the_goddamn_fitfunction();
+	string newname = "tmpname";
+	int newcolor = kBlack;
+	TH1D * newhist = (TH1D*)oldhist -> Clone(newname.c_str());
+	
+	newhist -> Sumw2(kFALSE);
+	newhist -> SetName(newname.c_str());
+	newhist -> SetTitle(newname.c_str());
+	newhist -> SetLineColor(newcolor);
+	newhist -> SetMarkerColor(newcolor);
+	
+	int n_bins = newhist->GetNbinsX();
+	newhist -> SetBinContent(n_bins,0);
+	newhist -> SetBinContent(0,0);
+	
+	for (int i=1; i<n_bins; i++)  // Bins i=0, i=n_bins are the underflow and overflow?
+	{
+		newhist -> SetBinContent(i,0);
+	}
+	return newhist;
+}
+
+class combo_histfitter
+{
+public:
+	combo_histfitter(int n=0);
+	void AddFitHist(TH1D* newfithist) { FitHist = newfithist; }
+	void AddHistWithParam(TH1D*, FitParameter);
+	void AddHistWithParam(FitParameter thisparam, TH1D* thishist) { AddHistWithParam(thishist, thisparam); }
+	void RemoveHistAndParam(string);
+	bool SetupTheFitter();
+//	SuperMinuit * TheMinuit;
+	TH1D * assemble_new_histogram();
+	
+private:
+	vector<TH1D*> histvect;
+	vector<FitParameter> paramvect;
+	int n_params;
+	TH1D * tmp_hist;
+	TH1D * FitHist;
 };
 
-OAS::OAS(SuperMinuit *this_instance_of_minuit)
+combo_histfitter::combo_histfitter(int n)
 {
-	instance_of_superminuit = new SuperMinuit();
-	instance_of_superminuit = this_instance_of_minuit;
+	n_params = n;
+	tmp_hist = new TH1D();
+	FitHist  = new TH1D();
+}
+void combo_histfitter::AddHistWithParam(TH1D* thishist, FitParameter thisparam)
+{
+	histvect.push_back(thishist);
+	paramvect.push_back(thisparam);
+	n_params++;
+}
+void combo_histfitter::RemoveHistAndParam(string paramname)
+{
+	bool found=false;
+	int this_paramnum = -1;
+	for(int i=0; i<n_params; i++)
+	{
+		if( paramvect.at(i).GetName().EqualTo( paramname.c_str() ) )
+		{
+			found=true;
+			this_paramnum=i;
+			break;
+		}
+	}
+	
+	if(found) 
+	{ 
+		vector<TH1D*> tmp_histvect;
+		vector<FitParameter> tmp_paramvect;
+		for(int j=0; j<n_params; j++)
+		{
+			if(j!=this_paramnum)
+			{
+				tmp_histvect.push_back(histvect.at(j));
+				tmp_paramvect.push_back(paramvect.at(j));
+			}
+		}
+		histvect = tmp_histvect;
+		paramvect = tmp_paramvect;
+		n_params--; 
+	}
 }
 
-void OAS::set_the_goddamn_fitfunction()
+
+TH1D* combo_histfitter::assemble_new_histogram()
 {
-// this -> TMinuit::SetFCN( NonMemberFitFunction );
-	instance_of_superminuit -> TMinuit::SetFCN(this_fcn);
+	tmp_hist = makehist_zeroslike(FitHist);
+	for(int i=0; i<n_params; i++)
+	{
+		tmp_hist -> Add( histvect.at(i), paramvect.at(i).fit_val ); // might need to reference param from inside the superminuit.
+	}
+	return tmp_hist;
 }
 
-void OAS::this_fcn(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
+// Call SetupTheFitter() when hists and params are all loaded up and you're about to fit.
+bool combo_histfitter::SetupTheFitter() // returns true if hists all have the same binning.
 {
-	double asym = parameters_[0];
-	double bg   = parameters_[1];
-	result_to_minimize_ = fabs( (asym - 0.5)*(bg - 0.4) + (asym - 0.5) + (bg - 0.4) );
+	bool samebinning = true;
+	for(int i=0; i<n_params; i++)
+	{
+		samebinning = samebinning && HistsHaveSameBinning(FitHist, histvect.at(i));
+	}
+	if( !samebinning ) 
+	{ 
+		cout << "ERROR!  Hists don't have the same binning!  Fitter is not set up." << endl;
+		return samebinning; 
+	}
+//	tmp_hist = makehist_zeroslike(FitHist); // must set up the temp histogram.
+	assemble_new_histogram();  // do I need to do this here??
 	
+	global_minuit = new SuperMinuit();
+	for(int i=0; i<n_params; i++)
+	{
+		global_minuit -> SetupParam(i, paramvect.at(i) );
+	}
+//	global_minuit -> chf = this;
+//	this -> TMinuit::SetFCN( NonMemberFitFunction ); // this line only works if it's a *static* void...
 	
-	// Do this at the end...
-//	this_minuit -> AssignPrivateFitParamsAndShit(n_params_, result_to_minimize_, parameters_, ierflg_);
+	return true;
+}
+
+
+void histfitter_NonMemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
+{
+	global_minuit -> histfitter_MemberFitFunction(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
 	
+	global_minuit -> n_params_i         = n_params_;
+	global_minuit -> gin                = gin_;
+	global_minuit -> result_to_minimize = result_to_minimize_;
+	global_minuit -> parameters         = parameters_;  // this doesn't really work??
+	global_minuit -> ierflg             = ierflg_;
+	
+	global_minuit -> DumpToOutput();
+	global_minuit -> increment_n_calls();
 	return;
 }
-*/
+
+int histfitter_FitFunction(combo_histfitter chf, Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
+{
+	result_to_minimize_ = 0;
+	/*
+	double this_Abeta = parameters_[0];
+	if(n_params==1)
+	{
+		// hist1 is the original.
+		// hist2 is the A*v/c histogram where we vary A.
+	//	TH1D* this_h2 = makehist_A_v_over_c_like(this_Abeta, hist1);
+		
+		double tmp_result = 0.0;
+		for(int i=fit_bmin; i<=fit_bmax; i++)
+		{
+			tmp_result =  get_chi2_thisbin(hist1->GetBinContent(i), parameters_[0]*hist2->GetBinContent(i), hist1->GetBinError(i), 0);
+			result_to_minimize_ = result_to_minimize_ + tmp_result;
+		}
+	}
+	*/
+	TH1D * tmp_hist = chf.assemble_new_histogram()
+//	TH1D * FitHist = chf.FitHist;
+	
+	for(int i=fit_bmin; i<=fit_bmax; i++)
+	{
+		tmp_result =  get_chi2_thisbin(chf.FitHist->GetBinContent(i), tmp_hist->GetBinContent(i), chf.FitHist->GetBinError(i), 0);
+		result_to_minimize_ = result_to_minimize_ + tmp_result;
+	}
+
+	/*
+	vector<TH1D*> histvect;
+	vector<FitParameter> paramvect;
+	int n_params;
+	TH1D * tmp_hist;
+	TH1D * FitHist;
+	*/
+	
+	n_params_i         = n_params_;  // really? 
+	gin                = gin_;
+	result_to_minimize = result_to_minimize_;
+	parameters         = parameters_;
+	ierflg             = ierflg_;
+	
+//	this -> DumpToOutput();
+//	n_calls++;
+	
+	return 1;
+}
 
