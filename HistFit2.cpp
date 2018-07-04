@@ -36,7 +36,9 @@ using std::setw;
 //class SuperMinuit;
 extern SuperMinuit * global_minuit;  // Create a global instance.
 
+
 // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
+/*
 TH1D* makehist_zeroslike(TH1D* oldhist)
 {
 	string newname = "tmpname";
@@ -59,7 +61,24 @@ TH1D* makehist_zeroslike(TH1D* oldhist)
 	}
 	return newhist;
 }
+*/
 
+void NonMember_HistFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
+{
+//	global_minuit -> DoThe_HistFitThing(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
+	global_minuit -> DoTheThing(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
+	
+	global_minuit -> n_params_i         = n_params_;
+	global_minuit -> gin                = gin_;
+	global_minuit -> result_to_minimize = result_to_minimize_;
+	global_minuit -> parameters         = parameters_;  // this doesn't really work??
+	global_minuit -> ierflg             = ierflg_;
+	
+	return;
+}
+
+
+// --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
 class combo_histfitter
 {
 public:
@@ -70,6 +89,8 @@ public:
 	void RemoveHistAndParam(string);
 	bool SetupTheFitter();
 	TH1D * assemble_new_histogram();
+
+	int DoThe_HistFitThing(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_);
 	
 private:
 	vector<TH1D*> histvect;
@@ -84,6 +105,10 @@ combo_histfitter::combo_histfitter(int n)
 	n_params = n;
 	tmp_hist = new TH1D();
 	FitHist  = new TH1D();
+	
+//	this -> SuperMinuit::init();
+//	global_minuit = this;
+//	this -> TMinuit::SetFCN( NonMember_HistFitFunction ); 
 }
 void combo_histfitter::AddHistWithParam(TH1D* thishist, FitParameter thisparam)
 {
@@ -150,11 +175,12 @@ bool combo_histfitter::SetupTheFitter() // returns true if hists all have the sa
 //	tmp_hist = makehist_zeroslike(FitHist); // must set up the temp histogram.
 	assemble_new_histogram();  // do I need to do this here??
 	
-//	global_minuit = new SuperMinuit();
-//	for(int i=0; i<n_params; i++)
-//	{
-//		global_minuit -> SetupParam(i, paramvect.at(i) );
-//	}
+	global_minuit = new SuperMinuit();
+	for(int i=0; i<n_params; i++)
+	{
+//		this -> SuperMinuit::SetupParam(i, paramvect.at(i) );
+		global_minuit -> SuperMinuit::SetupParam(i, paramvect.at(i) );
+	}
 	
 //	global_minuit -> chf = this;
 //	this -> TMinuit::SetFCN( NonMemberFitFunction ); // this line only works if it's a *static* void...
@@ -162,5 +188,39 @@ bool combo_histfitter::SetupTheFitter() // returns true if hists all have the sa
 	return true;
 }
 
-
+/*
+int combo_histfitter::DoThe_HistFitThing(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
+{
+	result_to_minimize_ = 0;
+	double this_Abeta = parameters_[0];
+	
+	// Which thing?
+	if(n_params==1)  // chi^2 fit to A_beta*v/c
+	{
+		// hist1 is the original.
+		// hist2 is the A*v/c histogram where we vary A.
+	//	TH1D* this_h2 = makehist_A_v_over_c_like(this_Abeta, hist1);
+		
+		double tmp_result = 0.0;
+	//	int n_bins = hist1->GetNbinsX();
+	//	fit_bmin
+		for(int i=fit_bmin; i<=fit_bmax; i++)
+		{
+	////		tmp_result =  get_chi2_thisbin(hist1->GetBinContent(i), parameters_[0]*hist2->GetBinContent(i), hist1->GetBinError(i), 0);
+			result_to_minimize_ = result_to_minimize_ + tmp_result;
+		}
+	}
+	
+	n_params_i         = n_params_;  // really? 
+	gin                = gin_;
+	result_to_minimize = result_to_minimize_;
+	parameters         = parameters_;
+	ierflg             = ierflg_;
+	
+	this -> DumpToOutput();
+	n_calls++;
+	
+	return 1;
+}
+*/
 

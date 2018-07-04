@@ -15,15 +15,45 @@ using std::vector;
 using std::string;  // already in MinuitWrapperWrapper3.h, but it doesn't matter.
 
 
+//#include "SomeFunctions.cpp"
 #include "MinuitWrapperWrapper3.h"
-//#include "MinuitWrapperWrapper_fitparam.cpp"  // already in .h, but I can put it in again if I want.
+//#include "MinuitWrapperWrapper_fitparam.cpp"  // already in .h, but I can put it in again if I wan
+//#include "HistFit.cpp"
 
-TH1D * hist1;
-TH1D * hist2;
+//TH1D * hist1;
+//TH1D * hist2;
 SuperMinuit * global_minuit;  // Create a global instance.
 
-// --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
 
+extern TH1D* makehist_zeroslike(TH1D*);  // kludge!!  :(
+extern bool HistsHaveSameBinning(TH1D *a, TH1D *b, bool verbose=false);
+
+
+// --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
+/*
+TH1D* makehist_zeroslike(TH1D* oldhist)
+{
+	string newname = "tmpname";
+	int newcolor = kBlack;
+	TH1D * newhist = (TH1D*)oldhist -> Clone(newname.c_str());
+	
+	newhist -> Sumw2(kFALSE);
+	newhist -> SetName(newname.c_str());
+	newhist -> SetTitle(newname.c_str());
+	newhist -> SetLineColor(newcolor);
+	newhist -> SetMarkerColor(newcolor);
+	
+	int n_bins = newhist->GetNbinsX();
+	newhist -> SetBinContent(n_bins,0);
+	newhist -> SetBinContent(0,0);
+	
+	for (int i=1; i<n_bins; i++)  // Bins i=0, i=n_bins are the underflow and overflow?
+	{
+		newhist -> SetBinContent(i,0);
+	}
+	return newhist;
+}
+*/
 
 //
 double get_chi2_thisbin(double h1_bincontent, double h2_bincontent, double h1_berr=0, double h2_berr=0)
@@ -234,6 +264,21 @@ void NonMemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_
 	
 	return;
 }
+
+void NonMember_HistFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
+{
+//	global_minuit -> DoThe_HistFitThing(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
+	global_minuit -> DoTheThing(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
+	
+	global_minuit -> n_params_i         = n_params_;
+	global_minuit -> gin                = gin_;
+	global_minuit -> result_to_minimize = result_to_minimize_;
+	global_minuit -> parameters         = parameters_;  // this doesn't really work??
+	global_minuit -> ierflg             = ierflg_;
+	
+	return;
+}
+
 int SuperMinuit::DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
 {
 	result_to_minimize_ = 0;
@@ -251,7 +296,7 @@ int SuperMinuit::DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_t
 	//	fit_bmin
 		for(int i=fit_bmin; i<=fit_bmax; i++)
 		{
-			tmp_result =  get_chi2_thisbin(hist1->GetBinContent(i), parameters_[0]*hist2->GetBinContent(i), hist1->GetBinError(i), 0);
+	////		tmp_result =  get_chi2_thisbin(hist1->GetBinContent(i), parameters_[0]*hist2->GetBinContent(i), hist1->GetBinError(i), 0);
 			result_to_minimize_ = result_to_minimize_ + tmp_result;
 		}
 	}
@@ -382,7 +427,7 @@ void SuperMinuit::OutputHeader1()
 		logfilestream << "n_bins:         " << fit_bmax - fit_bmin + 1 << endl;
 		logfilestream << "fit_bmin:       " << fit_bmin << endl;
 		logfilestream << "fit_bmax:       " << fit_bmax << endl;
-		logfilestream << "hist title:      " << hist1->GetTitle() << endl;  // GLOBAL hist1
+	//	logfilestream << "hist title:      " << hist1->GetTitle() << endl;  // GLOBAL hist1
 		
 		for (int i = 0; i < n_params; i++) 
 		{
@@ -847,4 +892,96 @@ void histfitter_NonMemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t 
 	global_minuit -> DumpToOutput();
 	global_minuit -> increment_n_calls();
 	return;
+}
+
+
+// --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
+
+
+combo_histfitter::combo_histfitter(int n)
+{
+	n_params = n;
+	tmp_hist = new TH1D();
+	FitHist  = new TH1D();
+	
+//	this -> SuperMinuit::init();
+//	global_minuit = this;
+//	this -> TMinuit::SetFCN( NonMember_HistFitFunction ); 
+}
+void combo_histfitter::AddHistWithParam(TH1D* thishist, FitParameter thisparam)
+{
+	histvect.push_back(thishist);
+	paramvect.push_back(thisparam);
+	n_params++;
+}
+void combo_histfitter::RemoveHistAndParam(string paramname)
+{
+	bool found=false;
+	int this_paramnum = -1;
+	for(int i=0; i<n_params; i++)
+	{
+		if( paramvect.at(i).GetName().EqualTo( paramname.c_str() ) )
+		{
+			found=true;
+			this_paramnum=i;
+			break;
+		}
+	}
+	
+	if(found) 
+	{ 
+		vector<TH1D*> tmp_histvect;
+		vector<FitParameter> tmp_paramvect;
+		for(int j=0; j<n_params; j++)
+		{
+			if(j!=this_paramnum)
+			{
+				tmp_histvect.push_back(histvect.at(j));
+				tmp_paramvect.push_back(paramvect.at(j));
+			}
+		}
+		histvect = tmp_histvect;
+		paramvect = tmp_paramvect;
+		n_params--; 
+	}
+}
+
+
+TH1D* combo_histfitter::assemble_new_histogram()
+{
+	tmp_hist = makehist_zeroslike(FitHist);
+	for(int i=0; i<n_params; i++)
+	{
+		tmp_hist -> Add( histvect.at(i), paramvect.at(i).fit_val ); // might need to reference param from inside the superminuit.
+	}
+	return tmp_hist;
+}
+
+// Call SetupTheFitter() when hists and params are all loaded up and you're about to fit.
+bool combo_histfitter::SetupTheFitter() // returns true if hists all have the same binning.
+{
+	bool samebinning = true;
+	for(int i=0; i<n_params; i++)
+	{
+		samebinning = samebinning && HistsHaveSameBinning(FitHist, histvect.at(i));
+	}
+	if( !samebinning ) 
+	{ 
+		cout << "ERROR!  Hists don't have the same binning!  Fitter is not set up." << endl;
+		return samebinning; 
+	}
+//	tmp_hist = makehist_zeroslike(FitHist); // must set up the temp histogram.
+	assemble_new_histogram();  // do I need to do this here??
+	
+	global_minuit = new SuperMinuit();
+	for(int i=0; i<n_params; i++)
+	{
+//		this -> SuperMinuit::SetupParam(i, paramvect.at(i) );
+		global_minuit -> SuperMinuit::SetupParam(i, paramvect.at(i) );
+	}
+	
+//	global_minuit -> chf = this;
+//	this -> TMinuit::SetFCN( NonMemberFitFunction ); // this line only works if it's a *static* void...
+	
+	return true;
 }

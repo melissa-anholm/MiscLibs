@@ -232,6 +232,44 @@ double justgetthedamnchisquared(TH1D * h1, TH1D * h2, bool already_weighted=true
 }
 
 
+TH1D* makehist_zeroslike(TH1D* oldhist)
+{
+	string newname = "tmpname";
+	int newcolor = kBlack;
+	TH1D * newhist = (TH1D*)oldhist -> Clone(newname.c_str());
+	
+	newhist -> Sumw2(kFALSE);
+	newhist -> SetName(newname.c_str());
+	newhist -> SetTitle(newname.c_str());
+	newhist -> SetLineColor(newcolor);
+	newhist -> SetMarkerColor(newcolor);
+	
+	int n_bins = newhist->GetNbinsX();
+	newhist -> SetBinContent(n_bins,0);
+	newhist -> SetBinContent(0,0);
+	
+	for (int i=1; i<n_bins; i++)  // Bins i=0, i=n_bins are the underflow and overflow?
+	{
+		newhist -> SetBinContent(i,0);
+	}
+	return newhist;
+}
+
+
+/*
+double get_chi2_thisbin(double h1_bincontent, double h2_bincontent, double h1_berr=0, double h2_berr=0)
+{
+	double combined_berr;
+	if(h1_berr==0 && h2_berr==0) { combined_berr = 1.0; }
+	else { combined_berr = sqrt(h1_berr*h1_berr + h2_berr*h2_berr); }
+	
+	double this_chi = 0.0;
+	this_chi = (h1_bincontent - h2_bincontent)/combined_berr;
+	
+	return this_chi*this_chi;
+}
+*/
+
 /*
 void dump_parameter_to_terminal(int this_paramnumber)
 {
