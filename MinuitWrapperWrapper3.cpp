@@ -1,52 +1,22 @@
 // ==================================================================== //
 // Code by Melissa Anholm
-// 28.9.2017 - 31.10.2017
+// 28.9.2017 - 3.7.2018
 // 
 // ==================================================================== //
-/*
-// Standard includes:
+
 #include <iostream>  // cout, endl;
-#include <string>
-#include <fstream>   // I think this probably helps...
 #include <iomanip>   // setw
-#include <stdlib.h>
-*/
-/*
-using std::cout;
-using std::endl;
-using std::cin;
-using std::string;
-using std::vector;  //
-using std::ofstream;
-using std::setw;
-*/
-/*
-// ROOT includes:
-#include <TFile.h>
-#include <TH1.h>
-#include <TMinuit.h>
-#include <TString.h>
-*/
+#include <vector>
 
-//
-//#include "AsymmetryCanvasLibs.cpp"      // HistsHaveSameBinning(...)
-//#include "MinuitWrapperWrapper2.cpp"  // No, don't.
-//#include "MinuitWrapperWrapper_fitparam.h"
+using std::cout;    // already in .h
+using std::endl;    // already in .h
+using std::setw;    
+using std::vector;
+using std::string;  // already in MinuitWrapperWrapper3.h, but it doesn't matter.
 
-//class SuperMinuit;
 
-/*
-TH1D * hist1;
-TH1D * hist2;
-
-class SuperMinuit;
-SuperMinuit * global_minuit;  // Create a global instance.
-*/
-
-//#include "AsymmetryCanvasLibs.cpp"   // HistsHaveSameBinning(...)
-#include "MinuitWrapperWrapper_fitparam.cpp"
 #include "MinuitWrapperWrapper3.h"
-
+//#include "MinuitWrapperWrapper_fitparam.cpp"  // already in .h, but I can put it in again if I want.
 
 TH1D * hist1;
 TH1D * hist2;

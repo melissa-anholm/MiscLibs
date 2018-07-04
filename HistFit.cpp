@@ -1,6 +1,6 @@
 // ==================================================================== //
 // Code by Melissa Anholm
-// 28.9.2017 - 31.10.2017
+// 28.9.2017 - 3.7.2018
 // 
 // ==================================================================== //
 
@@ -25,13 +25,8 @@ using std::setw;
 #include <TString.h>
 
 //
-#include "AsymmetryCanvasLibs.cpp"   // HistsHaveSameBinning(...)  // already in MinuitWrapperWrapper3.h
-//extern bool HistsHaveSameBinning(TH1D *a, TH1D *b, bool verbose=false);
-//extern double justgetthedamnchisquared(TH1D * h1, TH1D * h2, bool already_weighted=true, int bmin=0, int bmax=0);
-
-
+#include "SomeFunctions.cpp"
 #include "MinuitWrapperWrapper_fitparam.cpp"
-//#include "MinuitWrapperWrapper3.cpp"  // 
 #include "MinuitWrapperWrapper3.h"  // 
 
 
@@ -41,22 +36,7 @@ extern TH1D * hist2;
 class SuperMinuit;
 extern SuperMinuit * global_minuit;  // Create a global instance.
 
-
-//TH1D * hist1;
-//TH1D * hist2;
-//TH1D * hist3;
-
-//class SuperMinuit;
-//SuperMinuit * global_minuit;  // Create a global instance.
-
-//class FitParameter;
-
-//class combo_histfitter;
-//combo_histfitter global_histfitter;
-
 // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
-
-
 TH1D* makehist_zeroslike(TH1D* oldhist)
 {
 	string newname = "tmpname";
@@ -89,7 +69,6 @@ public:
 	void AddHistWithParam(FitParameter thisparam, TH1D* thishist) { AddHistWithParam(thishist, thisparam); }
 	void RemoveHistAndParam(string);
 	bool SetupTheFitter();
-//	SuperMinuit * TheMinuit;
 	TH1D * assemble_new_histogram();
 	
 private:

@@ -38,10 +38,10 @@ using std::vector;
 #include "HistExtras.cpp"
 #include "ColorExtras.cpp"
 #include "treeql_replacement.cpp"
-
+//#include "SomeFunctions.cpp"
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
-
+/*
 string fake_to_string(double thisnumber)  // This thing super doesn't work!!!  :( 
 {
 	string mynumberstring;// = "";
@@ -55,7 +55,7 @@ string fake_to_string(double thisnumber)  // This thing super doesn't work!!!  :
 	mynumberstring = ss.str();
 	return mynumberstring;
 }
-
+*/
 
 double get_Abeta_fromrho(double rho)
 {
@@ -395,6 +395,7 @@ TH1D * tf1_to_hist_like(TF1 * this_tf1, TH1D * this_hist, TColor this_color)
 }
 
 // ---- // ---- // ---- // ---- // ---- // ---- //
+/*
 bool HistsHaveSameBinning(TH1D *a, TH1D *b, bool verbose=false) 
 {
 	bool same = true;
@@ -434,7 +435,8 @@ bool HistsHaveSameBinning(TH1D *a, TH1D *b, bool verbose=false)
 	}
 	return same;
 }
-
+*/
+/*
 double justgetthedamnchisquared(TH1D * h1, TH1D * h2, bool already_weighted=true, int bmin=0, int bmax=0)
 {
 	int verbose = 0;
@@ -524,6 +526,7 @@ double justgetthedamnchisquared(TH1D * h1, TH1D * h2, bool already_weighted=true
 	}
 	return chi2;  // returns 0 if hists don't have the same binning.
 }
+*/
 
 TH1D* get_residuals(TH1D* h1, TH1D* h2, double ymin=0, double ymax=0)
 {
