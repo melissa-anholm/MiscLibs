@@ -25,7 +25,8 @@ using std::vector;
 
 // Mine:
 #include "MinuitWrapperWrapper_fitparam.cpp"
-
+//#include "HistFit.cpp"
+//#include "SomeFunctions.cpp"
 
 // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
 // A Class to deal with TMinuit itself:
@@ -35,12 +36,14 @@ public:
 //	SuperMinuit() {};
 	SuperMinuit():n_params(25), TMinuit(25) 
 		{ init(); };
-	SuperMinuit(int n):n_params(n), TMinuit(n) 
-		{ init(); };
+//	SuperMinuit(int n):n_params(n), TMinuit(n) 
+//		{ init(); };
 
 	int SetupParam(int c_paramnumber, FitParameter   fitpar);
 	int SetupParam(int c_paramnumber, FitParameter * fitpar);
 	FitParameter get_FitParameter(int n) { return this->fit_parameters.at(n); };
+	
+//	combo_histfitter;
 	
 	void Help()
 		{ cout << "\"Help()\":  Not yet implemented." << endl; };
@@ -211,5 +214,29 @@ public:
 	Int_t ierflg;
 	
 };
+
+
+// --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
+class combo_histfitter
+{
+public:
+	combo_histfitter(int n=0);
+	void AddFitHist(TH1D* newfithist) { FitHist = newfithist; }
+	void AddHistWithParam(TH1D*, FitParameter);
+	void AddHistWithParam(FitParameter thisparam, TH1D* thishist) { AddHistWithParam(thishist, thisparam); }
+	void RemoveHistAndParam(string);
+	bool SetupTheFitter();
+	TH1D * assemble_new_histogram();
+
+	int DoThe_HistFitThing(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_);
+	
+private:
+	vector<TH1D*> histvect;
+	vector<FitParameter> paramvect;
+	int n_params;
+	TH1D * tmp_hist;
+	TH1D * FitHist;
+};
+
 
 #endif
