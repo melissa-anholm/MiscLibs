@@ -39,6 +39,7 @@ using std::vector;
 #include "ColorExtras.cpp"
 #include "treeql_replacement.cpp"
 //#include "SomeFunctions.cpp"
+//#include "SomeFunctions.h"
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 /*
@@ -366,7 +367,7 @@ vector<TPad *> make_residupad(TH1D* top_hist, TH1D* bottom_hist, string top_draw
 	return pad_vector;
 }
 
-
+/*
 TH1D * tf1_to_hist_like(TF1 * this_tf1, TH1D * this_hist, int this_color=int(kBlack) )
 {
 	TH1D * new_hist = (TH1D*)this_hist -> Clone( this_tf1->GetName() );
@@ -393,6 +394,7 @@ TH1D * tf1_to_hist_like(TF1 * this_tf1, TH1D * this_hist, TColor this_color)
 	TH1D * new_th1d = tf1_to_hist_like(this_tf1, this_hist, my_color);
 	return new_th1d;
 }
+*/
 
 // ---- // ---- // ---- // ---- // ---- // ---- //
 /*

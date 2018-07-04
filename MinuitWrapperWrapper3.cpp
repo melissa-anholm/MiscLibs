@@ -15,45 +15,13 @@ using std::vector;
 using std::string;  // already in MinuitWrapperWrapper3.h, but it doesn't matter.
 
 
-//#include "SomeFunctions.cpp"
+#include "SomeFunctions.h"
 #include "MinuitWrapperWrapper3.h"
-//#include "MinuitWrapperWrapper_fitparam.cpp"  // already in .h, but I can put it in again if I wan
-//#include "HistFit.cpp"
-
-//TH1D * hist1;
-//TH1D * hist2;
-SuperMinuit * global_minuit;  // Create a global instance.
-
-
-extern TH1D* makehist_zeroslike(TH1D*);  // kludge!!  :(
-extern bool HistsHaveSameBinning(TH1D *a, TH1D *b, bool verbose=false);
-
+SuperMinuit      * global_minuit;  // Create a global instance.
+combo_histfitter * global_histfitter;
+TH1D             * global_thing1hist;
 
 // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
-/*
-TH1D* makehist_zeroslike(TH1D* oldhist)
-{
-	string newname = "tmpname";
-	int newcolor = kBlack;
-	TH1D * newhist = (TH1D*)oldhist -> Clone(newname.c_str());
-	
-	newhist -> Sumw2(kFALSE);
-	newhist -> SetName(newname.c_str());
-	newhist -> SetTitle(newname.c_str());
-	newhist -> SetLineColor(newcolor);
-	newhist -> SetMarkerColor(newcolor);
-	
-	int n_bins = newhist->GetNbinsX();
-	newhist -> SetBinContent(n_bins,0);
-	newhist -> SetBinContent(0,0);
-	
-	for (int i=1; i<n_bins; i++)  // Bins i=0, i=n_bins are the underflow and overflow?
-	{
-		newhist -> SetBinContent(i,0);
-	}
-	return newhist;
-}
-*/
 
 //
 double get_chi2_thisbin(double h1_bincontent, double h2_bincontent, double h1_berr=0, double h2_berr=0)
@@ -68,193 +36,9 @@ double get_chi2_thisbin(double h1_bincontent, double h2_bincontent, double h1_be
 	return this_chi*this_chi;
 }
 
-/*
-// A Class to deal with TMinuit itself:
-class SuperMinuit : virtual public TMinuit
-{
-public:
-//	SuperMinuit() {};
-	SuperMinuit():n_params(25), TMinuit(25) 
-		{ init(); };
-	SuperMinuit(int n):n_params(n), TMinuit(n) 
-		{ init(); };
-
-	int SetupParam(int c_paramnumber, FitParameter   fitpar);
-	int SetupParam(int c_paramnumber, FitParameter * fitpar);
-	
-	void Help()
-		{ cout << "\"Help()\":  Not yet implemented." << endl; };
-	
-	int execute_simplex();
-	int execute_simplex(int maxcalls, double err_est);
-	int execute_migrad();
-	int execute_migrad(int maxcalls, double err_est);
-	int execute_hesse();
-	int execute_hesse(int maxcalls, double err_est);
-	int execute_minos();
-	int execute_minos(int maxcalls, double err_est);
-	
-	double get_fmin_best();
-	double get_fedm_best();
-	double get_errdef_best();
-	int get_npar_varied_best();
-	int get_npar_defined_best();
-	int get_errmatrix_quality_best();
-	
-	Int_t Get_n_params() 
-	{
-		n_params = this->GetNumPars();  // gets the number of params that were *varied*.
-		return n_params; 
-	};
-	Int_t Get_n_fixed_params() 
-	{
-		n_fixed_params = this->GetNumFixedPars();  //
-		return n_fixed_params; 
-	};
-	Int_t Get_n_free_params() 
-	{
-		n_free_params = this->GetNumFreePars();  //
-		return n_free_params; 
-	};
-	
-//	int FixParameter(int internal_paramnumber) // must be an int to match the original..
-//		{ return this -> TMinuit::FixParameter(internal_paramnumber); };
-	void FreeParameter(int internal_paramnumber) 
-		{ this -> TMinuit::mnfree(-1*internal_paramnumber); };
-	
-	Double_t * Get_gin() {return gin; }; 
-	Double_t Get_result_to_minimize() {return result_to_minimize; };
-	Double_t * Get_parameters() {return parameters; };
-	Int_t Get_ierflg() {return ierflg; };
-
-	void init();
-	void Setup_FitStopParams(bool);
-	void Setup_FitStopParams(int, double);
-	void SetMaxCalls(int maxcalls);
-	void SetAcceptableErr(double err_est);
-	
-	vector<FitParameter> fit_parameters;
-	void DumpBestFitParams();
-	void DumpCurrentFitParams();
-	
-	void SetupOutput(string o_type, string o_fname=string("fitoutput.txt"), int o_verbosity=1);
-
-	void SetOutputVerbosity(int o_verbosity=1)
-	{ 
-		output_verbosity = o_verbosity; 
-		cout << "Set output verbosity to:  " << output_verbosity << endl;
-	};
-	void DumpToOutput();
-
-	void ClosedownOutput() { logfilestream.close(); };
-	
-	int DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_);
-//	int histfitter_MemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_);
-//	int which_thing;
-	
-	void set_bmin(int newbin) { fit_bmin = newbin; }
-	void set_bmax(int newbin) { fit_bmax = newbin; }
-	int get_bmin() {return fit_bmin; }
-	int get_bmax() {return fit_bmax; }
-	int set_xmin(double xmin, TH1D*h)
-	{
-		int binno = h->GetXaxis()->FindBin(xmin);
-		double bin_minx = h->GetBinCenter(binno) - 0.5*h->GetBinWidth(binno);
-		if(bin_minx<xmin)
-		{
-			binno++;
-		}
-		set_bmin(binno);
-		return binno;
-	}
-	int set_xmax(double xmax, TH1D*h)
-	{
-		int binno = h->GetXaxis()->FindBin(xmax);
-		double bin_maxx = h->GetBinCenter(binno) + 0.5*h->GetBinWidth(binno);
-		if(bin_maxx>xmax)
-		{
-			binno--;
-		}
-		set_bmax(binno);
-		return binno;
-	}
-//	double get_xmin()
-//	{
-//		
-//	}
-//	double get_xmax()
-//	{
-//		
-//	}
-	void set_fitrange(int xmin, int xmax, TH1D*h)
-	{
-		set_xmin(xmin, h);
-		set_xmax(xmax, h);
-	}
-	
-	int get_n_fitbins() { return fit_bmax - fit_bmin + 1; }
-	void increment_n_calls() { n_calls++; }
-	
-//	combo_histfitter chf;
-private:
-	int fit_bmin;
-	int fit_bmax;
-//	int n_fitbins;
-	
-	void SetupOutputType(string);  // private!
-	void OutputHeader();           // private?
-	void OutputHeader1();          // private?
-	void OutputHeader2();          // private?
-	void DumpFitResults();         // ...private??
-
-	double fmin_val;        //
-	double fedm;            // Huh?  some sort of fit error.
-	double errdef;          // Huh?  some sort of fit error.
-	int npar_varied;        // 
-	int npar_defined;       //
-	int errmatrix_quality;  //
-	
-	Double_t arglist[10];  // for memory space only?
-
-	int length_of_arglist;
-	Int_t n_maxcalls;
-	Double_t est_distance_to_min;
-	
-	int n_fits;
-	int n_calls;
-	bool is_finished;
-	
-	string output_type;
-	string output_fname;
-	string current_fittype;
-	
-	int     output_verbosity;
-	bool    output_type_to_file;
-	bool    output_type_to_cout;
-	
-	ofstream         logfilestream;
-	const static int orig_columnwidth = 12;
-	int              current_columnwidth;
-	
-	Int_t n_fixed_params;
-	Int_t n_free_params;
-	Int_t n_params;        // used for something real.
-
-	
-public:
-//	Int_t n_params;           // used, for something real.  but also for something fake.
-	Int_t n_params_i;  // used for something fake.
-	Double_t *gin;
-	Double_t result_to_minimize;  // don't need it?
-	Double_t *parameters;  // don't need it?
-	Int_t ierflg;
-	
-};
-*/
-
 void NonMemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
 {
-	global_minuit -> DoTheThing(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
+	global_minuit -> MakeTheMinimizationGo(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
 	
 	global_minuit -> n_params_i         = n_params_;
 	global_minuit -> gin                = gin_;
@@ -265,10 +49,28 @@ void NonMemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_
 	return;
 }
 
+/*
+void NonMemberFitFunction_histfitter(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
+{
+//	global_minuit -> histfitter_MemberFitFunction(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
+	
+	global_minuit -> n_params_i         = n_params_;
+	global_minuit -> gin                = gin_;
+	global_minuit -> result_to_minimize = result_to_minimize_;
+	global_minuit -> parameters         = parameters_;  // this doesn't really work??
+	global_minuit -> ierflg             = ierflg_;
+	
+	global_minuit -> DumpToOutput();
+	global_minuit -> increment_n_calls();
+	return;
+}
+*/
+
+/*
 void NonMember_HistFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
 {
 //	global_minuit -> DoThe_HistFitThing(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
-	global_minuit -> DoTheThing(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
+//	global_minuit -> DoTheThing(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
 	
 	global_minuit -> n_params_i         = n_params_;
 	global_minuit -> gin                = gin_;
@@ -277,16 +79,18 @@ void NonMember_HistFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &resul
 	global_minuit -> ierflg             = ierflg_;
 	
 	return;
-}
+}*/
 
-int SuperMinuit::DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
+int SuperMinuit::MakeTheMinimizationGo(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
 {
-	result_to_minimize_ = 0;
-	double this_Abeta = parameters_[0];
 	
-	// Which thing?
-	if(/*which_thing==1 &&*/ n_params==1)  // chi^2 fit to A_beta*v/c
+	result_to_minimize_ = 0;
+	if(which_thing == uninitialized) {return 0;}
+	
+	if(which_thing==1 && n_params==1)  // chi^2 fit to A_beta*v/c.  this is probably broken now...
 	{
+		/*
+		double this_Abeta = parameters_[0];
 		// hist1 is the original.
 		// hist2 is the A*v/c histogram where we vary A.
 	//	TH1D* this_h2 = makehist_A_v_over_c_like(this_Abeta, hist1);
@@ -297,6 +101,34 @@ int SuperMinuit::DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_t
 		for(int i=fit_bmin; i<=fit_bmax; i++)
 		{
 	////		tmp_result =  get_chi2_thisbin(hist1->GetBinContent(i), parameters_[0]*hist2->GetBinContent(i), hist1->GetBinError(i), 0);
+			result_to_minimize_ = result_to_minimize_ + tmp_result;
+		}
+		*/
+	}
+	
+	if(which_thing == histfitter)
+	{
+		double tmp_result = 0.0;
+		double tmp_bincontent = 0.0;
+		double tmp_binerror = 0.0;
+	//	TH1D* tmp_hist = global_histfitter -> adjust_histogram(); 
+		for(int i=fit_bmin; i<=fit_bmax; i++)
+		{
+	//		tmp_result = get_chi2_thisbin( global_histfitter->get_FitHist()->GetBinContent(i), 
+	//			parameters_[0]*hist2->GetBinContent(i), global_histfitter->get_FitHist()->GetBinError(i), 0);
+		//	tmp_result = get_chi2_thisbin( global_histfitter->get_FitHist()->GetBinContent(i), 
+		//		tmp_hist->GetBinContent(i), global_histfitter->get_FitHist()->GetBinError(i), 0);
+			
+			tmp_bincontent = 0.0;
+			tmp_binerror = 0.0;
+			for(int j=0; j<n_params; j++)
+			{
+			//	tmp_hist -> Add( histvect.at(i), paramvect.at(i).fit_val ); // might need to reference param from inside the superminuit.
+				tmp_bincontent = tmp_bincontent + parameters_[j]*(global_histfitter->histvect.at(j)->GetBinContent(i));
+			}
+			tmp_result = get_chi2_thisbin( global_histfitter->get_FitHist()->GetBinContent(i), 
+				tmp_bincontent, global_histfitter->get_FitHist()->GetBinError(i), tmp_binerror);
+			
 			result_to_minimize_ = result_to_minimize_ + tmp_result;
 		}
 	}
@@ -325,8 +157,8 @@ void SuperMinuit::init()
 	
 	n_fits = 0;
 	n_calls = 0;
-//	which_thing = 1;
-
+	which_thing = uninitialized;
+	
 	is_finished = false;
 	SetupOutput("file");
 	
@@ -334,12 +166,39 @@ void SuperMinuit::init()
 	
 	Int_t n_params = 25;
 	Double_t *gin  = new Double_t(25);
-//	Double_t result_to_minimize;
-	Double_t *parameters = new Double_t(25);  
-//	Int_t ierflg;
-
+	Double_t *parameters = new Double_t(25);
 	this -> TMinuit::SetFCN( NonMemberFitFunction ); // this line only works if it's a *static* void...
 }
+
+void SuperMinuit::SetupFCN_original(TH1D* hist_to_fit)
+{
+	which_thing = original;
+	// this fit function basically doesn't do anything..
+	// this -> TMinuit::SetFCN( NonMemberFitFunction ); 
+};
+void SuperMinuit::SetupFCN_histfitter( combo_histfitter * chf )
+{
+	cout << "Setting up the histfitter...." << endl;
+	cout << "Initially, n_params = " << chf->get_n_params() << endl;
+	
+	which_thing = histfitter;
+	chf -> SetupTheFitter(); // returns true if hists all have the same binning.
+	global_histfitter = chf;
+	
+//	global_minuit = new SuperMinuit();
+	for(int i=0; i<chf->get_n_params(); i++)
+	{
+//		this -> SuperMinuit::SetupParam(i, paramvect.at(i) );
+//		global_minuit -> SuperMinuit::SetupParam(i, paramvect.at(i) );
+		this -> SetupParam(i, chf->paramvect.at(i) );
+	}
+	
+	cout << "At the end, n_params = " << chf->get_n_params() << endl;
+	
+	// Make sure there's a global combo_histfitter ready to go, here.
+	// this -> TMinuit::SetFCN( NonMemberFitFunction_histfitter ); 
+};
+
 
 void SuperMinuit::SetupOutputType(string o_type)
 {
@@ -830,9 +689,9 @@ int SuperMinuit::get_errmatrix_quality_best()
 	return errmatrix_quality;
 }
 
-int histfitter_FitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
-{
-	result_to_minimize_ = 0;
+//int histfitter_FitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
+//{
+//	result_to_minimize_ = 0;
 	/*
 	double this_Abeta = parameters_[0];
 	if(n_params==1)
@@ -875,24 +734,10 @@ int histfitter_FitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to
 //	this -> DumpToOutput();
 //	n_calls++;
 	
-	return 1;
-}
+//	return 1;
+//}
 
 
-void histfitter_NonMemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
-{
-//	global_minuit -> histfitter_MemberFitFunction(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
-	
-	global_minuit -> n_params_i         = n_params_;
-	global_minuit -> gin                = gin_;
-	global_minuit -> result_to_minimize = result_to_minimize_;
-	global_minuit -> parameters         = parameters_;  // this doesn't really work??
-	global_minuit -> ierflg             = ierflg_;
-	
-	global_minuit -> DumpToOutput();
-	global_minuit -> increment_n_calls();
-	return;
-}
 
 
 // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
@@ -957,6 +802,19 @@ TH1D* combo_histfitter::assemble_new_histogram()
 	return tmp_hist;
 }
 
+/*
+TH1D* combo_histfitter::adjust_histogram()
+{
+	for(int i=0; i<n_params; i++)
+	{
+		tmp_hist -> Add( histvect.at(i), paramvect.at(i).fit_val );
+	}
+	return tmp_hist;
+}
+*/
+
+// SetupTheFitter() is called by SuperMinuit's SetupFCN_histfitter(...) method.
+// SetupTheFitter() clears out the SuperMinuit.
 // Call SetupTheFitter() when hists and params are all loaded up and you're about to fit.
 bool combo_histfitter::SetupTheFitter() // returns true if hists all have the same binning.
 {
@@ -972,14 +830,14 @@ bool combo_histfitter::SetupTheFitter() // returns true if hists all have the sa
 	}
 //	tmp_hist = makehist_zeroslike(FitHist); // must set up the temp histogram.
 	assemble_new_histogram();  // do I need to do this here??
-	
+	/*
 	global_minuit = new SuperMinuit();
 	for(int i=0; i<n_params; i++)
 	{
 //		this -> SuperMinuit::SetupParam(i, paramvect.at(i) );
 		global_minuit -> SuperMinuit::SetupParam(i, paramvect.at(i) );
 	}
-	
+	*/
 //	global_minuit -> chf = this;
 //	this -> TMinuit::SetFCN( NonMemberFitFunction ); // this line only works if it's a *static* void...
 	

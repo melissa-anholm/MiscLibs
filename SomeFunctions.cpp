@@ -36,6 +36,7 @@
 
 //#include <TMinuit.h>
 #include <TObject.h>
+#include "TColor.h"
 
 //#include <TLine.h>
 //#include <TFitResult.h>
@@ -55,6 +56,7 @@ using std::min;
 using std::fixed;
 using std::setprecision;
 
+//#include "SomeFunctions.h"
 
 TF1* make_Abeta_func()
 {
@@ -232,6 +234,41 @@ double justgetthedamnchisquared(TH1D * h1, TH1D * h2, bool already_weighted=true
 }
 
 
+TH1D * tf1_to_hist_like(TF1 * this_tf1, TH1D * this_hist, int this_color=int(kBlack) )
+{
+	TH1D * new_hist = (TH1D*)this_hist -> Clone( this_tf1->GetName() );
+	new_hist -> Sumw2(kFALSE);
+	new_hist -> SetMarkerColor(this_color);
+	new_hist -> SetLineColor(this_color);
+	
+	int n_bins = new_hist->GetNbinsX();
+	for (int i=1; i<n_bins; i++)  // Bins i=0, i=n_bins are the underflow and overflow?
+	{
+		new_hist -> SetBinContent(i, this_tf1->Eval(this_hist->GetBinCenter(i)) );
+	}
+	return new_hist;
+}
+TH1D * tf1_to_hist_like(TF1 * this_tf1, TH1D * this_hist, TColor this_color)
+{
+	Int_t my_color = TColor::GetColor(this_color.GetRed(), this_color.GetGreen(), this_color.GetBlue());
+	TH1D * new_th1d = tf1_to_hist_like(this_tf1, this_hist, my_color);
+	return new_th1d;
+}
+
+/*
+TH1D* make_th1_from_tf1(TF1* this_tf1, string hist_type, int this_color=int(kBlack), string new_hist_title=string(""))
+{ // rescale so Abeta is 1 before calling this, maybe?
+	int rebin_factor=1;
+	if(new_hist_title==string("")) { new_hist_title = string(this_tf1->GetTitle()); }
+	TH1D * new_hist = CreateHist(new_hist_title, hist_type, this_color, rebin_factor);
+	int n_bins = new_hist->GetNbinsX();
+	for (int i=1; i<n_bins; i++)  // Bins i=0, i=n_bins are the underflow and overflow?
+	{
+		new_hist -> SetBinContent(i, this_tf1->Eval(new_hist->GetBinCenter(i)) );
+	}
+	return new_hist;
+}
+*/
 TH1D* makehist_zeroslike(TH1D* oldhist)
 {
 	string newname = "tmpname";
@@ -255,7 +292,15 @@ TH1D* makehist_zeroslike(TH1D* oldhist)
 	return newhist;
 }
 
+TH1D* makehist_Avoverc_like(TH1D* oldhist)
+{
+	TF1 * thetf1 = make_Abeta_func();
+	thetf1 -> SetParLimits(0, -1.0, 1.0);
+	thetf1 -> SetParameter("Abeta", 1.0);
 
+	TH1D* newhist = tf1_to_hist_like(thetf1, oldhist);
+	return newhist;
+}
 /*
 double get_chi2_thisbin(double h1_bincontent, double h2_bincontent, double h1_berr=0, double h2_berr=0)
 {

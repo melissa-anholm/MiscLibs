@@ -26,7 +26,7 @@ using std::setw;
 
 //
 #include "SomeFunctions.cpp"
-#include "MinuitWrapperWrapper_fitparam.cpp"
+#include "MinuitWrapperWrapper_fitparam.h"
 #include "MinuitWrapperWrapper3.h"  // 
 
 
@@ -66,7 +66,8 @@ TH1D* makehist_zeroslike(TH1D* oldhist)
 void NonMember_HistFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_)
 {
 //	global_minuit -> DoThe_HistFitThing(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
-	global_minuit -> DoTheThing(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
+//	global_minuit -> DoTheThing(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
+	global_minuit -> DoTheThing_Original(n_params_, gin_, result_to_minimize_, parameters_, ierflg_);
 	
 	global_minuit -> n_params_i         = n_params_;
 	global_minuit -> gin                = gin_;

@@ -24,10 +24,42 @@ using std::vector;
 #include <TMinuit.h>
 
 // Mine:
-#include "MinuitWrapperWrapper_fitparam.cpp"
+#include "MinuitWrapperWrapper_fitparam.h"
 //#include "HistFit.cpp"
 //#include "SomeFunctions.cpp"
+//#include "SomeFunctions.h"
 
+enum 
+{
+	uninitialized = 0,
+	original = 1,
+	histfitter = 2
+};
+
+// --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
+class combo_histfitter
+{
+public:
+	combo_histfitter(int n=0);
+	void AddFitHist(TH1D* newfithist) { FitHist = newfithist; }
+	void AddHistWithParam(TH1D*, FitParameter);
+	void AddHistWithParam(FitParameter thisparam, TH1D* thishist) { AddHistWithParam(thishist, thisparam); }
+	void RemoveHistAndParam(string);
+	bool SetupTheFitter();
+	TH1D * assemble_new_histogram();
+//	TH1D * adjust_histogram();
+	
+//	vector<TH1D*> get_histvect()  { return histvect; }
+//	vector<TH1D*> get_paramvect() { return paramvect; }
+	int get_n_params() { return n_params; }
+	TH1D* get_FitHist() { return FitHist; }
+	vector<TH1D*> histvect;
+	vector<FitParameter> paramvect;
+private:
+	int n_params;
+	TH1D * tmp_hist;
+	TH1D * FitHist;
+};
 // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
 // A Class to deal with TMinuit itself:
 class SuperMinuit : virtual public TMinuit
@@ -42,8 +74,6 @@ public:
 	int SetupParam(int c_paramnumber, FitParameter   fitpar);
 	int SetupParam(int c_paramnumber, FitParameter * fitpar);
 	FitParameter get_FitParameter(int n) { return this->fit_parameters.at(n); };
-	
-//	combo_histfitter;
 	
 	void Help()
 		{ cout << "\"Help()\":  Not yet implemented." << endl; };
@@ -85,6 +115,7 @@ public:
 	void FreeParameter(int internal_paramnumber) 
 		{ this -> TMinuit::mnfree(-1*internal_paramnumber); };
 	
+	
 	Double_t * Get_gin() {return gin; }; 
 	Double_t Get_result_to_minimize() {return result_to_minimize; };
 	Double_t * Get_parameters() {return parameters; };
@@ -110,9 +141,11 @@ public:
 
 	void ClosedownOutput() { logfilestream.close(); };
 	
-	int DoTheThing(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_);
-//	int histfitter_MemberFitFunction(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_);
-//	int which_thing;
+	int MakeTheMinimizationGo(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_);
+	
+	int which_thing;
+	void SetupFCN_original(TH1D* hist_to_fit);
+	void SetupFCN_histfitter(combo_histfitter * chf);
 	
 	void set_bmin(int newbin) { fit_bmin = newbin; }
 	void set_bmax(int newbin) { fit_bmax = newbin; }
@@ -157,13 +190,11 @@ public:
 	int get_n_fitbins() { return fit_bmax - fit_bmin + 1; }
 	void increment_n_calls() { n_calls++; }
 	
-//	combo_histfitter chf;
 private:
 	vector<FitParameter> fit_parameters;  // just for memory space...
 	
 	int fit_bmin;
 	int fit_bmax;
-//	int n_fitbins;
 	
 	void SetupOutputType(string);  // private!
 	void OutputHeader();           // private?
@@ -214,29 +245,7 @@ public:
 	Int_t ierflg;
 	
 };
-
-
 // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
-class combo_histfitter
-{
-public:
-	combo_histfitter(int n=0);
-	void AddFitHist(TH1D* newfithist) { FitHist = newfithist; }
-	void AddHistWithParam(TH1D*, FitParameter);
-	void AddHistWithParam(FitParameter thisparam, TH1D* thishist) { AddHistWithParam(thishist, thisparam); }
-	void RemoveHistAndParam(string);
-	bool SetupTheFitter();
-	TH1D * assemble_new_histogram();
-
-	int DoThe_HistFitThing(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_);
-	
-private:
-	vector<TH1D*> histvect;
-	vector<FitParameter> paramvect;
-	int n_params;
-	TH1D * tmp_hist;
-	TH1D * FitHist;
-};
 
 
 #endif
