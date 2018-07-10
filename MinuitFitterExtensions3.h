@@ -28,7 +28,7 @@ using std::vector;
 //#include "HistFit.cpp"
 //#include "SomeFunctions.cpp"
 //#include "SomeFunctions.h"
-//#include "asym_histset2.cpp"
+#include "asym_histset2.cpp"
 
 
 bool HistsHaveSameBinning(TH1D *a, TH1D *b, bool verbose=false) 
@@ -77,14 +77,22 @@ bool HistsHaveSameBinning(TH1D *a, TH1D *b, bool verbose=false)
 class superasym_histfitter
 {
 public:
-	superasym_histfitter(created_histset* this_chs);
+	superasym_histfitter(created_histset*, FitParameter, FitParameter, FitParameter);
 	created_histset * chs;
 	bool SetupTheFitter_Asym();
+	
+	FitParameter param_one;
+	FitParameter param_A;
+	FitParameter param_b;
 };
 
-superasym_histfitter::superasym_histfitter(created_histset* this_chs)
+superasym_histfitter::superasym_histfitter(created_histset* this_chs, FitParameter fp1, FitParameter fpA, FitParameter fpb)
 {
 	chs = this_chs;
+	// Set up the fit parameters, maybe?
+	param_one = fp1;
+	param_A   = fpA;
+	param_b   = fpb;
 }
 
 bool superasym_histfitter::SetupTheFitter_Asym()

@@ -14,8 +14,13 @@ using std::setw;
 using std::vector;
 using std::string;  // already in MinuitWrapperWrapper3.h, but it doesn't matter.
 
-
+// 'MinuitWrapperWrapper3.cpp' holds the base class structure of the SuperMinuit.
+//     'MinuitWrapperWrapper3.cpp' includes 'MinuitFitterExtensions3.h'
 #include "MinuitFitterExtensions3.h"  // combo_histfitter, superasym_histfitter
+// 'MinuitFitterExtensions3.h' holds the combo_histfitter and superasym_histfitter classes.
+//     'MinuitFitterExtensions3.h' includes 'MinuitWrapperWrapper_fitparam.h'
+// 'MinuitWrapperWrapper_fitparam.h' holds the FitParameter class.  It's safe to include anywhere.
+
 
 //extern bool HistsHaveSameBinning(TH1D *a, TH1D *b, bool verbose);
 //extern double get_chi2_thisbin(double h1_bincontent, double h2_bincontent, double h1_berr=0, double h2_berr=0);

@@ -6,6 +6,10 @@
 // for Wtilde analysis.
 //
 // ==================================================================== //
+#ifndef INCLUDE_ASYMHISTSET
+#define INCLUDE_ASYMHISTSET 1
+
+
 #include <stdlib.h>
 #include <string>
 #include <sstream> 
@@ -614,3 +618,4 @@ TH1D* assemble_AsymmetrySuperratio(created_histset * chf)
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+#endif

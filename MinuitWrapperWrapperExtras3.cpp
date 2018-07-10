@@ -1,14 +1,24 @@
 // ==================================================================== //
 // Code by Melissa Anholm
 // 28.9.2017 - 3.7.2018
-// 
+//
+// 'Extras' is where I put the functions that go with SuperMinuit 
+// but do actual physics that one might want to change.  
+// Otherwise, SuperMinuit itself just gets messy.
 // ==================================================================== //
 
-#include "MinuitWrapperWrapper3.cpp"
 
-SuperMinuit      * global_minuit;  // Create a global instance.
-combo_histfitter * global_histfitter;
-TH1D             * global_thing1hist;
+#include "MinuitWrapperWrapper3.cpp"
+// 'MinuitWrapperWrapper3.cpp' holds the base class structure of the SuperMinuit.
+//     'MinuitWrapperWrapper3.cpp' includes 'MinuitFitterExtensions3.h'
+// 'MinuitFitterExtensions3.h' holds the combo_histfitter and superasym_histfitter classes.
+//     'MinuitFitterExtensions3.h' includes 'MinuitWrapperWrapper_fitparam.h'
+// 'MinuitWrapperWrapper_fitparam.h' holds the FitParameter class.  It's safe to include anywhere.
+
+
+SuperMinuit          * global_minuit;  // Create a global instance.
+combo_histfitter     * global_chf;
+superasym_histfitter * global_sahf;
 
 enum 
 {
@@ -68,6 +78,7 @@ int SuperMinuit::MakeTheMinimizationGo(Int_t &n_params_, Double_t *gin_, Double_
 			result_to_minimize_ = result_to_minimize_ + tmp_result;
 		}
 		*/
+		return 0;
 	}
 	
 	if(which_thing == histfitter || (which_thing == histfitter_A && n_params==1) )
@@ -82,10 +93,10 @@ int SuperMinuit::MakeTheMinimizationGo(Int_t &n_params_, Double_t *gin_, Double_
 			tmp_binerror = 0.0;
 			for(int j=0; j<n_params; j++)
 			{
-				tmp_bincontent = tmp_bincontent + parameters_[j]*(global_histfitter->histvect.at(j)->GetBinContent(i));
+				tmp_bincontent = tmp_bincontent + parameters_[j]*(global_chf->histvect.at(j)->GetBinContent(i));
 			}
-			tmp_result = get_chi2_thisbin( global_histfitter->get_FitHist()->GetBinContent(i), 
-				tmp_bincontent, global_histfitter->get_FitHist()->GetBinError(i), tmp_binerror);
+			tmp_result = get_chi2_thisbin( global_chf->get_FitHist()->GetBinContent(i), 
+				tmp_bincontent, global_chf->get_FitHist()->GetBinError(i), tmp_binerror);
 			
 			result_to_minimize_ = result_to_minimize_ + tmp_result;
 		}
@@ -98,8 +109,8 @@ int SuperMinuit::MakeTheMinimizationGo(Int_t &n_params_, Double_t *gin_, Double_
 		double tmp_binerror = 0.0;
 		result_to_minimize_ = 0;
 		
-		int Abeta_num  = global_histfitter->get_paramnumber_by_name(string("Abeta"));
-		int bFierz_num = global_histfitter->get_paramnumber_by_name(string("bFierz"));
+		int Abeta_num  = global_chf->get_paramnumber_by_name(string("Abeta"));
+		int bFierz_num = global_chf->get_paramnumber_by_name(string("bFierz"));
 		if( Abeta_num == -1 || bFierz_num == -1 )
 		{
 			cout << "BAD!!  Abeta_num = " << Abeta_num << ",\tbFierz_num = " << bFierz_num << endl;
@@ -108,19 +119,19 @@ int SuperMinuit::MakeTheMinimizationGo(Int_t &n_params_, Double_t *gin_, Double_
 		for(int i=fit_bmin; i<=fit_bmax; i++)
 		{
 			tmp_binerror = 0.0;
-			tmp_bincontent = parameters_[Abeta_num]*(global_histfitter->histvect.at(Abeta_num)->GetBinContent(i)) / (1.0 + parameters_[bFierz_num]*(global_histfitter->histvect.at(bFierz_num)->GetBinContent(i)) );
+			tmp_bincontent = parameters_[Abeta_num]*(global_chf->histvect.at(Abeta_num)->GetBinContent(i)) / (1.0 + parameters_[bFierz_num]*(global_chf->histvect.at(bFierz_num)->GetBinContent(i)) );
 			
-			tmp_result = get_chi2_thisbin( global_histfitter->get_FitHist()->GetBinContent(i), 
-				tmp_bincontent, global_histfitter->get_FitHist()->GetBinError(i), tmp_binerror);
+			tmp_result = get_chi2_thisbin( global_chf->get_FitHist()->GetBinContent(i), 
+				tmp_bincontent, global_chf->get_FitHist()->GetBinError(i), tmp_binerror);
 			result_to_minimize_ = result_to_minimize_ + tmp_result;
 		}
 	}
 	
 	if(which_thing == histfitter_asym && n_params==3)
 	{
-		int one_num    = global_histfitter->get_paramnumber_by_name(string("One"));
-		int Abeta_num  = global_histfitter->get_paramnumber_by_name(string("Abeta"));
-		int bFierz_num = global_histfitter->get_paramnumber_by_name(string("bFierz"));
+	//	int one_num    = global_sahf->get_paramnumber_by_name(string("One"));
+	//	int Abeta_num  = global_sahf->get_paramnumber_by_name(string("Abeta"));
+	//	int bFierz_num = global_sahf->get_paramnumber_by_name(string("bFierz"));
 	}
 	
 	n_params_i         = n_params_;  // really? 
@@ -149,7 +160,7 @@ void SuperMinuit::SetupFCN_histfitter( combo_histfitter * chf )
 	
 	which_thing = histfitter;
 	chf -> SetupTheFitter_LinearCombo(); // returns true if hists all have the same binning.
-	global_histfitter = chf;
+	global_chf = chf;
 	
 	for(int i=0; i<chf->get_n_params(); i++)
 	{
