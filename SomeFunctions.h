@@ -20,6 +20,7 @@ using std::string;
 
 TF1 * make_Abeta_func();
 TF1 * make_Abeta_b_func();
+TF1 * make_quasi_b_func();
 TF1 * make_parabola_func();
 
 extern string double_to_string(double thisnumber, int thisprecision=3);  // 
@@ -32,6 +33,7 @@ TH1D * tf1_to_hist_like(TF1 * this_tf1, TH1D * this_hist, int this_color=int(kBl
 TH1D * tf1_to_hist_like(TF1 * this_tf1, TH1D * this_hist, TColor this_color);
 TH1D * make_th1_from_tf1(TF1* this_tf1, string hist_type, int this_color=int(kBlack), string new_hist_title=string(""));
 TH1D * makehist_zeroslike(TH1D* oldhist);
+TH1D * makehist_oneslike(TH1D* oldhist);
 TH1D * makehist_Avoverc_like(TH1D* oldhist);
 
 

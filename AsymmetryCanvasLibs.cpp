@@ -176,7 +176,6 @@ double get_asymmetry_err(double r1p, double r1m, double r2p, double r2m)
 		DA2 = pow( -2.0/( (1.0+s)*(1.0+s) ), 2) * 1.0/4.0 * s*s * (1.0/r1p + 1.0/r1m + 1.0/r2p + 1.0/r2m);
 	}
 	return sqrt(DA2);  // if everything is zero, sqrt(DA2) = 1/4
-
 }
 
 TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, string hist_title = string("A_beta"), int color=int(kBlack), int plotmarkerstyle=20)

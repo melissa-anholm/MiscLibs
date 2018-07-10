@@ -86,9 +86,10 @@ public:
 	Double_t xlo, xup; // ??
 	Int_t f_pnum;  // f_pnum = fortran_paramnumber
 	
+	TString name;
 	TString GetName() {return name; };
 	void SetName(TString newname) { name = TString(newname); };
-	TString name;
+	bool is_named(string possiblename) { return (bool)name.EqualTo(possiblename.c_str()); };
 };
 
 #endif

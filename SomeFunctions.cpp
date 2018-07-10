@@ -79,6 +79,18 @@ TF1* make_Abeta_b_func()
 	
 	return Abeta_b_func_keV;
 }
+TF1* make_quasi_b_func()
+{
+	// (1.0 + [0]*(510.9989461/(x+510.9989461)) ) is exact;  divide 'A' by it.
+//	TF1* b_func_keV = new TF1("b_func_keV", "(1.0 + [0]*(510.9989461/(x+510.9989461)) )", 0.0, 5100.0);
+	
+	// divide 'A' by (1+b_func_keV).
+	TF1* b_func_keV = new TF1("b_func_keV", "[0]*(510.9989461/(x+510.9989461))", 0.0, 5100.0);
+	b_func_keV -> SetParNames("bFierz");
+	b_func_keV -> SetParameter("bFierz", 1.0);
+	
+	return b_func_keV;
+}
 TF1 * make_parabola_func()
 {
 	//double xmin = -0.590;
@@ -103,45 +115,6 @@ string double_to_string(double thisnumber, int thisprecision=3)  //
 }
 
 // ---- // ---- // ---- // ---- // ---- // ---- //
-bool HistsHaveSameBinning(TH1D *a, TH1D *b, bool verbose=false) 
-{
-	bool same = true;
-	if (!a || !b) 
-	{
-		cout << "ERROR:  Histogram doesn't exist" << endl;
-		cout << "a=" << a << ", b=" << b << endl;
-		same = false;
-	//	return same;
-	}
-	else if ( a -> GetNbinsX() != b -> GetNbinsX() ) 
-	{
-		cout << "ERROR:  Histograms have different numbers of bins." << endl;
-		same = false;
-	//	return same;
-	}
-	double eps = 1.E-3;
-	if (same) 
-	{
-		for (int i = 1; i <= a -> GetNbinsX(); i++) 
-		{
-			if (fabs(a->GetBinCenter(i) - b->GetBinCenter(i)) > eps)
-			{
-				same = false;
-			}
-		}
-	}
-	//
-	if(same && verbose)
-	{
-		cout << "Histograms " << a->GetName() << " and ";
-		cout << b->GetName() << " have the same binning." << endl;
-	}
-	else if(!same)
-	{
-		cout << "ERROR:  bin centres are different." << endl;
-	}
-	return same;
-}
 
 double justgetthedamnchisquared(TH1D * h1, TH1D * h2, bool already_weighted=true, int bmin=0, int bmax=0)
 {
@@ -288,6 +261,29 @@ TH1D* makehist_zeroslike(TH1D* oldhist)
 	for (int i=1; i<n_bins; i++)  // Bins i=0, i=n_bins are the underflow and overflow?
 	{
 		newhist -> SetBinContent(i,0);
+	}
+	return newhist;
+}
+
+TH1D* makehist_oneslike(TH1D* oldhist)
+{
+	string newname = "tmpname";
+	int newcolor = kBlack;
+	TH1D * newhist = (TH1D*)oldhist -> Clone(newname.c_str());
+	
+	newhist -> Sumw2(kFALSE);
+	newhist -> SetName(newname.c_str());
+	newhist -> SetTitle(newname.c_str());
+	newhist -> SetLineColor(newcolor);
+	newhist -> SetMarkerColor(newcolor);
+	
+	int n_bins = newhist->GetNbinsX();
+	newhist -> SetBinContent(n_bins,0);
+	newhist -> SetBinContent(0,0);
+	
+	for (int i=1; i<n_bins; i++)  // Bins i=0, i=n_bins are the underflow and overflow?
+	{
+		newhist -> SetBinContent(i,1);
 	}
 	return newhist;
 }
