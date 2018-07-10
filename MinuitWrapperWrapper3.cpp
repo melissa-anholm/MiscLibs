@@ -14,11 +14,13 @@ using std::setw;
 using std::vector;
 using std::string;  // already in MinuitWrapperWrapper3.h, but it doesn't matter.
 
+// 'MinuitWrapperWrapperExtras3.cpp' holds all the physics of the SuperMinuit fit functions.
+//     'MinuitWrapperWrapperExtras3.cpp' includes 'MinuitWrapperWrapper3.cpp'
 // 'MinuitWrapperWrapper3.cpp' holds the base class structure of the SuperMinuit.
 //     'MinuitWrapperWrapper3.cpp' includes 'MinuitFitterExtensions3.h'
-#include "MinuitFitterExtensions3.h"  // combo_histfitter, superasym_histfitter
-// 'MinuitFitterExtensions3.h' holds the combo_histfitter and superasym_histfitter classes.
-//     'MinuitFitterExtensions3.h' includes 'MinuitWrapperWrapper_fitparam.h'
+#include "MinuitWrapperWrapperFitExtensions3.cpp"  // combo_histfitter, superasym_histfitter
+// 'MinuitWrapperWrapperFitExtensions3.cpp' holds the combo_histfitter and superasym_histfitter classes.
+//     'MinuitWrapperWrapperFitExtensions3.cpp' includes 'MinuitWrapperWrapper_fitparam.h'
 // 'MinuitWrapperWrapper_fitparam.h' holds the FitParameter class.  It's safe to include anywhere.
 
 

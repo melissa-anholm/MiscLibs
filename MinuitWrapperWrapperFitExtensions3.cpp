@@ -4,8 +4,8 @@
 // 
 // ==================================================================== //
 
-#ifndef INCLUDE_SUPERMINUIT
-#define INCLUDE_SUPERMINUIT 1
+#ifndef INCLUDE_FITTEREXTENSIONS
+#define INCLUDE_FITTEREXTENSIONS 1
 
 
 // Standard includes:
@@ -24,11 +24,16 @@ using std::vector;
 #include <TMinuit.h>
 
 // Mine:
-#include "MinuitWrapperWrapper_fitparam.h"
-//#include "HistFit.cpp"
-//#include "SomeFunctions.cpp"
-//#include "SomeFunctions.h"
 #include "asym_histset2.cpp"
+
+// 'MinuitWrapperWrapperExtras3.cpp' holds all the physics of the SuperMinuit fit functions.
+//     'MinuitWrapperWrapperExtras3.cpp' includes 'MinuitWrapperWrapper3.cpp'
+// 'MinuitWrapperWrapper3.cpp' holds the base class structure of the SuperMinuit.
+//     'MinuitWrapperWrapper3.cpp' includes 'MinuitWrapperWrapperFitExtensions3.cpp'
+// 'MinuitWrapperWrapperFitExtensions3.cpp' holds the combo_histfitter and superasym_histfitter classes.
+//     'MinuitWrapperWrapperFitExtensions3.cpp' includes 'MinuitWrapperWrapper_fitparam.h'
+#include "MinuitWrapperWrapper_fitparam.h"
+// 'MinuitWrapperWrapper_fitparam.h' holds the FitParameter class.  It's safe to include anywhere.
 
 
 bool HistsHaveSameBinning(TH1D *a, TH1D *b, bool verbose=false) 

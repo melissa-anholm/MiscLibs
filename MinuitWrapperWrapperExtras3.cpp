@@ -9,10 +9,12 @@
 
 
 #include "MinuitWrapperWrapper3.cpp"
+// 'MinuitWrapperWrapperExtras3.cpp' holds all the physics of the SuperMinuit fit functions.
+//     'MinuitWrapperWrapperExtras3.cpp' includes 'MinuitWrapperWrapper3.cpp'
 // 'MinuitWrapperWrapper3.cpp' holds the base class structure of the SuperMinuit.
-//     'MinuitWrapperWrapper3.cpp' includes 'MinuitFitterExtensions3.h'
-// 'MinuitFitterExtensions3.h' holds the combo_histfitter and superasym_histfitter classes.
-//     'MinuitFitterExtensions3.h' includes 'MinuitWrapperWrapper_fitparam.h'
+//     'MinuitWrapperWrapper3.cpp' includes 'MinuitWrapperWrapperFitExtensions3.cpp'
+// 'MinuitWrapperWrapperFitExtensions3.cpp' holds the combo_histfitter and superasym_histfitter classes.
+//     'MinuitWrapperWrapperFitExtensions3.cpp' includes 'MinuitWrapperWrapper_fitparam.h'
 // 'MinuitWrapperWrapper_fitparam.h' holds the FitParameter class.  It's safe to include anywhere.
 
 
