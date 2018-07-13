@@ -36,6 +36,8 @@ using std::vector;
 // 'MinuitWrapperWrapper_fitparam.h' holds the FitParameter class.  It's safe to include anywhere.
 
 
+
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 bool HistsHaveSameBinning(TH1D *a, TH1D *b, bool verbose=false) 
 {
 	bool same = true;
@@ -76,37 +78,59 @@ bool HistsHaveSameBinning(TH1D *a, TH1D *b, bool verbose=false)
 	return same;
 }
 
-
 // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
 
 class superasym_histfitter
 {
 public:
+	superasym_histfitter();
+	superasym_histfitter(created_histset*);
 	superasym_histfitter(created_histset*, FitParameter, FitParameter, FitParameter);
-	created_histset * chs;
-	bool SetupTheFitter_Asym();
+	void init(created_histset*, FitParameter, FitParameter, FitParameter);
+	
+	void setup_chs(created_histset*);
+	void setup_params(FitParameter, FitParameter, FitParameter);
+	created_histset * the_chs;
 	
 	FitParameter param_one;
 	FitParameter param_A;
 	FitParameter param_b;
+	
+	void AddFitHist(TH1D* newfithist) { FitHist = newfithist; }
+	TH1D * get_FitHist() { return FitHist; }
+private:
+	TH1D * FitHist;
 };
 
+superasym_histfitter::superasym_histfitter()
+{
+	the_chs = new created_histset();
+}
+superasym_histfitter::superasym_histfitter(created_histset* this_chs)
+{
+	setup_chs(this_chs);
+}
 superasym_histfitter::superasym_histfitter(created_histset* this_chs, FitParameter fp1, FitParameter fpA, FitParameter fpb)
 {
-	chs = this_chs;
-	// Set up the fit parameters, maybe?
+	init(this_chs, fp1, fpA, fpb);
+}
+void superasym_histfitter::init(created_histset* this_chs, FitParameter fp1, FitParameter fpA, FitParameter fpb)
+{
+	setup_chs(this_chs);
+	setup_params(fp1, fpA, fpb);
+}
+void superasym_histfitter::setup_chs(created_histset* this_chs) 
+{ 
+	the_chs = this_chs; 
+}
+void superasym_histfitter::setup_params(FitParameter fp1, FitParameter fpA, FitParameter fpb)
+{
 	param_one = fp1;
 	param_A   = fpA;
 	param_b   = fpb;
 }
 
-bool superasym_histfitter::SetupTheFitter_Asym()
-{
-	return true;
-}
-
 // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
-
 class combo_histfitter
 {
 public:
@@ -116,12 +140,11 @@ public:
 	void AddHistWithParam(FitParameter thisparam, TH1D* thishist) { AddHistWithParam(thishist, thisparam); }
 	void RemoveHistAndParam(string);
 	bool SetupTheFitter_LinearCombo();
-	bool SetupTheFitter_Asym();
 	TH1D * assemble_new_histogram();
 	
 	int get_paramnumber_by_name(string thename);
 	
-	int get_n_params() { return n_params; }
+	int get_n_params()  { return n_params; }
 	TH1D* get_FitHist() { return FitHist; }
 	vector<TH1D*> histvect;
 	vector<FitParameter> paramvect;
@@ -186,17 +209,6 @@ TH1D* combo_histfitter::assemble_new_histogram()
 	return tmp_hist;
 }
 
-/*
-TH1D* combo_histfitter::adjust_histogram()
-{
-	for(int i=0; i<n_params; i++)
-	{
-		tmp_hist -> Add( histvect.at(i), paramvect.at(i).fit_val );
-	}
-	return tmp_hist;
-}
-*/
-
 // SetupTheFitter_LinearCombo() is called by SuperMinuit's SetupFCN_histfitter(...) method.
 // SetupTheFitter_LinearCombo() clears out the SuperMinuit.
 // Call SetupTheFitter_LinearCombo() when hists and params are all loaded up and you're about to fit.
@@ -212,39 +224,9 @@ bool combo_histfitter::SetupTheFitter_LinearCombo() // returns true if hists all
 		cout << "ERROR!  Hists don't have the same binning!  Fitter is not set up." << endl;
 		return samebinning; 
 	}
-//	tmp_hist = makehist_zeroslike(FitHist); // must set up the temp histogram.
 	assemble_new_histogram();  // do I need to do this here??
-	/*
-	global_minuit = new SuperMinuit();
-	for(int i=0; i<n_params; i++)
-	{
-//		this -> SuperMinuit::SetupParam(i, paramvect.at(i) );
-		global_minuit -> SuperMinuit::SetupParam(i, paramvect.at(i) );
-	}
-	*/
-//	global_minuit -> chf = this;
-//	this -> TMinuit::SetFCN( NonMemberFitFunction ); // this line only works if it's a *static* void...
-	
 	return true;
 }
-
-bool combo_histfitter::SetupTheFitter_Asym() // returns true if hists all have the same binning.
-{
-	bool samebinning = true;
-	for(int i=0; i<n_params; i++)
-	{
-		samebinning = samebinning && HistsHaveSameBinning(FitHist, histvect.at(i), false);
-	}
-	if( !samebinning ) 
-	{ 
-		cout << "ERROR!  Hists don't have the same binning!  Fitter is not set up." << endl;
-		return samebinning; 
-	}
-//	assemble_new_histogram();  // do I need to do this here??
-	// assemble_new_histogram() assumes a lin. combo.  make a new function to do the asymhists.
-	return true;
-}
-
 
 int combo_histfitter::get_paramnumber_by_name(string thename)
 {
@@ -257,9 +239,10 @@ int combo_histfitter::get_paramnumber_by_name(string thename)
 			break;
 		}
 	}
-	
 	return the_paramnumber;
 }
+
+
 // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
 // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- // / // --- * --- //
 

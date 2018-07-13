@@ -56,7 +56,7 @@ public:
 	//	cout << "Original FitParameter is called for param:  " << name_ << endl;
 	};
 	
-	double initial_val;
+	double initial_val;  // initial_val gets overwritten and corrupted...  :(
 	double stepsize;
 	double min_val;
 	double max_val;
@@ -89,7 +89,8 @@ public:
 	TString name;
 	TString GetName() {return name; };
 	void SetName(TString newname) { name = TString(newname); };
-	bool is_named(string possiblename) { return (bool)name.EqualTo(possiblename.c_str()); };
+	bool is_named(string possiblename)  { return (bool)name.EqualTo(possiblename.c_str()); };
+	bool is_named(TString possiblename) { return (bool)name.EqualTo(possiblename); };
 };
 
 #endif

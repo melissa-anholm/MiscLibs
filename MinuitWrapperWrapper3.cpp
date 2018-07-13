@@ -42,7 +42,10 @@ public:
 
 	int SetupParam(int c_paramnumber, FitParameter   fitpar);
 	int SetupParam(int c_paramnumber, FitParameter * fitpar);
-	FitParameter get_FitParameter(int n) { return this->fit_parameters.at(n); };
+//	FitParameter get_FitParameter(int n) { return this->fit_parameters.at(n); };
+	int get_variable_paramnumber_by_name(string);
+//	FitParameter get_FitParameter_byname(string thename);
+	FitParameter get_parameter_byname(string thename);
 	
 	void Help()
 		{ cout << "\"Help()\":  Not yet implemented." << endl; };
@@ -106,7 +109,7 @@ public:
 	};
 	void DumpToOutput();
 
-	void ClosedownOutput() { logfilestream.close(); };
+	void ClosedownOutput();// { logfilestream.close(); };
 	
 	int MakeTheMinimizationGo(Int_t &n_params_, Double_t *gin_, Double_t &result_to_minimize_, Double_t *parameters_, Int_t ierflg_);
 	
@@ -116,6 +119,9 @@ public:
 	void SetupFCN_histfitter_A  ( combo_histfitter * chf );
 	void SetupFCN_histfitter_Ab ( combo_histfitter * chf );
 	void SetupFCN_histfitter_superasym( superasym_histfitter * sahf );
+	combo_histfitter     * the_chf;
+	superasym_histfitter * the_sahf;
+	
 	
 	void set_bmin(int newbin) { fit_bmin = newbin; }
 	void set_bmax(int newbin) { fit_bmax = newbin; }
@@ -162,6 +168,7 @@ public:
 	
 private:
 	vector<FitParameter> fit_parameters;  // just for memory space...
+	vector<FitParameter> allthe_fit_parameters;  // ...because constant fit parameters aren't stored, apparently.
 	
 	int fit_bmin;
 	int fit_bmax;
@@ -220,6 +227,7 @@ public:
 void SuperMinuit::init()
 {
 	fit_parameters = vector<FitParameter>(25);
+//	allthe_fit_parameters = vector<FitParameter>(25);
 	
 	length_of_arglist = 0;
 	n_maxcalls = 500;
@@ -231,8 +239,10 @@ void SuperMinuit::init()
 	
 	is_finished = false;
 	SetupOutput("file");
-	
 	current_fittype = string("");
+	
+	the_chf  = new combo_histfitter();
+	the_sahf = new superasym_histfitter();
 	
 	Int_t n_params = 25;
 	Double_t *gin  = new Double_t(25);
@@ -484,16 +494,25 @@ void SuperMinuit::DumpFitResults()
 	logfilestream << "fmin_best    = " << this -> get_fmin_best() << endl;
 	logfilestream << "fedm_best    = " << this -> get_fedm_best() << endl;
 	logfilestream << "errdef_best  = " << this -> get_errdef_best() << endl;
-
+	logfilestream << "ierflg       = " << this -> ierflg << endl;
+	
+	
 	logfilestream << endl;
 	logfilestream << endl;
 }
+
+void SuperMinuit::ClosedownOutput() 
+{ 
+	if( logfilestream.is_open() ) { logfilestream.close(); }
+}
+
 void SuperMinuit::DumpCurrentFitParams()
 {
 	// For the overall fit;
 	n_params = this->GetNumPars();  // gets the number of params that were *varied*.
 	n_fixed_params = this->GetNumFixedPars();  // 
 	n_free_params = this->GetNumFreePars();  // 
+//	cout << "n_params = " << n_params << ";\tn_free_params = " << n_free_params << ";\tn_fixed_params = " << n_fixed_params << endl;
 	
 	this -> mnstat(fmin_val, fedm, errdef, npar_varied, npar_defined, errmatrix_quality);
 	// error est ?
@@ -505,7 +524,9 @@ void SuperMinuit::DumpCurrentFitParams()
 	
 	Double_t eplus, eminus, eparab, globcc;
 	
-	for(int i=0; i<n_params; i++)
+//	for(int i=0; i<n_params; i++)
+//	for(int i=0; i<25; i++)
+	for(int i=0; i<allthe_fit_parameters.size(); i++)
 	{
 		this -> mnpout(i, paramname, val, err, xlo, xup, f_pnum);
 		this->fit_parameters[i].name      = paramname;
@@ -521,6 +542,36 @@ void SuperMinuit::DumpCurrentFitParams()
 		this->fit_parameters[i].eminus    = eminus;
 		this->fit_parameters[i].eparab    = eparab;
 		this->fit_parameters[i].globcc    = globcc;
+		
+	//	bool found = false;
+		for(int j=0; j<allthe_fit_parameters.size(); j++)
+		{
+			// check if it has the same name...
+			if ( this->allthe_fit_parameters[j].is_named(paramname) )
+			{
+			//	cout << paramname << " is at:  allthe_fit_parameters[" << j << "] and fit_parameters[" << i << "]" << endl;
+	//			found = true;
+				this->allthe_fit_parameters[j] = this->fit_parameters[i];
+				break;
+			}
+		//	else
+		//	{ 
+		//		cout << "no match found for " << paramname << ".  i=" << i << ", j=" << j << endl;
+		//	}
+			// if it does, just copy the whole fit parameter.
+			
+			// otherwise, do something else.
+			// set fit_val = initial_val
+			// set fit_err = 0
+		}
+	//	if(!found)
+	//	{ 
+	//		cout << "no match found for " << paramname << ".  i=" << i << /*", j=" << j << */ endl;
+	//	}
+	//	if(!found)
+	//	{
+	//		
+	//	}
 	}
 	return;
 //	fit_min
@@ -529,30 +580,40 @@ void SuperMinuit::DumpCurrentFitParams()
 int SuperMinuit::SetupParam(int c_paramnumber, FitParameter fitpar)
 {
 	cout << "Setting up parameter:  " << c_paramnumber << endl;
-	cout << "\t" << fitpar.name << endl;
-	cout << "\t" << fitpar.initial_val << endl;
-	cout << "\t" << fitpar.stepsize << endl;
-	cout << "\t" << fitpar.min_val << endl;
-	cout << "\t" << fitpar.max_val << endl;
+	cout << "\tName:       " << fitpar.name << endl;
+	cout << "\tInitial Val:" << fitpar.initial_val << endl;
+	cout << "\tStep Size:  " << fitpar.stepsize << endl;
+	cout << "\tMin Val:    " << fitpar.min_val << endl;
+	cout << "\tMax Val:    " << fitpar.max_val << endl;
 	cout << "\t" << "ierflg = " << ierflg << endl;
 	
-	this -> mnparm(c_paramnumber, fitpar.name, fitpar.initial_val, fitpar.stepsize, fitpar.min_val, fitpar.max_val, ierflg);
+//	fitpar.fit_val = fitpar.initial_val;
+	fitpar.fit_val = *(new double(fitpar.initial_val));
+//	cout << "fitpar.fit_val = " << fitpar.fit_val << endl;
+	this -> mnparm(c_paramnumber, fitpar.name, fitpar.fit_val, fitpar.stepsize, fitpar.min_val, fitpar.max_val, ierflg);
 	if(fitpar.is_fixed)
 	{
+//		fitpar.fit_val = fitpar.initial_val;
+		fitpar.fit_err = 0.0;
 		cout << "Fixing param:  " << fitpar.name << endl;
 		this -> FixParameter(c_paramnumber);
 	}
+	// Below:  do this to keep track of all the parameters, in case some are fixed:
+	allthe_fit_parameters.push_back(fitpar);
+	
 	cout << "\t" << "ierflg = " << ierflg << endl;
 	return ierflg;
 }
+
+/*
 int SuperMinuit::SetupParam(int c_paramnumber, FitParameter * fitpar)
 {
 	cout << "Setting up parameter:  " << c_paramnumber << endl;
-	cout << "\t" << fitpar->name << endl;
-	cout << "\t" << fitpar->initial_val << endl;
-	cout << "\t" << fitpar->stepsize << endl;
-	cout << "\t" << fitpar->min_val << endl;
-	cout << "\t" << fitpar->max_val << endl;
+	cout << "\tName:       " << fitpar->name << endl;
+	cout << "\tInitial Val:" << fitpar->initial_val << endl;
+	cout << "\tStep Size:  " << fitpar->stepsize << endl;
+	cout << "\tMin Val:    " << fitpar->min_val << endl;
+	cout << "\tMax Val:    " << fitpar->max_val << endl;
 	cout << "\t" << "ierflg = " << ierflg << endl;
 
 	this -> mnparm(c_paramnumber, fitpar->name, fitpar->initial_val, fitpar->stepsize, fitpar->min_val, fitpar->max_val, ierflg);
@@ -561,9 +622,69 @@ int SuperMinuit::SetupParam(int c_paramnumber, FitParameter * fitpar)
 		cout << "Fixing param:  " << fitpar->name << endl;
 		this -> FixParameter(c_paramnumber);
 	}
+	// Below:  do this stuff to keep track of all the parameters, in case some are fixed:
+	allthe_fit_parameters.push_back(*fitpar);
+	
 	cout << "\t" << "ierflg = " << ierflg << endl;
 	return ierflg;
 }
+*/
+
+int SuperMinuit::get_variable_paramnumber_by_name(string thename)
+{
+	int this_paramnum = -1;
+//	for (int i = 0; i < n_params; i++) 
+	for (int i = 0; i < 25; i++) 
+	{
+		cout << "parameter " << i << " is named " << fit_parameters.at(i).GetName() << endl;
+		if( fit_parameters.at(i).is_named(thename) )
+		{
+			this_paramnum = i;
+		//	cout << "parameter " << i << " is named " << thename << endl;
+			break;
+		}
+	}
+	//
+//	cout << "Parameter " << thename << " has paramnumber " << this_paramnum << endl;
+	if(this_paramnum==-1)
+	{
+		cout << "Parameter " << thename << " has paramnumber " << this_paramnum;
+		cout << " -- it probably is fixed/constant.";
+		cout << endl;
+		
+		// ok, what's our contingency plan here??
+	}
+	return this_paramnum;
+}
+
+FitParameter SuperMinuit::get_parameter_byname(string thename)
+//FitParameter SuperMinuit::get_FitParameter_byname(string thename)
+{
+//	for (int i = 0; i < 25; i++) 
+	for (int i = 0; i < allthe_fit_parameters.size(); i++) 
+	{
+		if( allthe_fit_parameters.at(i).is_named(thename) )
+		{
+		//	this_paramnum = i;
+		//	break;
+	//		cout << "get_parameter_byname(...):  parameter " << i << " is named " << thename << endl;
+			return allthe_fit_parameters.at(i);
+		}
+	}
+	cout << "Bad!  Couldn't find parameter!" << endl;
+	FitParameter fp;
+	return fp;
+	/*
+	int the_paramnum = get_variable_paramnumber_by_name(thename);
+//	cout << "Parameter " << thename << " has paramnumber " << the_paramnum << endl;
+	if (the_paramnum == -1) 
+	{
+		// Do .... something??
+	}
+	return get_FitParameter(the_paramnum);
+	*/
+}
+
 
 void SuperMinuit::SetMaxCalls(int maxcalls)
 {

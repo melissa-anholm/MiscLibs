@@ -77,6 +77,46 @@ TH1D* makehist_zeroslike(TH1D* oldhist)
 	}
 	return newhist;
 }
+bool HistsHaveSameBinning2(TH1D *a, TH1D *b, bool verbose=false) 
+{
+	bool same = true;
+	if (!a || !b) 
+	{
+		cout << "ERROR:  Histogram doesn't exist" << endl;
+		cout << "a=" << a << ", b=" << b << endl;
+		same = false;
+	//	return same;
+	}
+	else if ( a -> GetNbinsX() != b -> GetNbinsX() ) 
+	{
+		cout << "ERROR:  Histograms have different numbers of bins." << endl;
+		same = false;
+	//	return same;
+	}
+	double eps = 1.E-3;
+	if (same) 
+	{
+		for (int i = 1; i <= a -> GetNbinsX(); i++) 
+		{
+			if (fabs(a->GetBinCenter(i) - b->GetBinCenter(i)) > eps)
+			{
+				same = false;
+			}
+		}
+	}
+	//
+	if(same && verbose)
+	{
+		cout << "Histograms " << a->GetName() << " and ";
+		cout << b->GetName() << " have the same binning." << endl;
+	}
+	else if(!same)
+	{
+		cout << "ERROR:  bin centres are different." << endl;
+	}
+	return same;
+}
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 
 
 class asym_histset : public TObject
@@ -338,20 +378,32 @@ public:
 	created_histset();
 	created_histset(TH1D*, TH1D*, TH1D*);
 	
+	void set_hists(TH1D*, TH1D*, TH1D*);
 	TH1D* Wtilde_1_hist;
 	TH1D* Wtilde_A_hist;
 	TH1D* Wtilde_b_hist;
+	bool has_wtilde_hists;
 	
-	TH1D* make_an_Ehist_more(double, double, double);
-	TH1D* make_an_Ehist_less(double, double, double);
-//	void make_all_the_Ehists();
-	void make_raw_Ehists();
-	void make_raw_Ehists(double, double, double);
-	TH1D* assemble_AsymmetrySuperratio();
+	void set_physics_params(double par_one=1.0, double par_A=-0.5723, double par_b=0.0);
+	double parsize_one;
+	double parsize_A;
+	double parsize_b;
+
+	bool setup_counts(double n_total_counts, double, double, double, double);
+	double N_total_counts;
+	double N_tp;
+	double N_tm;
+	double N_bp;
+	double N_bm;
+	void setup_counts_like_B();
+	void setup_counts_like_C();
+	void setup_counts_like_D();
+	void scale_stats(double n_total_counts);
+	void set_use_errs(bool this_use_errs) { use_errs = this_use_errs; };
 	
-	double size_one;
-	double size_A;
-	double size_b;
+	TH1D* make_all_Ehists();
+	TH1D* make_all_Ehists(double, double, double);
+//	TH1D* assemble_AsymmetrySuperratio();
 	
 	double top_efficiency;
 	double bottom_efficiency;
@@ -361,64 +413,36 @@ public:
 	double pol_minus;
 	double avg_costheta;
 	
-	void setup_counts(double n_total_counts, double, double, double, double);
-	double N_total_counts;
-	double N_tp;
-	double N_tm;
-	double N_bp;
-	double N_bm;
-//	void rescale_theoretical_fromraw();
-	void rescale_empirical_fromraw();
-	void rescale_statistics_by_N(double n_total_counts);
-	void rescale_statistics_by_fraction(double scale_factor);
-	void rescale_statistics_by_empirical();
-
-	void setup_counts_like_B();
-	void setup_counts_like_C();
-	void setup_counts_like_D();
 	
+	void rescale_empirical();
+	void rescale_all(double n_total_counts);
+	
+//	void rescale_statistics_by_fraction(double scale_factor);
+//	void rescale_theoretical_fromraw();
+//	void rescale_statistics_by_empirical();
+	
+private:
+	bool use_errs;
+	TH1D* make_an_Ehist_more(double, double, double);
+	TH1D* make_an_Ehist_less(double, double, double);
 };
 
 created_histset::created_histset()
 {
-	asym_histset();
-	
-	Wtilde_1_hist = new TH1D();
-	Wtilde_A_hist = new TH1D();
-	Wtilde_b_hist = new TH1D();
-
-	size_one = 1.0;
-	size_A   = -0.5723;
-	size_b   = 0.0;
-	
-	top_efficiency      = 1.0;
-	bottom_efficiency   = 1.0;
-	N_plus_rel          = 1.0;
-	N_minus_rel         = 1.0;
-	
-	pol_plus       = 0.9913;    // +0.9913(6)
-	pol_minus      = 0.9912;    // -0.9912(7)
-	avg_costheta   = 0.994484;  // or less.
-	
-	N_total_counts = 0.0;
-	N_tp = 0;
-	N_tm = 0;
-	N_bp = 0;
-	N_bm = 0;
+	TH1D* w1 = new TH1D();
+	TH1D* wA = new TH1D();
+	TH1D* wb = new TH1D();
+	created_histset(w1, wA, wb);
+	has_wtilde_hists = false;
 }
-
 created_histset::created_histset(TH1D* w1, TH1D* wA, TH1D* wb)
 {
 	asym_histset();
-	
-	Wtilde_1_hist = w1;
-	Wtilde_A_hist = wA;
-	Wtilde_b_hist = wb;
-	
-	size_one = 1.0;
-	size_A   = -0.5723;
-	size_b   = 0.0;
-	
+	set_hists(w1, wA, wb);
+	set_physics_params();
+
+	use_errs = true;
+
 	top_efficiency      = 1.0;
 	bottom_efficiency   = 1.0;
 	N_plus_rel          = 1.0;
@@ -434,143 +458,42 @@ created_histset::created_histset(TH1D* w1, TH1D* wA, TH1D* wb)
 	N_bp = 0;
 	N_bm = 0;
 }
-
-TH1D* created_histset::make_an_Ehist_more(double parsize_one=1.0, double parsize_A=-0.5723, double parsize_b=0.0)
+void created_histset::set_hists(TH1D* w1, TH1D* wA, TH1D* wb)
 {
-	TH1D* tmp_Ehist = makehist_zeroslike(Wtilde_1_hist);
-	tmp_Ehist -> Add(Wtilde_1_hist, parsize_one);
-	tmp_Ehist -> Add(Wtilde_A_hist, 1.0*parsize_A);
-	tmp_Ehist -> Add(Wtilde_b_hist, parsize_b);
+	Wtilde_1_hist = w1;
+	Wtilde_A_hist = wA;
+	Wtilde_b_hist = wb;
+	has_wtilde_hists = Wtilde_1_hist && Wtilde_A_hist && Wtilde_b_hist; 
+	bool same_binning = false;
 	
-	return tmp_Ehist;
+	same_binning = HistsHaveSameBinning2(Wtilde_1_hist, Wtilde_A_hist) 
+		&& HistsHaveSameBinning2(Wtilde_1_hist, Wtilde_b_hist);
+	// re-rescale things now?
 }
-TH1D* created_histset::make_an_Ehist_less(double parsize_one=1.0, double parsize_A=-0.5723, double parsize_b=0.0)
+void created_histset::set_physics_params(double par_one, double par_A, double par_b)
 {
-	TH1D* tmp_Ehist = makehist_zeroslike(Wtilde_1_hist);
-	tmp_Ehist -> Add(Wtilde_1_hist, parsize_one);
-	tmp_Ehist -> Add(Wtilde_A_hist, -1.0*parsize_A);
-	tmp_Ehist -> Add(Wtilde_b_hist, parsize_b);
-	
-	return tmp_Ehist;
+	parsize_one = par_one;
+	parsize_A   = par_A;
+	parsize_b   = par_b;
 }
-
-/*
-void created_histset::make_all_the_Ehists()
-{
-	h_tp = make_an_Ehist_less(size_one, size_A*pol_plus*avg_costheta,  size_b);
-//	h_tp -> Scale(top_efficiency*N_plus_rel);
-	h_tm = make_an_Ehist_more(size_one, size_A*pol_minus*avg_costheta, size_b);
-//	h_tm -> Scale(top_efficiency*N_minus_rel);
-	
-	h_bp = make_an_Ehist_more(size_one, size_A*pol_plus*avg_costheta,  size_b);
-//	h_bp -> Scale(bottom_efficiency*N_plus_rel);
-	h_bm = make_an_Ehist_less(size_one, size_A*pol_minus*avg_costheta, size_b);
-//	h_bm -> Scale(bottom_efficiency*N_minus_rel);
-	
-	// rescale them all by N_total_counts.  but only if N!=0.
-}
-*/
-void created_histset::make_raw_Ehists()
-{
-	h_tp = make_an_Ehist_less(size_one, size_A*pol_plus *avg_costheta, size_b);
-	h_tm = make_an_Ehist_more(size_one, size_A*pol_minus*avg_costheta, size_b);
-	h_bp = make_an_Ehist_more(size_one, size_A*pol_plus *avg_costheta, size_b);
-	h_bm = make_an_Ehist_less(size_one, size_A*pol_minus*avg_costheta, size_b);
-}
-
-void created_histset::make_raw_Ehists(double this_size_one, double this_size_A, double this_size_b)
-{
-	size_one = this_size_one;
-	size_A   = this_size_A;
-	size_b   = this_size_b;
-	make_raw_Ehists();
-}
-
-void created_histset::rescale_empirical_fromraw()
-{
-	if(N_tp!=0 && N_tm!=0 && N_bp!=0 && N_bm!=0)
-	{
-		cout << "Warning:  an empirical rescale doesn't appropriately take into account ";
-		cout << "the difference between detector efficiency and trap location.  "; 
-		cout << "This will be implemented later.  Maybe." << endl;
-		
-		h_tp -> Scale(N_tp);
-		h_tm -> Scale(N_tm);
-		h_bp -> Scale(N_bp);
-		h_bm -> Scale(N_bm);
-	}
-	else
-	{
-		cout << "ERROR!  Could not rescale histograms.  Everything will be wrong!" << endl;
-	}
-}
-
-/*
-void created_histset::rescale_theoretical_fromraw()
-{
-	h_tp -> Scale(top_efficiency*N_plus_rel);
-	h_tm -> Scale(top_efficiency*N_minus_rel);
-	h_bp -> Scale(bottom_efficiency*N_plus_rel);
-	h_bm -> Scale(bottom_efficiency*N_minus_rel);
-	
-	if(N_total_counts!=0)
-	{
-		double tmp_N = 0;
-		tmp_N = h_tp->Integral() + h_tm->Integral() + h_bp->Integral() + h_bm->Integral();
-		
-		h_tp -> Scale(N_total_counts/tmp_N);
-		h_tm -> Scale(N_total_counts/tmp_N);
-		h_bp -> Scale(N_total_counts/tmp_N);
-		h_bm -> Scale(N_total_counts/tmp_N);
-	}
-}
-*/
-
-void created_histset::rescale_statistics_by_N(double n_total_counts)
-{ 
-	// * if this is called before rescale_empirical_fromraw(), then 
-	//   rescale_empirical_fromraw() still must be called afterwards.
-	// * if this is called after rescale_empirical_fromraw(), then 
-	//   all the histograms should come out scaled correctly.
-	// **The important thing is that both must be called.
-	double scale_factor = n_total_counts/N_total_counts;
-	h_tp -> Scale(scale_factor);
-	h_tm -> Scale(scale_factor);
-	h_bp -> Scale(scale_factor);
-	h_bm -> Scale(scale_factor);
-	
-	N_total_counts = n_total_counts;
-	N_tp = N_tp*scale_factor;
-	N_tm = N_tm*scale_factor;
-	N_bp = N_bp*scale_factor;
-	N_bm = N_bm*scale_factor;
-}
-
-void created_histset::rescale_statistics_by_empirical()
-{ 
-	// Use this one if you've already set up all the N_countses for the 4 sub-hists.
-	h_tp -> Scale( N_tp/(h_tp->Integral()) );
-	h_tm -> Scale( N_tm/(h_tm->Integral()) );
-	h_bp -> Scale( N_bp/(h_bp->Integral()) );
-	h_bm -> Scale( N_bm/(h_bm->Integral()) );
-}
-
-void created_histset::rescale_statistics_by_fraction(double scale_factor)
-{ 
-	double n_total_counts = scale_factor*N_total_counts;
-	rescale_statistics_by_N(n_total_counts);
-}
-
-void created_histset::setup_counts(double n_total_counts, double n_tp=0, double n_tm=0, double n_bp=0, double n_bm=0)
+bool created_histset::setup_counts(double n_total_counts, double n_tp=0, double n_tm=0, double n_bp=0, double n_bm=0)
 {
 	N_total_counts = n_total_counts;
 	N_tp = n_tp;
 	N_tm = n_tm;
 	N_bp = n_bp;
 	N_bm = n_bm;
+	
+	bool setup_good = true;
+	if( N_total_counts != N_tp + N_tm + N_bp + N_bm )
+	{
+		cout << "ERROR!  Mismatched counts!" << endl;
+		cout << "N_total_counts = " << N_total_counts << endl;
+		cout << "N_tp + N_tm + N_bp + N_bm = " << N_tp + N_tm + N_bp + N_bm << endl;
+		setup_good = false;
+	}
+	return setup_good;
 }
-
-
 void created_histset::setup_counts_like_B()
 {
 	double n_total_counts = 196395;
@@ -599,6 +522,160 @@ void created_histset::setup_counts_like_D()
 	setup_counts(n_total_counts, n_tp, n_tm, n_bp, n_bm);
 }
 
+void created_histset::scale_stats(double n_total_counts)
+{
+	// originally:
+	// B:  196395
+	// C:   20177
+	// D:  232061
+	double scale_factor = n_total_counts/N_total_counts;
+	
+	N_total_counts = N_total_counts*scale_factor;
+	N_tp = N_tp * scale_factor;
+	N_tm = N_tm * scale_factor;
+	N_bp = N_bp * scale_factor;
+	N_bm = N_bm * scale_factor;
+}
+
+TH1D* created_histset::make_an_Ehist_more(double par_one, double par_A, double par_b)
+{
+	TH1D* tmp_Ehist = makehist_zeroslike(Wtilde_1_hist);
+	tmp_Ehist -> Add(Wtilde_1_hist, par_one);
+	tmp_Ehist -> Add(Wtilde_A_hist, -1.0*par_A);
+	tmp_Ehist -> Add(Wtilde_b_hist, par_b);
+	
+	return tmp_Ehist;
+}
+TH1D* created_histset::make_an_Ehist_less(double par_one, double par_A, double par_b)
+{
+	TH1D* tmp_Ehist = makehist_zeroslike(Wtilde_1_hist);
+	tmp_Ehist -> Add(Wtilde_1_hist, par_one);
+	tmp_Ehist -> Add(Wtilde_A_hist, 1.0*par_A);
+	tmp_Ehist -> Add(Wtilde_b_hist, par_b);
+	
+	return tmp_Ehist;
+}
+TH1D* created_histset::make_all_Ehists()
+{
+	if(h_tp==0 || h_tm==0 || h_bp==0 || h_bm==0)
+	{
+		cout << "uh-oh..." << endl;
+	}
+	
+	h_tp = make_an_Ehist_less(parsize_one, parsize_A*pol_plus *avg_costheta, parsize_b);
+	h_tm = make_an_Ehist_more(parsize_one, parsize_A*pol_minus*avg_costheta, parsize_b);
+	h_bp = make_an_Ehist_more(parsize_one, parsize_A*pol_plus *avg_costheta, parsize_b);
+	h_bm = make_an_Ehist_less(parsize_one, parsize_A*pol_minus*avg_costheta, parsize_b);
+//	rescale_empirical(); // everything is scaled correctly now, so h_asym and h_counts will be too.
+	
+	h_asym = make_asymmetry_histogram(h_tp, h_tm, h_bp, h_bm, string("A_super"));
+	h_counts = make_asymcounts_histogram(h_tp, h_tm, h_bp, h_bm, string("Counts for A_super"));
+
+// TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, string hist_title = string("A_beta"), int color=int(kBlack), int plotmarkerstyle=20)
+	
+	if(!use_errs) { h_asym->Sumw2(false); }
+	return h_asym;
+}
+TH1D* created_histset::make_all_Ehists(double this_size_one, double this_size_A, double this_size_b)
+{
+	set_physics_params(this_size_one, this_size_A, this_size_b);
+	make_all_Ehists();
+	return h_asym;
+}
+void created_histset::rescale_empirical()
+{
+	if(N_tp!=0 && N_tm!=0 && N_bp!=0 && N_bm!=0)
+	{
+//		cout << "Warning:  an empirical rescale doesn't appropriately take into account ";
+//		cout << "the difference between detector efficiency and trap location.  "; 
+//		cout << "This will be implemented later.  Maybe." << endl;
+		
+		h_tp -> Scale( N_tp / (h_tp->Integral()) );
+		h_tm -> Scale( N_tm / (h_tm->Integral()) );
+		h_bp -> Scale( N_bp / (h_bp->Integral()) );
+		h_bm -> Scale( N_bm / (h_bm->Integral()) );
+	}
+	else
+	{
+		cout << "ERROR!  Could not rescale histograms.  Everything will be wrong!" << endl;
+	}
+}
+/*
+void created_histset::scale_hists(double n_total_counts)
+{ 
+	double scale_factor = n_total_counts/N_total_counts;
+	h_tp -> Scale(scale_factor);
+	h_tm -> Scale(scale_factor);
+	h_bp -> Scale(scale_factor);
+	h_bm -> Scale(scale_factor);
+	
+	N_total_counts = n_total_counts;
+	N_tp = N_tp*scale_factor;
+	N_tm = N_tm*scale_factor;
+	N_bp = N_bp*scale_factor;
+	N_bm = N_bm*scale_factor;
+}
+*/
+
+
+/*
+void created_histset::make_all_the_Ehists()
+{
+	h_tp = make_an_Ehist_less(size_one, size_A*pol_plus*avg_costheta,  size_b);
+//	h_tp -> Scale(top_efficiency*N_plus_rel);
+	h_tm = make_an_Ehist_more(size_one, size_A*pol_minus*avg_costheta, size_b);
+//	h_tm -> Scale(top_efficiency*N_minus_rel);
+	
+	h_bp = make_an_Ehist_more(size_one, size_A*pol_plus*avg_costheta,  size_b);
+//	h_bp -> Scale(bottom_efficiency*N_plus_rel);
+	h_bm = make_an_Ehist_less(size_one, size_A*pol_minus*avg_costheta, size_b);
+//	h_bm -> Scale(bottom_efficiency*N_minus_rel);
+	
+	// rescale them all by N_total_counts.  but only if N!=0.
+}
+*/
+
+
+/*
+void created_histset::rescale_theoretical_fromraw()
+{
+	h_tp -> Scale(top_efficiency*N_plus_rel);
+	h_tm -> Scale(top_efficiency*N_minus_rel);
+	h_bp -> Scale(bottom_efficiency*N_plus_rel);
+	h_bm -> Scale(bottom_efficiency*N_minus_rel);
+	
+	if(N_total_counts!=0)
+	{
+		double tmp_N = 0;
+		tmp_N = h_tp->Integral() + h_tm->Integral() + h_bp->Integral() + h_bm->Integral();
+		
+		h_tp -> Scale(N_total_counts/tmp_N);
+		h_tm -> Scale(N_total_counts/tmp_N);
+		h_bp -> Scale(N_total_counts/tmp_N);
+		h_bm -> Scale(N_total_counts/tmp_N);
+	}
+}
+*/
+
+/*
+void created_histset::rescale_statistics_by_empirical()
+{ 
+	// Use this one if you've already set up all the N_countses for the 4 sub-hists.
+	h_tp -> Scale( N_tp/(h_tp->Integral()) );
+	h_tm -> Scale( N_tm/(h_tm->Integral()) );
+	h_bp -> Scale( N_bp/(h_bp->Integral()) );
+	h_bm -> Scale( N_bm/(h_bm->Integral()) );
+}
+*/
+/*
+void created_histset::rescale_statistics_by_fraction(double scale_factor)
+{ 
+	double n_total_counts = scale_factor*N_total_counts;
+	rescale_statistics_by_N(n_total_counts);
+}
+*/
+
+/*
 TH1D* created_histset::assemble_AsymmetrySuperratio()
 {
 	// they must all be correctly scaled, already.
@@ -613,7 +690,7 @@ TH1D* assemble_AsymmetrySuperratio(created_histset * chf)
 	TH1D* this_h_asym = make_asymmetry_histogram(chf->h_tp, chf->h_tm, chf->h_bp, chf->h_bm, string("A_super"), int(kBlack));
 	return this_h_asym;
 }
-
+*/
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
