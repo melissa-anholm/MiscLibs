@@ -97,7 +97,7 @@ public:
 	void SetMaxCalls(int maxcalls);
 	void SetAcceptableErr(double err_est);
 	
-	void DumpBestFitParams();
+//	void DumpBestFitParams();
 	void DumpCurrentFitParams();
 	
 	void SetupOutput(string o_type, string o_fname=string("fitoutput.txt"), int o_verbosity=1);

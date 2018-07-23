@@ -120,3 +120,24 @@ TF1 * make_Wtilde_b()  // x-axis is beta kinetic energy in keV.  "E_scint".
 	return Wtilde_b;
 }
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+
+TF1* make_gaussian_func(double center, double sigma, double area)
+{
+	TF1* gaussian_func = new TF1("gaussian_func_keV", "[0]/(sqrt(2*pi)*[2]) * exp(-0.5*((x-[1])/[2])**2)", 0.0, 6000.0);
+	gaussian_func -> SetParNames("area", "mean", "sigma");
+	gaussian_func -> SetParameter("area",  area);
+	gaussian_func -> SetParameter("mean",  center);
+	gaussian_func -> SetParameter("sigma", sigma);
+	
+	return gaussian_func;
+}
+
+/*
+TF1* make_gaussian_func(double center, double sigma, double area)
+{
+	TF1* gaussian_func = new TF1("gaussian_func_keV", )
+	
+}
+*/
+
+

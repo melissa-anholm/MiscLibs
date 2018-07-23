@@ -224,7 +224,9 @@ TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_his
 	superratio -> SetMarkerStyle(plotmarkerstyle);
 //	superratio -> SetMarkerStyle(20);  // 20:  big circles.
 //	superratio -> SetMarkerStyle(22);  // 22:  solid up-triangles.
-
+	
+	superratio -> SetOption("E1L");
+	
 	return superratio;
 }
 
@@ -606,7 +608,8 @@ TH1D* get_residuals(TH1D* h1, TH1D* h2, double ymin=0, double ymax=0)
 	new_hist -> SetMarkerColor(kBlack);
 	new_hist -> SetLineColor(kBlack);
 	new_hist -> SetMarkerStyle(20);
-	new_hist -> SetMarkerSize(1.0);
+//	new_hist -> SetMarkerSize(1.0);
+	new_hist -> SetMarkerSize(0.8);
 //	new_hist -> GetYaxis() -> SetRangeUser(-0.08, 0.08);
 //	new_hist -> GetYaxis() -> SetRangeUser(-2.0, 2.0);
 	if(ymin!=ymax)

@@ -201,7 +201,7 @@ void combo_histfitter::RemoveHistAndParam(string paramname)
 
 TH1D* combo_histfitter::assemble_new_histogram()
 {
-	tmp_hist = makehist_zeroslike(FitHist);
+	tmp_hist = makehist_zeroslike(FitHist, string(FitHist->GetName()) );
 	for(int i=0; i<n_params; i++)
 	{
 		tmp_hist -> Add( histvect.at(i), paramvect.at(i).fit_val ); // might need to reference param from inside the superminuit.

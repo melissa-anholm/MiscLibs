@@ -55,11 +55,16 @@ string double_to_string(double thisnumber, int thisprecision=3)  //
 	string mynumberstring = oss.str();
 	return mynumberstring;
 }
-TH1D* makehist_zeroslike(TH1D* oldhist)
+TH1D* makehist_zeroslike(TH1D* oldhist, string newname)
 {
-	string newname = "tmpname";
-	int newcolor = kBlack;
+//	string newname = "tmpname";
+//	int newcolor = kBlack;
+	int newcolor = int(oldhist->GetLineColor());
+//	TH1D * newhist = new TH1D(*oldhist);  // doesn't copy the list of functions.
 	TH1D * newhist = (TH1D*)oldhist -> Clone(newname.c_str());
+//	newhist = new TH1D(*newhist);
+	
+	// delete the list of functions...
 	
 	newhist -> Sumw2(kFALSE);
 	newhist -> SetName(newname.c_str());
@@ -116,6 +121,55 @@ bool HistsHaveSameBinning2(TH1D *a, TH1D *b, bool verbose=false)
 	}
 	return same;
 }
+
+TH1D* make_th1_from_tf1(TF1* this_tf1, string hist_type, string new_hist_title, int this_color=int(kBlack))
+{ // rescale so Abeta is 1 before calling this, maybe?
+	double x_min = this_tf1->GetXmin();
+	double x_max = this_tf1->GetXmax();
+	int rebin_factor=1;
+	TH1D * new_hist = CreateHist(new_hist_title, hist_type, this_color, rebin_factor);
+	int n_bins = new_hist->GetNbinsX();
+	
+	for (int i=1; i<n_bins; i++)  // Bins i=0, i=n_bins are the underflow and overflow?
+	{
+		if( new_hist->GetBinCenter(i) - 0.5*(new_hist->GetBinWidth(i)) >= x_min 
+		 && new_hist->GetBinCenter(i) + 0.5*(new_hist->GetBinWidth(i)) <= x_max )
+		{
+			new_hist -> SetBinContent(i, this_tf1->Eval(new_hist->GetBinCenter(i)) );
+		}
+		else
+		{
+			new_hist -> SetBinContent(i, 0.0 );
+		}
+	}
+//	new_hist->GetListOfFunctions()->Add(this_tf1);
+	return new_hist;
+}
+
+TH1D * evaluate_gaussian(string hist_type, double center, double lambda, double counts_total)
+{
+	TH1D* gaussian_hist = new TH1D();
+	TH1D * tmp_hist = CreateHist("tmp", hist_type, int(kBlack), 1);
+	if(counts_total > 0)
+	{
+		double sigma = sqrt(lambda*center);
+		double area = counts_total*tmp_hist->GetBinWidth(1);
+	
+		TF1* gaussian_func = make_gaussian_func(center, sigma, area);
+		gaussian_hist = make_th1_from_tf1(gaussian_func, hist_type, "tmp_gaussian");
+		double scale_factor = counts_total/gaussian_hist->Integral();
+		gaussian_hist -> Scale( scale_factor );
+	}
+	else
+	{
+		gaussian_hist = makehist_zeroslike(tmp_hist, "tmp_gaussian");
+	}
+	tmp_hist -> Delete();
+	
+	return gaussian_hist;
+}
+
+
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 
 
@@ -303,7 +357,15 @@ asym_histset * get_pair_ben_B()
 		name_tp_default, name_tm_default, name_bp_default, name_bm_default);
 	if(pair_benB->has_counthists && verbose) { cout << "Successfully initialized counthists for Set B." << endl; }
 	else if (verbose) { cout << "Could not initialize counthists for Set B." << endl; }
-
+	
+	if(pair_benB->has_counthists)
+	{
+		pair_benB->h_tp -> SetName( (string("Ben Set B:  ")+string(pair_benB->h_tp->GetName())).c_str() );
+		pair_benB->h_tm -> SetName( (string("Ben Set B:  ")+string(pair_benB->h_tm->GetName())).c_str() );
+		pair_benB->h_bp -> SetName( (string("Ben Set B:  ")+string(pair_benB->h_bp->GetName())).c_str() );
+		pair_benB->h_bm -> SetName( (string("Ben Set B:  ")+string(pair_benB->h_bm->GetName())).c_str() );
+	}
+	
 	return pair_benB;
 }
 asym_histset * get_pair_ben_C()
@@ -330,6 +392,14 @@ asym_histset * get_pair_ben_C()
 	if(pair_benC->has_counthists && verbose) { cout << "Successfully initialized counthists for Set C." << endl; }
 	else if (verbose) { cout << "Could not initialize counthists for Set C." << endl; }
 
+	if(pair_benC->has_counthists)
+	{
+		pair_benC->h_tp -> SetName( (string("Ben Set C:  ")+string(pair_benC->h_tp->GetName())).c_str() );
+		pair_benC->h_tm -> SetName( (string("Ben Set C:  ")+string(pair_benC->h_tm->GetName())).c_str() );
+		pair_benC->h_bp -> SetName( (string("Ben Set C:  ")+string(pair_benC->h_bp->GetName())).c_str() );
+		pair_benC->h_bm -> SetName( (string("Ben Set C:  ")+string(pair_benC->h_bm->GetName())).c_str() );
+	}
+
 	return pair_benC;
 }
 asym_histset * get_pair_ben_D()
@@ -355,6 +425,15 @@ asym_histset * get_pair_ben_D()
 		name_tp_default, name_tm_default, name_bp_default, name_bm_default);
 	if(pair_benD->has_counthists && verbose) { cout << "Successfully initialized counthists for Set D." << endl; }
 	else if (verbose) { cout << "Could not initialize counthists for Set D." << endl; }
+
+	if(pair_benD->has_counthists)
+	{
+		pair_benD->h_tp -> SetName( (string("Ben Set D:  ")+string(pair_benD->h_tp->GetName())).c_str() );
+		pair_benD->h_tm -> SetName( (string("Ben Set D:  ")+string(pair_benD->h_tm->GetName())).c_str() );
+		pair_benD->h_bp -> SetName( (string("Ben Set D:  ")+string(pair_benD->h_bp->GetName())).c_str() );
+		pair_benD->h_bm -> SetName( (string("Ben Set D:  ")+string(pair_benD->h_bm->GetName())).c_str() );
+	}
+
 	return pair_benD;
 }
 asym_histset * get_g4_asymhist_pair(double rho, string setletter)
@@ -378,7 +457,7 @@ public:
 	created_histset();
 	created_histset(TH1D*, TH1D*, TH1D*);
 	
-	void set_hists(TH1D*, TH1D*, TH1D*);
+	bool set_hists(TH1D*, TH1D*, TH1D*);
 	TH1D* Wtilde_1_hist;
 	TH1D* Wtilde_A_hist;
 	TH1D* Wtilde_b_hist;
@@ -405,26 +484,42 @@ public:
 	TH1D* make_all_Ehists(double, double, double);
 //	TH1D* assemble_AsymmetrySuperratio();
 	
+	void set_efficiency_by_N();
 	double top_efficiency;
 	double bottom_efficiency;
+	void rescale_by_efficiency();
+	
 	double N_plus_rel;
 	double N_minus_rel;
 	double pol_plus;
 	double pol_minus;
 	double avg_costheta;
 	
-	
-	void rescale_empirical();
-	void rescale_all(double n_total_counts);
+	void rescale_by_stats();
+//	void rescale_empirical();
+//	void rescale_all(double n_total_counts);
 	
 //	void rescale_statistics_by_fraction(double scale_factor);
 //	void rescale_theoretical_fromraw();
 //	void rescale_statistics_by_empirical();
 	
+	void setup_convolution_params(double, double, double);
+	double lambda_top;
+	double lambda_bottom;
+	double fraction_flat;
+	
+	void set_do_convolution(bool doitornot) { do_numerical_convolution=doitornot; }
+	void convolute_hists();
+	void do_the_flat_bit();
+	void do_the_gaussian_bit();
+	
+	void setup_plotstyle();
+	
 private:
+	bool do_numerical_convolution;
 	bool use_errs;
-	TH1D* make_an_Ehist_more(double, double, double);
-	TH1D* make_an_Ehist_less(double, double, double);
+	TH1D* make_an_Ehist_more(double, double, double, string);
+	TH1D* make_an_Ehist_less(double, double, double, string);
 };
 
 created_histset::created_histset()
@@ -440,9 +535,14 @@ created_histset::created_histset(TH1D* w1, TH1D* wA, TH1D* wb)
 	asym_histset();
 	set_hists(w1, wA, wb);
 	set_physics_params();
+	setup_convolution_params(0.10, 1.4, 1.4);
 
 	use_errs = true;
-
+	do_numerical_convolution = false;
+//	double lambda_top    = 0.0;
+//	double lambda_bottom = 0.0;
+//	double fraction_flat = 0.0;
+	
 	top_efficiency      = 1.0;
 	bottom_efficiency   = 1.0;
 	N_plus_rel          = 1.0;
@@ -458,7 +558,7 @@ created_histset::created_histset(TH1D* w1, TH1D* wA, TH1D* wb)
 	N_bp = 0;
 	N_bm = 0;
 }
-void created_histset::set_hists(TH1D* w1, TH1D* wA, TH1D* wb)
+bool created_histset::set_hists(TH1D* w1, TH1D* wA, TH1D* wb)
 {
 	Wtilde_1_hist = w1;
 	Wtilde_A_hist = wA;
@@ -468,7 +568,14 @@ void created_histset::set_hists(TH1D* w1, TH1D* wA, TH1D* wb)
 	
 	same_binning = HistsHaveSameBinning2(Wtilde_1_hist, Wtilde_A_hist) 
 		&& HistsHaveSameBinning2(Wtilde_1_hist, Wtilde_b_hist);
+		
+	if (!same_binning)
+	{
+		cout << "You fail at assigning histograms to this class." << endl;
+	}
 	// re-rescale things now?
+	
+	return same_binning;
 }
 void created_histset::set_physics_params(double par_one, double par_A, double par_b)
 {
@@ -492,6 +599,8 @@ bool created_histset::setup_counts(double n_total_counts, double n_tp=0, double 
 		cout << "N_tp + N_tm + N_bp + N_bm = " << N_tp + N_tm + N_bp + N_bm << endl;
 		setup_good = false;
 	}
+	
+	set_efficiency_by_N();
 	return setup_good;
 }
 void created_histset::setup_counts_like_B()
@@ -502,6 +611,9 @@ void created_histset::setup_counts_like_B()
 	double n_bp = 78222;
 	double n_bm = 23571;
 	setup_counts(n_total_counts, n_tp, n_tm, n_bp, n_bm);
+	
+	lambda_top    = 1.55;
+	lambda_bottom = 1.28;
 }
 void created_histset::setup_counts_like_C()
 {
@@ -511,6 +623,9 @@ void created_histset::setup_counts_like_C()
 	double n_bp = 8183;
 	double n_bm = 2360;
 	setup_counts(n_total_counts, n_tp, n_tm, n_bp, n_bm);
+	
+	lambda_top    = 1.42;
+	lambda_bottom = 1.32;
 }
 void created_histset::setup_counts_like_D()
 {
@@ -520,6 +635,30 @@ void created_histset::setup_counts_like_D()
 	double n_bp = 92961;
 	double n_bm = 28004;
 	setup_counts(n_total_counts, n_tp, n_tm, n_bp, n_bm);
+	
+	lambda_top    = 1.42;
+	lambda_bottom = 1.32;
+}
+
+void created_histset::setup_convolution_params(double flatfrac, double lambda_t, double lambda_b)
+{
+	fraction_flat = flatfrac;
+	lambda_top    = lambda_t;
+	lambda_bottom = lambda_b;
+}
+
+void created_histset::set_efficiency_by_N()
+{
+	if(N_tp==0 || N_tm==0 || N_bp==0 || N_bm==0)
+	{
+		cout << "Nope.  Can't set the efficiencies." << endl;
+		return;
+	}
+	double n_top    = N_tp+N_tm;
+	double n_bottom = N_bp+N_bm;
+	
+	top_efficiency = 1.0;
+	bottom_efficiency = n_bottom/n_top;
 }
 
 void created_histset::scale_stats(double n_total_counts)
@@ -537,21 +676,25 @@ void created_histset::scale_stats(double n_total_counts)
 	N_bm = N_bm * scale_factor;
 }
 
-TH1D* created_histset::make_an_Ehist_more(double par_one, double par_A, double par_b)
+TH1D* created_histset::make_an_Ehist_more(double par_one, double par_A, double par_b, string name="")
 {
-	TH1D* tmp_Ehist = makehist_zeroslike(Wtilde_1_hist);
+	TH1D* tmp_Ehist = makehist_zeroslike(Wtilde_1_hist, name);
 	tmp_Ehist -> Add(Wtilde_1_hist, par_one);
 	tmp_Ehist -> Add(Wtilde_A_hist, -1.0*par_A);
 	tmp_Ehist -> Add(Wtilde_b_hist, par_b);
-	
+//	tmp_Ehist -> SetName(name.c_str());
+//	tmp_Ehist -> SetTitle(name.c_str());
+
 	return tmp_Ehist;
 }
-TH1D* created_histset::make_an_Ehist_less(double par_one, double par_A, double par_b)
+TH1D* created_histset::make_an_Ehist_less(double par_one, double par_A, double par_b, string name="")
 {
-	TH1D* tmp_Ehist = makehist_zeroslike(Wtilde_1_hist);
+	TH1D* tmp_Ehist = makehist_zeroslike(Wtilde_1_hist, name);
 	tmp_Ehist -> Add(Wtilde_1_hist, par_one);
 	tmp_Ehist -> Add(Wtilde_A_hist, 1.0*par_A);
 	tmp_Ehist -> Add(Wtilde_b_hist, par_b);
+//	tmp_Ehist -> SetName(name.c_str());
+//	tmp_Ehist -> SetTitle(name.c_str());
 	
 	return tmp_Ehist;
 }
@@ -559,21 +702,32 @@ TH1D* created_histset::make_all_Ehists()
 {
 	if(h_tp==0 || h_tm==0 || h_bp==0 || h_bm==0)
 	{
-		cout << "uh-oh..." << endl;
+		cout << "Uh-oh..." << endl;
 	}
 	
-	h_tp = make_an_Ehist_less(parsize_one, parsize_A*pol_plus *avg_costheta, parsize_b);
-	h_tm = make_an_Ehist_more(parsize_one, parsize_A*pol_minus*avg_costheta, parsize_b);
-	h_bp = make_an_Ehist_more(parsize_one, parsize_A*pol_plus *avg_costheta, parsize_b);
-	h_bm = make_an_Ehist_less(parsize_one, parsize_A*pol_minus*avg_costheta, parsize_b);
+	h_tp = make_an_Ehist_less(parsize_one, parsize_A*pol_plus *avg_costheta, parsize_b, "TP");
+	h_tm = make_an_Ehist_more(parsize_one, parsize_A*pol_minus*avg_costheta, parsize_b, "TM");
+	h_bp = make_an_Ehist_more(parsize_one, parsize_A*pol_plus *avg_costheta, parsize_b, "BP");
+	h_bm = make_an_Ehist_less(parsize_one, parsize_A*pol_minus*avg_costheta, parsize_b, "BM");
 //	rescale_empirical(); // everything is scaled correctly now, so h_asym and h_counts will be too.
+	rescale_by_stats();
+	rescale_by_efficiency();
+	
+	if(do_numerical_convolution)
+	{
+		convolute_hists();
+	}
 	
 	h_asym = make_asymmetry_histogram(h_tp, h_tm, h_bp, h_bm, string("A_super"));
 	h_counts = make_asymcounts_histogram(h_tp, h_tm, h_bp, h_bm, string("Counts for A_super"));
 
 // TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, string hist_title = string("A_beta"), int color=int(kBlack), int plotmarkerstyle=20)
 	
+	h_asym->SetOption("E1L");
+	h_asym->SetMarkerSize(0.5);
 	if(!use_errs) { h_asym->Sumw2(false); }
+//	else { h_asym->SetOption("E1L"); }
+	
 	return h_asym;
 }
 TH1D* created_histset::make_all_Ehists(double this_size_one, double this_size_A, double this_size_b)
@@ -582,7 +736,8 @@ TH1D* created_histset::make_all_Ehists(double this_size_one, double this_size_A,
 	make_all_Ehists();
 	return h_asym;
 }
-void created_histset::rescale_empirical()
+/*
+void created_histset::rescale_empirical() // turns out this function is a fucking disaster.
 {
 	if(N_tp!=0 && N_tm!=0 && N_bp!=0 && N_bm!=0)
 	{
@@ -600,6 +755,425 @@ void created_histset::rescale_empirical()
 		cout << "ERROR!  Could not rescale histograms.  Everything will be wrong!" << endl;
 	}
 }
+*/
+void created_histset::rescale_by_stats()
+{
+	double N_total_counts_current = h_tp->Integral() + h_tm->Integral() + h_bp->Integral() + h_bm->Integral();
+	double scale_factor = N_total_counts/N_total_counts_current;
+	
+	h_tp -> Scale(scale_factor);
+	h_tm -> Scale(scale_factor);
+	h_bp -> Scale(scale_factor);
+	h_bm -> Scale(scale_factor);
+}
+
+void created_histset::rescale_by_efficiency()
+{
+	h_tp -> Scale( top_efficiency );
+	h_tm -> Scale( top_efficiency );
+	h_bp -> Scale( bottom_efficiency );
+	h_bm -> Scale( bottom_efficiency );
+}
+
+void created_histset::convolute_hists()
+{
+	do_the_flat_bit();
+	do_the_gaussian_bit();
+}
+
+TH1D* do_the_gaussian_bit_individual(TH1D* oldhist, double lambda)
+{
+	TH1D * this_hist = oldhist;
+	int n_bins = oldhist -> GetNbinsX();
+	const char * thename = oldhist -> GetName();
+	TH1D* this_clone = makehist_zeroslike(oldhist, "tmp3");
+	
+//	TH1D * this_hist;
+//	TH1D * this_clone;
+	TH1D * res_gauss;
+	double this_lambda;
+	
+	double old_bincount;
+	double old_clonecontent;
+	double new_bincount;
+	double total_counts = 0;
+	
+//	this_hist  = oldhist;
+//	this_clone = newhist;
+	this_lambda = lambda;
+	for (int i=1; i<n_bins; i++)
+	{
+		old_bincount = this_hist->GetBinContent(i);
+		res_gauss = evaluate_gaussian("Ben_Ebeta", this_hist->GetBinCenter(i), this_lambda, old_bincount);
+		for (int j=1; j<n_bins; j++)
+		{
+			this_clone -> SetBinContent(j, this_clone->GetBinContent(j) + res_gauss->GetBinContent(j) );
+		}
+		res_gauss -> Delete();
+	}
+	
+	oldhist = (TH1D*) this_clone -> Clone(thename);
+	oldhist -> SetName(thename);
+	oldhist -> SetTitle(thename);
+	
+	return oldhist;
+}
+
+void created_histset::do_the_gaussian_bit()
+{
+	h_tp = do_the_gaussian_bit_individual(h_tp, lambda_top);
+	h_tm = do_the_gaussian_bit_individual(h_tm, lambda_top);
+	h_bp = do_the_gaussian_bit_individual(h_bp, lambda_bottom);
+	h_bm = do_the_gaussian_bit_individual(h_bm, lambda_bottom);
+}
+
+
+/*
+void created_histset::do_the_gaussian_bit()
+{
+	int verbose = 0;
+//	cout << "Called gaussian bit." << endl;
+	
+	if(h_tp==0 || h_tm==0 || h_bp==0 || h_bm==0) { cout << "Uh-oh..." << endl; return; }
+	int n_bins = h_tp -> GetNbinsX();
+	
+	TH1D* h_tp_tmp = makehist_zeroslike(h_tp, "tmp2_tp");
+	TH1D* h_tm_tmp = makehist_zeroslike(h_tm, "tmp2_tm");
+	TH1D* h_bp_tmp = makehist_zeroslike(h_bp, "tmp2_bp");
+	TH1D* h_bm_tmp = makehist_zeroslike(h_bm, "tmp2_bm");
+	if(h_tp_tmp==0 || h_tm_tmp==0 || h_bp_tmp==0 || h_bm_tmp==0) { cout << "There are no clones!!" << endl; return; }
+	
+	TH1D * this_hist;
+	TH1D * this_clone;
+	TH1D * res_gauss;
+	double this_lambda;
+	
+	double old_bincount;
+	double old_clonecontent;
+	double new_bincount;
+	double total_counts = 0;
+	//
+	this_hist  = h_tp;
+	this_clone = h_tp_tmp;
+	this_lambda = lambda_top;
+	for (int i=1; i<n_bins; i++)
+	{
+		old_bincount = this_hist->GetBinContent(i);
+		res_gauss = evaluate_gaussian("Ben_Ebeta", this_hist->GetBinCenter(i), this_lambda, old_bincount);
+		for (int j=1; j<n_bins; j++)
+		{
+			this_clone -> SetBinContent(j, this_clone->GetBinContent(j) + res_gauss->GetBinContent(j) );
+		}
+		res_gauss -> Delete();
+	}
+	if(verbose>0)
+	{
+		total_counts = this_hist -> Integral();
+		cout << "TP:  original:  N=" << total_counts << ",\tafterward:  N=" << this_clone -> Integral();// << endl;
+		cout << "diff = " << total_counts - this_clone -> Integral() << endl;
+	}
+	this_hist  = h_tm;
+	this_clone = h_tm_tmp;
+	this_lambda = lambda_top;
+//	total_counts = this_hist -> Integral();
+	for (int i=1; i<n_bins; i++)
+	{
+		old_bincount = this_hist->GetBinContent(i);
+		res_gauss = evaluate_gaussian("Ben_Ebeta", this_hist->GetBinCenter(i), this_lambda, old_bincount);
+		for (int j=1; j<n_bins; j++)
+		{
+			this_clone -> SetBinContent(j, this_clone->GetBinContent(j) + res_gauss->GetBinContent(j) );
+		}
+		res_gauss -> Delete();
+	}
+	if(verbose>0)
+	{
+		total_counts = this_hist -> Integral();
+		cout << "TM:  original:  N=" << total_counts << ",\tafterward:  N=" << this_clone -> Integral();// << endl;
+		cout << "diff = " << total_counts - this_clone -> Integral() << endl;
+	}
+
+	this_hist  = h_bp;
+	this_clone = h_bp_tmp;
+	this_lambda = lambda_bottom;
+//	total_counts = this_hist -> Integral();
+	for (int i=1; i<n_bins; i++)
+	{
+		old_bincount = this_hist->GetBinContent(i);
+		res_gauss = evaluate_gaussian("Ben_Ebeta", this_hist->GetBinCenter(i), this_lambda, old_bincount);
+		for (int j=1; j<n_bins; j++)
+		{
+			this_clone -> SetBinContent(j, this_clone->GetBinContent(j) + res_gauss->GetBinContent(j) );
+		}
+		res_gauss -> Delete();
+	}
+	if(verbose>0)
+	{
+		total_counts = this_hist -> Integral();
+		cout << "BP:  original:  N=" << total_counts << ",\tafterward:  N=" << this_clone -> Integral();// << endl;
+		cout << "diff = " << total_counts - this_clone -> Integral() << endl;
+	}
+	
+	this_hist  = h_bm;
+	this_clone = h_bm_tmp;
+	this_lambda = lambda_bottom;
+//	total_counts = this_hist -> Integral();
+	for (int i=1; i<n_bins; i++)
+	{
+		old_bincount = this_hist->GetBinContent(i);
+		res_gauss = evaluate_gaussian("Ben_Ebeta", this_hist->GetBinCenter(i), this_lambda, old_bincount);
+		for (int j=1; j<n_bins; j++)
+		{
+			this_clone -> SetBinContent(j, this_clone->GetBinContent(j) + res_gauss->GetBinContent(j) );
+		}
+		res_gauss -> Delete();
+	}
+	if(verbose>0)
+	{
+		total_counts = this_hist -> Integral();
+		cout << "BM:  original:  N=" << total_counts << ",\tafterward:  N=" << this_clone -> Integral();// << endl;
+		cout << "diff = " << total_counts - this_clone -> Integral() << endl;
+	}
+	
+	
+	h_tp = (TH1D*)h_tp_tmp -> Clone();
+	h_tm = (TH1D*)h_tm_tmp -> Clone();
+	h_bp = (TH1D*)h_bp_tmp -> Clone();
+	h_bm = (TH1D*)h_bm_tmp -> Clone();
+	
+	h_tp -> SetName("TP");
+	h_tp -> SetTitle("TP");
+	h_tm -> SetName("TM");
+	h_tm -> SetTitle("TM");
+	h_bp -> SetName("BP");
+	h_bp -> SetTitle("BP");
+	h_bm -> SetName("BM");
+	h_bm -> SetTitle("BM");
+}
+
+*/
+
+TH1D* do_the_flat_bit_individual(TH1D* oldhist, double flatfrac)
+{
+	TH1D * this_hist  = oldhist;
+	const char * thename = oldhist -> GetName();
+	int n_bins = oldhist -> GetNbinsX();
+	TH1D * this_clone = makehist_zeroslike(oldhist, "tmp_4");
+
+	double fraction_flat = flatfrac;
+	double old_bincount;
+	double new_bincount;
+	double flatbit_for_each_bin;
+//	double total_counts;
+	double n_bins_to_use;
+	for (int i=0; i<n_bins; i++)
+	{
+		old_bincount = this_hist->GetBinContent(i);
+		this_clone -> SetBinContent(i, old_bincount);
+		if(i>=2)
+		{
+			n_bins_to_use = double(i) - 1.0;
+			flatbit_for_each_bin = (fraction_flat*old_bincount)/n_bins_to_use;
+			
+			this_clone -> SetBinContent(i, (1.0-fraction_flat)*old_bincount );
+			for(int j=i-1; j>0; j--)
+			{
+				this_clone -> SetBinContent(j, this_clone->GetBinContent(j)+flatbit_for_each_bin );
+			}
+		}
+	}
+	oldhist = (TH1D*) this_clone -> Clone(thename);
+	oldhist -> SetName(thename);
+	oldhist -> SetTitle(thename);
+	
+	return oldhist;
+}
+
+void created_histset::do_the_flat_bit()
+{
+	h_tp = do_the_flat_bit_individual(h_tp, fraction_flat);
+	h_tm = do_the_flat_bit_individual(h_tm, fraction_flat);
+	h_bp = do_the_flat_bit_individual(h_bp, fraction_flat);
+	h_bm = do_the_flat_bit_individual(h_bm, fraction_flat);
+}
+
+
+/*
+void created_histset::do_the_flat_bit()
+{
+	int verbose = 0;
+//	fraction_flat = 0.10;
+	
+	TH1D * this_hist;
+	TH1D * this_clone;
+
+	int n_bins = h_tp -> GetNbinsX();
+	if(h_tp==0 || h_tm==0 || h_bp==0 || h_bm==0)
+	{
+		cout << "Uh-oh..." << endl;
+	}
+
+	TH1D* h_tp_tmp = makehist_zeroslike(h_tp, "tmp_tp");
+	TH1D* h_tm_tmp = makehist_zeroslike(h_tm, "tmp_tm");
+	TH1D* h_bp_tmp = makehist_zeroslike(h_bp, "tmp_bp");
+	TH1D* h_bm_tmp = makehist_zeroslike(h_bm, "tmp_bm");
+	if(h_tp==0 || h_tm==0 || h_bp==0 || h_bm==0)
+	{
+		cout << "Hists went away.  :(" << endl;
+	}
+	if(h_tp_tmp==0 || h_tm_tmp==0 || h_bp_tmp==0 || h_bm_tmp==0)
+	{
+		cout << "There are no clones!!" << endl;
+	}
+	
+	double old_bincount;
+	double new_bincount;
+	double flatbit_for_each_bin;
+	double total_counts;
+	double n_bins_to_use;
+	// Flatbit first...
+
+	this_hist  = h_tp;
+	this_clone = h_tp_tmp;
+	total_counts = this_hist -> Integral();
+	for (int i=0; i<n_bins; i++)
+	{
+		old_bincount = this_hist->GetBinContent(i);
+		this_clone -> SetBinContent(i, old_bincount);
+		if(i>=2)
+		{
+			n_bins_to_use = double(i) - 1.0;
+			flatbit_for_each_bin = (fraction_flat*old_bincount)/n_bins_to_use;
+			
+			this_clone -> SetBinContent(i, (1.0-fraction_flat)*old_bincount );
+			for(int j=i-1; j>0; j--)
+			{
+				this_clone -> SetBinContent(j, this_clone->GetBinContent(j)+flatbit_for_each_bin );
+			}
+		}
+	}
+	if(verbose>=1)
+	{
+		cout << "original:  N=" << total_counts << ",\tafterward:  N=" << this_clone -> Integral() << endl;
+	}
+	
+	this_hist  = h_tm;
+	this_clone = h_tm_tmp;
+	total_counts = this_hist -> Integral();
+	
+	for (int i=0; i<n_bins; i++)
+	{
+		old_bincount = this_hist->GetBinContent(i);
+		this_clone -> SetBinContent(i, old_bincount);
+		if(i>=2)
+		{
+			n_bins_to_use = double(i) - 1.0;
+			flatbit_for_each_bin = (fraction_flat*old_bincount)/n_bins_to_use;
+			this_clone -> SetBinContent(i, (1.0-fraction_flat)*old_bincount );
+			
+			for(int j=i-1; j>0; j--)
+			{
+			//	this_clone -> SetBinContent(i, this_clone->GetBinContent(j)+flatbit_for_each_bin );
+				this_clone -> SetBinContent(j, this_clone->GetBinContent(j)+flatbit_for_each_bin );
+			}
+		}
+	}
+	if(verbose>=1)
+	{
+		cout << "original:  N=" << total_counts << ",\tafterward:  N=" << this_clone -> Integral() << endl;
+	}
+	
+	this_hist  = h_bp;
+	this_clone = h_bp_tmp;
+	total_counts = this_hist -> Integral();
+	for (int i=0; i<n_bins; i++)
+	{
+		old_bincount = this_hist->GetBinContent(i);
+		this_clone -> SetBinContent(i, old_bincount);
+		if(i>=2)
+		{
+			n_bins_to_use = double(i) - 1.0;
+			flatbit_for_each_bin = (fraction_flat*old_bincount)/n_bins_to_use;
+			
+			this_clone -> SetBinContent(i, (1.0-fraction_flat)*old_bincount );
+			for(int j=i-1; j>0; j--)
+			{
+				this_clone -> SetBinContent(j, this_clone->GetBinContent(j)+flatbit_for_each_bin );
+			}
+		}
+	}
+	if(verbose>=1)
+	{
+		cout << "original:  N=" << total_counts << ",\tafterward:  N=" << this_clone -> Integral() << endl;
+	}
+
+	this_hist  = h_bm;
+	this_clone = h_bm_tmp;
+	total_counts = this_hist -> Integral();
+	for (int i=0; i<n_bins; i++)
+	{
+		old_bincount = this_hist->GetBinContent(i);
+		this_clone -> SetBinContent(i, old_bincount);
+		if(i>=2)
+		{
+			n_bins_to_use = double(i) - 1.0;
+			flatbit_for_each_bin = (fraction_flat*old_bincount)/n_bins_to_use;
+			
+			this_clone -> SetBinContent(i, (1.0-fraction_flat)*old_bincount );
+			for(int j=i-1; j>0; j--)
+			{
+				this_clone -> SetBinContent(j, this_clone->GetBinContent(j)+flatbit_for_each_bin );
+			}
+		}
+	}
+	if(verbose>=1)
+	{
+		cout << "original:  N=" << total_counts << ",\tafterward:  N=" << this_clone -> Integral() << endl;
+	}
+	h_tp = (TH1D*)h_tp_tmp -> Clone();
+	h_tm = (TH1D*)h_tm_tmp -> Clone();
+	h_bp = (TH1D*)h_bp_tmp -> Clone();
+	h_bm = (TH1D*)h_bm_tmp -> Clone();
+	
+	h_tp -> SetName("TP");
+	h_tp -> SetTitle("TP");
+	h_tm -> SetName("TM");
+	h_tm -> SetTitle("TM");
+	h_bp -> SetName("BP");
+	h_bp -> SetTitle("BP");
+	h_bm -> SetName("BM");
+	h_bm -> SetTitle("BM");
+}
+*/
+
+void created_histset::setup_plotstyle()
+{
+	h_tp -> SetName("TP");
+	h_tp -> SetTitle("TP");
+	h_tp -> SetLineColor(kGreen);
+	h_tp -> SetMarkerColor(kGreen);
+	
+	h_tm -> SetName("TM");
+	h_tm -> SetTitle("TM");
+	h_tm -> SetLineColor(mOrange);
+	h_tm -> SetMarkerColor(mOrange);
+	
+	h_bp -> SetName("BP");
+	h_bp -> SetTitle("BP");
+	h_bp -> SetLineColor(kBlue);
+	h_bp -> SetMarkerColor(kBlue);
+
+	h_bm -> SetName("BM");
+	h_bm -> SetTitle("BM");
+	h_bm -> SetLineColor(kMagenta);
+	h_bm -> SetMarkerColor(kMagenta);
+	
+	h_asym -> SetLineColor(kAzure);
+	h_asym -> SetMarkerColor(kAzure);
+	h_asym -> SetMarkerStyle(24);
+}
+
+
 /*
 void created_histset::scale_hists(double n_total_counts)
 { 
@@ -617,7 +1191,6 @@ void created_histset::scale_hists(double n_total_counts)
 }
 */
 
-
 /*
 void created_histset::make_all_the_Ehists()
 {
@@ -634,7 +1207,6 @@ void created_histset::make_all_the_Ehists()
 	// rescale them all by N_total_counts.  but only if N!=0.
 }
 */
-
 
 /*
 void created_histset::rescale_theoretical_fromraw()
