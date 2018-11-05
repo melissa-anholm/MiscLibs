@@ -21,7 +21,7 @@
 // already there in version 5.  New this version is backscatter 
 // event classification.
 // 
-// 11.12.2017:  version 7:  use overall BB1 threshold too!  60 keV.
+// 11.12.2017:  version 7: use overall BB1 threshold too!  60 keV.
 // 
 // 26.4.2018:  version 8:  added scintillator resolution 'blur' to g4 
 // output.  At some point during version 7, backscatter classifications 
@@ -31,6 +31,15 @@
 // 
 // 12.6.2018:  version 9:  added BB1 detector noise and resolution to 
 // g4 data processing.
+// 
+// 5.11.2018:  version 10:  added dl_x_pos and dl_z_pos branches to G4 output.  
+// previously the branches were there, but zero, and G4 position info
+// was (also still is) stored in only the DL_X_Pos (etc) branches.  
+// Also added at version 10:  partial LE/TE support.  Breaks retupling on 
+// files analyzed before the LE/TE analyzer, but LE/TE doesn't crash it.
+// 
+// still needs to just add all the "orig_LE" branch names back as "orig".
+// 
 // ==================================================================== //
 
 #include <stdlib.h>
@@ -58,12 +67,12 @@ using std::min;
 
 //
 bool is_blinded            = false;
-bool is_g4                 = true;
+bool is_g4                 = false;
 bool use_g4_metadata       = true;
 bool apply_scint_res_on_g4 = true;
 bool doEmpirical           = true;  // empirical noise on BB1s.
 
-int version = 9;
+int version = 10;
 
 //#define XSTR(x) #x
 //#define STR(x) XSTR(x)
@@ -446,18 +455,6 @@ int main(int argc, char *argv[])
 {
 	setup_location();
 	
-//	string blind_r_path = br_path;
-//	string blind_e_path = be_path;
-//	string blind_o_path = bf_path;
-
-//	string unblind_r_path = ur_path;
-//	string unblind_e_path = ue_path;
-//	string unblind_o_path = uf_path;
-
-//	string g4_tree_path     = g4_path;
-//	string g4_friend_path   = g4f_path;
-//	string metadatafilename = metadata_name;
-
 	int runno;
 	if(argc==2)
 	{
@@ -548,7 +545,7 @@ int main(int argc, char *argv[])
 		gRandom->SetSeed(0);  // sets seed to something something machine time.
 		cout << "New Rand. Seed:  " << endl;
 		cout << gRandom->GetSeed() << endl;
-
+		
 		
 		is_blinded = false; 
 		this_opdelay = 0.0;
@@ -606,6 +603,8 @@ int main(int argc, char *argv[])
 	TTree *friend_tree = new TTree("friendtuple", "friendtuple");
 	cout << "Loaded up the ntuple and created the new friendtuple." << endl;
 	
+	// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+	
 	UInt_t upper_qdc_int;
 	UInt_t lower_qdc_int;
 	UInt_t unix_time;
@@ -622,65 +621,30 @@ int main(int argc, char *argv[])
 	{
 		tree -> SetBranchAddress("QDC_UpperPMT", &upper_qdc_int);
 		tree -> SetBranchAddress("QDC_LowerPMT", &lower_qdc_int);
-		tree -> SetBranchAddress("Unix_time", &unix_time);
-		
-		tree -> SetBranchAddress("TNIM_ACMOT_ON", &acmot_last);
-		tree -> SetBranchAddress("TNIM_DCMOT_OFF",&dcmot_last);
-		tree -> SetBranchAddress("TNIM_ACMOT_ON_all", &acmot_all);
-		tree -> SetBranchAddress("TNIM_DCMOT_OFF_all",&dcmot_all);
-		tree -> SetBranchAddress("TNIM_TIMESTAMP", &eventtime);  // 
 	}
-	else
+	else if(is_g4)
 	{
 		tree -> SetBranchAddress("QDC_UpperPMT", &upper_qdc_d);
 		tree -> SetBranchAddress("QDC_LowerPMT", &lower_qdc_d);
 	}
-	vector<double> * scint_time_t = 0;
-	vector<double> * scint_time_b = 0;
-	tree -> SetBranchAddress("TDC_SCINT_TOP",    &scint_time_t);  
-	tree -> SetBranchAddress("TDC_SCINT_BOTTOM", &scint_time_b);  
-
-
-	int acmot_count;
-	int dcmot_count;
 	
-	vector<double> *ion_events = 0;
-	tree -> SetBranchAddress("TDC_ION_MCP", &ion_events);
-	int ion_count = 0;
-
-	vector<double> *x1_dla = 0;
-	vector<double> *x2_dla = 0;
-	vector<double> *z1_dla = 0;
-	vector<double> *z2_dla = 0;
-	vector<double> *prev_dlx = 0;
-	vector<double> *prev_dlz = 0;
 	if(!is_g4)
 	{
-		tree -> SetBranchAddress("TDC_DL_X1",&x1_dla);
-		tree -> SetBranchAddress("TDC_DL_X2",&x2_dla);
-		tree -> SetBranchAddress("TDC_DL_Z1",&z1_dla);
-		tree -> SetBranchAddress("TDC_DL_Z2",&z2_dla);
+		tree -> SetBranchAddress("Unix_time",         &unix_time);
+		tree -> SetBranchAddress("TNIM_ACMOT_ON",     &acmot_last);
+		tree -> SetBranchAddress("TNIM_DCMOT_OFF",    &dcmot_last);
+		tree -> SetBranchAddress("TNIM_ACMOT_ON_all", &acmot_all);
+		tree -> SetBranchAddress("TNIM_DCMOT_OFF_all",&dcmot_all);
+		tree -> SetBranchAddress("TNIM_TIMESTAMP",    &eventtime);  // 
 	}
-	else
-	{
-		// branches for the x, z position info that already exists.
-		tree -> SetBranchAddress("DL_X_Pos",&prev_dlx);
-		tree -> SetBranchAddress("DL_Z_Pos",&prev_dlz);
-	}
-	int x1_count = 0;
-	int x2_count = 0;
-	int z1_count = 0;
-	int z2_count = 0;
-	int x_count = 0;
-	int z_count = 0;
-
-
-	// 
+	int acmot_count;
+	int dcmot_count;
+		
 	// Some Friend Tree Stuff:
-	Bool_t all_okay = kTRUE;
-	Bool_t is_polarized = kFALSE;
+	Bool_t all_okay       = kTRUE;
+	Bool_t is_polarized   = kFALSE;
 	Bool_t is_unpolarized = kFALSE;
-	Bool_t is_ac = kFALSE;
+	Bool_t is_ac          = kFALSE;
 	TBranch *all_okay_b       = friend_tree -> Branch("all_okay", &all_okay);  
 	TBranch *is_polarized_b   = friend_tree -> Branch("is_polarized", &is_polarized);  
 	TBranch *is_unpolarized_b = friend_tree -> Branch("is_unpolarized", &is_unpolarized);  
@@ -692,10 +656,65 @@ int main(int argc, char *argv[])
 	Double_t lower_E;
 	Double_t upper_E_res;
 	Double_t lower_E_res;
-	TBranch *upper_e_b = friend_tree -> Branch("upper_scint_E", &upper_E);
-	TBranch *lower_e_b = friend_tree -> Branch("lower_scint_E", &lower_E);
+	TBranch *upper_e_b          = friend_tree -> Branch("upper_scint_E", &upper_E);
+	TBranch *lower_e_b          = friend_tree -> Branch("lower_scint_E", &lower_E);
 	TBranch *upper_e_res_branch = friend_tree -> Branch("upper_scint_E_res", &upper_E_res);
 	TBranch *lower_e_res_branch = friend_tree -> Branch("lower_scint_E_res", &lower_E_res);
+	
+	//
+	UInt_t led_count = 0;
+	UInt_t photodiode_count = 0;
+	vector<double> *tdc_photodiode = 0;
+	vector<double> *tdc_pulser_led = 0;
+	if(!is_g4)
+	{
+	//	tree -> SetBranchAddress("TDC_PULSER_LED_Count",  &led_count);
+	//	tree -> SetBranchAddress("TDC_PHOTO_DIODE_Count", &photodiode_count);
+		tree -> SetBranchAddress("TDC_PULSER_LED_LE_Count",  &led_count);
+		tree -> SetBranchAddress("TDC_PHOTO_DIODE_LE_Count", &photodiode_count);
+	}
+	if(is_g4)
+	{
+		// these are defined above, but only need to create new branches for g4 runs.  it's to prevent segfaults later.
+		TBranch *led_count_branch        = friend_tree -> Branch("TDC_PULSER_LED_LE_Count",  &led_count);
+		TBranch *photodiode_count_branch = friend_tree -> Branch("TDC_PHOTO_DIODE_LE_Count", &photodiode_count);
+		TBranch *photodiode_vec_branch   = friend_tree -> Branch("TDC_PHOTO_DIODE_LE",       &tdc_photodiode);
+		TBranch *led_vec_branch          = friend_tree -> Branch("TDC_PULSER_LED_LE",        &tdc_pulser_led);
+		
+	//	TBranch *led_count_branch        = friend_tree -> Branch("TDC_PULSER_LED_Count",  &led_count);
+	//	TBranch *photodiode_count_branch = friend_tree -> Branch("TDC_PHOTO_DIODE_Count", &photodiode_count);
+	//	TBranch *photodiode_vec_branch   = friend_tree -> Branch("TDC_PHOTO_DIODE",       &tdc_photodiode);
+	//	TBranch *led_vec_branch          = friend_tree -> Branch("TDC_PULSER_LED",        &tdc_pulser_led);
+	}
+	
+	//
+	vector<double> * scint_time_t = 0;  
+	vector<double> * scint_time_b = 0;  
+	if(is_g4)
+	{
+		tree -> SetBranchAddress("TDC_SCINT_TOP",    &scint_time_t);  
+		tree -> SetBranchAddress("TDC_SCINT_BOTTOM", &scint_time_b);  
+	}
+	else
+	{
+		tree -> SetBranchAddress("TDC_SCINT_TOP_LE",    &scint_time_t);  
+		tree -> SetBranchAddress("TDC_SCINT_BOTTOM_LE", &scint_time_b);  
+	}
+
+	
+	// --*-- // --*-- // --*-- // --*-- // --*-- // --*-- // --*-- // --*-- // --*-- // 
+	// rmcp delay line stuff:
+
+	vector<double> *ion_events = 0;
+	if(is_g4)
+	{
+		tree -> SetBranchAddress("TDC_ION_MCP", &ion_events);
+	}
+	else
+	{
+		tree -> SetBranchAddress("TDC_ION_MCP_LE", &ion_events);
+	}
+	int ion_count = 0;
 
 	vector<double> *dl_x_pos = 0;
 	vector<double> *dl_z_pos = 0;
@@ -703,24 +722,38 @@ int main(int argc, char *argv[])
 	TBranch *z_branch = friend_tree -> Branch("dl_z_pos", &dl_z_pos);
 	dl_x_pos -> clear();
 	dl_z_pos -> clear();
-	
-	UInt_t led_count = 0;
-	UInt_t photodiode_count = 0;
-	vector<double> *tdc_photodiode = 0;
-	vector<double> *tdc_pulser_led = 0;
+
+	vector<double> *x1_dla = 0;
+	vector<double> *x2_dla = 0;
+	vector<double> *z1_dla = 0;
+	vector<double> *z2_dla = 0;
+	vector<double> *prev_dlx = 0;
+	vector<double> *prev_dlz = 0;
 	if(!is_g4)
 	{
-		tree -> SetBranchAddress("TDC_PULSER_LED_Count",  &led_count);
-		tree -> SetBranchAddress("TDC_PHOTO_DIODE_Count", &photodiode_count);
+	//	tree -> SetBranchAddress("TDC_DL_X1",&x1_dla);
+	//	tree -> SetBranchAddress("TDC_DL_X2",&x2_dla);
+	//	tree -> SetBranchAddress("TDC_DL_Z1",&z1_dla);
+	//	tree -> SetBranchAddress("TDC_DL_Z2",&z2_dla);
+		
+		tree -> SetBranchAddress("TDC_DL_X1_LE",&x1_dla);
+		tree -> SetBranchAddress("TDC_DL_X2_LE",&x2_dla);
+		tree -> SetBranchAddress("TDC_DL_Z1_LE",&z1_dla);
+		tree -> SetBranchAddress("TDC_DL_Z2_LE",&z2_dla);
 	}
-	if(is_g4)
+	else if(is_g4)
 	{
-		// these are defined above, but only need to create new branches for g4 runs.
-		TBranch *led_count_branch        = friend_tree -> Branch("TDC_PULSER_LED_Count",  &led_count);
-		TBranch *photodiode_count_branch = friend_tree -> Branch("TDC_PHOTO_DIODE_Count", &photodiode_count);
-		TBranch *photodiode_vec_branch   = friend_tree -> Branch("TDC_PHOTO_DIODE",       &tdc_photodiode);
-		TBranch *led_vec_branch          = friend_tree -> Branch("TDC_PULSER_LED",        &tdc_pulser_led);
+		// branches for the x, z position info that already exists.
+		tree -> SetBranchAddress("DL_X_Pos",&prev_dlx);
+		tree -> SetBranchAddress("DL_Z_Pos",&prev_dlz);
 	}
+	int x1_count = 0;
+	int x2_count = 0;
+	int z1_count = 0;
+	int z2_count = 0;
+	int x_count = 0;
+	int z_count = 0;
+	
 	
 	// ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // 
 	// BB1s:  
@@ -823,11 +856,10 @@ int main(int argc, char *argv[])
 //	TBranch *bb1_t_pass_b = friend_tree -> Branch("bb1_t_pass", &bb1_t_pass);  
 //	TBranch *bb1_b_pass_b = friend_tree -> Branch("bb1_b_pass", &bb1_b_pass);  
 	
-	BB1Hit    bb1_hit[2] = {BB1Hit(), BB1Hit()};              // 2 detectors.
-	BB1Hit    bb1_sechit[2] = {BB1Hit(), BB1Hit()};           // 2 detectors.
+	BB1Hit    bb1_hit[2]    = {BB1Hit(), BB1Hit()};        // 2 detectors.
+	BB1Hit    bb1_sechit[2] = {BB1Hit(), BB1Hit()};        // 2 detectors.
 	BB1Result bb1_result[2] = {BB1Result(), BB1Result()};  // 2 detectors.
 	//
-
 	
 	// Backscatter Event Classification:
 	// is_type1_t:  
@@ -1068,6 +1100,11 @@ int main(int argc, char *argv[])
 				upper_E_res = getres_withresolution(upper_E, lambda_g4_res_t);
 				lower_E_res = getres_withresolution(lower_E, lambda_g4_res_b);
 			}
+			if( ion_count>0 && prev_dlx->size() >0 && prev_dlz->size() > 0)
+			{
+				dl_x_pos -> push_back( (*prev_dlx)[0] );
+				dl_z_pos -> push_back( (*prev_dlz)[0] );
+			}
 		}
 		
 		// Set up event types:
@@ -1289,10 +1326,6 @@ int main(int argc, char *argv[])
 			is_unpolarized = kFALSE;
 			is_ac = kFALSE;
 			cyclecount = 50;
-	//		Bool_t is_unpolarized = kFALSE;
-	//		Bool_t is_ac = kFALSE;
-	//		int cyclecount = 50;
-	//			
 	//		Double_t upper_E;  // ok
 	//		Double_t lower_E;  // ok
 	//		Double_t upper_E_res;  // ok

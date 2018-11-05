@@ -1,4 +1,2 @@
-for i in {1001..1012}; 
-do
-	./retuple $i;
-done
+./retuple 411; # recoils.
+./retuple 481; # electrons

@@ -44,9 +44,13 @@ string br_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_201
 string be_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
 string bf_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Friends_2014/";
 
-string ur_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Recoils_2014/";
-string ue_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons_2014/";
-string uf_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
+//string ur_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Recoils_2014/";
+//string ue_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons_2014/";
+//string uf_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
+
+string ur_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/ReAnalyzed_2014/";
+string ue_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/ReAnalyzed_2014/";
+string uf_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/ReAnalyzedFriends_2014/";
 
 //string g4_path_fifteen  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
 string g4_path_fifteen  = "/Users/spiffyzha/Desktop/Anal-Ysis/G4_Data/";
