@@ -48,7 +48,8 @@ string ur_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Recoils_2
 string ue_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons_2014/";
 string uf_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
 
-string g4_path_fifteen  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
+//string g4_path_fifteen  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
+string g4_path_fifteen  = "/Users/spiffyzha/Desktop/Anal-Ysis/G4_Data/";
 string bb1_prefix_fifteen = "/Users/spiffyzha/Packages/MiscLibs/BB1/";
 //
 string br_path_trinatdaq = "/data/trinat/S1188_2014_blinded/";
@@ -106,7 +107,6 @@ string ue_path = ue_path_fifteen;
 string uf_path = uf_path_fifteen;
 
 string g4_path  = g4_path_fifteen;
-
 string g4f_path = g4_path+"Friends/";
 string metadata_name = g4_path+"MetaData.txt";
 

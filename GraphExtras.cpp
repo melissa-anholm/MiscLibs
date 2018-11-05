@@ -8,6 +8,7 @@ using std::vector;
 #include <TGraph.h>
 #include <TGraphErrors.h>
 
+#include <TH1.h>
 //#include <HistExtras.cpp>
 #include "Pythonic.cpp"
 
@@ -253,6 +254,12 @@ TGraphErrors * make_sorted_TGraphErrors(vector<double> x_avg, vector<double> y_a
 TGraph * make_TGraph(vector<double> x_avg, vector<double> y_avg, int color=int(kBlack))
 {
 	int N_points = std::min(x_avg.size(), y_avg.size());
+	if( N_points <= 0 ) 
+	{ 
+		cout << "Bad!  No points!" << endl; 
+		cout << "n_xpoints = " << x_avg.size() << endl;
+		cout << "n_ypoints = " << y_avg.size() << endl;
+	}
 	
 	if( x_avg.size() != y_avg.size() )
 		{ cout << "* WARNING:  TGraphErrors input vectors have non-constant sizes.  Creating graph anyway." << endl; }
