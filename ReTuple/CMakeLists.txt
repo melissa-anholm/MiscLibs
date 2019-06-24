@@ -66,7 +66,7 @@ target_link_libraries (retuple
                        bb1_strip
                        Gui
                        Core
-                       Cint #doesn't work with rootv6.  I can comment it out, but then does root still work?!
+                #       Cint #doesn't work with rootv6.  I can comment it out, but then does root still work?!
                        RIO
                        Net
                        Hist

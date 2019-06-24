@@ -11,6 +11,7 @@
 using std::string;
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+/*
 enum EColorPalette {kImprovedRainbow=1,   kTropicalBird=2,
                     kDeepSea=51,          kGreyScale=52,    kDarkBodyRadiator=53,
                     kBlueYellow= 54,      kRainBow=55,      kInvertedDarkBodyRadiator=56,
@@ -717,6 +718,8 @@ void use_hq_palette(int palettenumber, bool invert=false)
 	gStyle->SetNumberContours(255);
 	return;
 }
+*/
+
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 int mBlack       = int(kBlack);
 

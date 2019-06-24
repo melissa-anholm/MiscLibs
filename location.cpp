@@ -40,6 +40,19 @@
 #define on_trinat02 1
 */
 
+// do these things even work on wisely??
+string br_path_wisely = "/Users/anholm/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
+string be_path_wisely = "/Users/anholm/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
+string bf_path_wisely = "/Users/anholm/Desktop/Anal-Ysis/Blinded_Friends_2014/";
+
+string ur_path_wisely = "/Users/anholm/Desktop/Anal-Ysis/ReAnalyzed_2014/";
+string ue_path_wisely = "/Users/anholm/Desktop/Anal-Ysis/ReAnalyzed_2014/";
+string uf_path_wisely = "/Users/anholm/Desktop/Anal-Ysis/ReAnalyzedFriends_2014/";
+
+//string g4_path_wisely  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
+string g4_path_wisely  = "/Users/anholm/Desktop/Anal-Ysis/G4_Data/";
+string bb1_prefix_wisely = "/Users/anholm/Packages/MiscLibs/BB1/";
+//
 string br_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
 string be_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
 string bf_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Friends_2014/";
@@ -88,18 +101,6 @@ string uf_path_trinat01 = "/pool/anholm/Data_2014/Unblinded_Friends_2014/";
 
 string g4_path_trinat01  = "/pool/anholm/Output/";
 string bb1_prefix_trinat01 = "/home/anholm/MiscLibs/BB1/";
-
-/*
-string br_path;
-string be_path;
-string bf_path;
-
-string ur_path;
-string ue_path;
-string uf_path;
-
-string g4_path;
-*/
 
 //
 string br_path = br_path_fifteen;
@@ -153,6 +154,24 @@ bool setup_location()
 		metadata_name = g4_path+"MetaData.txt";
 
 		bb1_prefix = bb1_prefix_fifteen;
+		return true;
+	}
+	else if( strcmp(this_location, "Wisely")==0 || strcmp(this_location, "wisely")==0 )
+	{
+		cout << "Location is Wisely." << endl;
+		br_path = br_path_wisely;
+		be_path = be_path_wisely;
+		bf_path = bf_path_wisely;
+		
+		ur_path = ur_path_wisely;
+		ue_path = ue_path_wisely;
+		uf_path = uf_path_wisely;
+		
+		g4_path  = g4_path_wisely;
+		g4f_path = g4_path+"Friends/";
+		metadata_name = g4_path+"MetaData.txt";
+
+		bb1_prefix = bb1_prefix_wisely;
 		return true;
 	}
 	else if(strcmp(this_location, "trinat01")==0)

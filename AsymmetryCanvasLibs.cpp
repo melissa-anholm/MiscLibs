@@ -36,7 +36,7 @@ using std::vector;
 //#include "/Users/spiffyzha/Packages/MiscLibs/ColorExtras.cpp"
 //#include "/Users/spiffyzha/Packages/MiscLibs/treeql_replacement.cpp"
 #include "HistExtras.cpp"
-#include "ColorExtras.cpp"
+//#include "ColorExtras.cpp"  // not in root6
 #include "treeql_replacement.cpp"
 //#include "SomeFunctions.cpp"
 //#include "SomeFunctions.h"
