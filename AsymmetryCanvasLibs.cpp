@@ -80,6 +80,18 @@ double get_Abeta_fromrho(double rho)
 //}
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+TH1D * manual_normalize(TH1D* input_hist)
+{
+	string new_nametitle = string(input_hist->GetName())+string(" - Normalized");
+	TH1D * output_hist = (TH1D*)input_hist->Clone(new_nametitle.c_str());
+	output_hist -> SetName(new_nametitle.c_str());
+	output_hist -> SetTitle(new_nametitle.c_str());
+	output_hist -> GetListOfFunctions() -> Clear();
+	
+	double the_integral = input_hist->GetEntries();
+	output_hist -> Scale(1.0/the_integral);
+	return output_hist;
+}
 
 TH1D * get_hist_sqrt(TH1D* input_hist, string title = string("Histogram") )
 {
@@ -126,6 +138,7 @@ void readout_bincenters(TH1D * hist)
 	}
 	return;
 }
+
 /*
 double get_polcorrected_asymmetry(double p1, double p2, double r1p, double r1m, double r2p, double r2m)
 {
@@ -388,7 +401,6 @@ TH1D * tf1_to_hist_like(TF1 * this_tf1, TH1D * this_hist, int this_color=int(kBl
 	return new_hist;
 }
 
-
 TH1D * tf1_to_hist_like(TF1 * this_tf1, TH1D * this_hist, TColor this_color)
 {
 	Int_t my_color = TColor::GetColor(this_color.GetRed(), this_color.GetGreen(), this_color.GetBlue());
@@ -560,6 +572,14 @@ TH1D* get_residuals(TH1D* h1, TH1D* h2, double ymin=0, double ymax=0)
 	TArrayD* errs1_2 = h1->GetSumw2(); // these are actually the *squares* of the weights.
 	TArrayD* errs2_2 = h2->GetSumw2(); // GetSumw2 is the squares, GetBinError is the unsquared weights.
 	
+	double size2 = errs2_2->GetSize();
+	double size1 = errs1_2->GetSize();
+	if(verbose>0)
+	{
+		cout << "size1 = " << size1 << ";\tn_bins1 = " << n_bins << endl;
+		cout << "size2 = " << size2 << ";\tn_bins2 = " << n_bins2 << endl;
+	}
+	
 //	TArrayD* errs_new = new_hist->GetSumw2();
 	if(verbose>0)
 	{
@@ -578,6 +598,7 @@ TH1D* get_residuals(TH1D* h1, TH1D* h2, double ymin=0, double ymax=0)
 	double dif;
 	double sig;
 	double res;
+	double e1, e2;
 	for (int i =1; i<=n_bins; i++) 
 	{
 		dif = h1->GetBinContent(i) - h2->GetBinContent(i);
@@ -590,7 +611,22 @@ TH1D* get_residuals(TH1D* h1, TH1D* h2, double ymin=0, double ymax=0)
 	//	sig = sqrt( h1->At(i) + h2->At(i) );
 	//	sig = 1.0;
 		
-		sig = sqrt( errs1_2->At(i) + errs2_2->At(i) );
+		// this is to make sure histograms come out having "zero uncertainty" if they went into the function without Sumw2 defined.
+		if(size1>i) { e1 = errs1_2->At(i); }
+		else        { e1 = 0; }
+		if(size2>i) { e2 = errs2_2->At(i); }
+		else        { e2 = 0; }
+		
+	//	sig = sqrt( errs1_2->At(i) + errs2_2->At(i) );
+		
+		sig = sqrt( e1 + e2 ); 
+		/*
+		if(verbose>0)
+		{
+			double oldsig = sqrt( errs1_2->At(i) + errs2_2->At(i) ); // 
+			cout << "sig - oldsig = " << sig - oldsig << endl;
+		}
+		*/
 		if(sig==0)
 		{
 			if(verbose>0)

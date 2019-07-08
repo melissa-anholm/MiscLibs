@@ -80,6 +80,51 @@ TF1 * make_parabola_func()
 	return parabola;
 }
 
+TF1 * make_betaEphasespace_func() // phase space as a function of *energy*. keV.
+{
+	// P(E) dE = C * p*E*(E0-E)^2  // params:  constant C, endpoint E0.
+	// pbetac = sqrt( pow(E,2) - pow(m_e,2) );
+	// m_e = 0.5109989461*1000.0;
+	// E0 = 5.63646*1000.0;
+	TF1* beta_phasespace = new TF1("beta_phasespace", "[0]*x*sqrt( pow(x,2) - pow(510.9989461,2) )*([1]-x)^2", 0.5109989461*1000.0, 5.63646*1000.0);
+	beta_phasespace -> SetParNames("scale", "E0");
+	beta_phasespace -> SetParameter("scale", 3.0e7);
+	beta_phasespace -> SetParameter("E0", 5636.46);
+	
+	
+	return beta_phasespace;
+}
+
+TF1* make_linefunc()
+{
+//	TF1* linefunc = new TF1("linefunc", "[0]*x + [1]", 0.0, 6000.0);
+//	linefunc -> SetParNames("m", "b");
+//	linefunc -> SetParameter("m", -1.0e-4);
+//	linefunc -> SetParameter("b", 0.13);
+	
+	TF1* linefunc = new TF1("linefunc", "[0]*(x-[1])", 0.0, 6000.0);
+	linefunc -> SetParNames("slope", "x_intercept");
+	linefunc -> SetParameter("slope", -1.0e-8);
+	linefunc -> SetParameter("x_intercept", 5700.0);
+	return linefunc;
+}
+
+/*
+TF1 * make_betaKEphasespace_func() // phase space as a function of *energy*. keV.
+{
+	// P(E) dE = C * p*E*(E0-E)^2  // params:  constant C, endpoint E0.
+	// pbetac = sqrt( pow(E,2) - pow(m_e,2) );
+	// m_e = 0.5109989461*1000.0;
+	// E0 = 5.63646*1000.0;
+	TF1* beta_phasespace = new TF1("beta_phasespace", "[0]*x*sqrt( pow(x,2) - pow(510.9989461,2) )*([1]-x)^2", 0.5109989461*1000.0, 5.63646*1000.0);
+	beta_phasespace -> SetParNames("scale", "E0");
+	beta_phasespace -> SetParameter("scale", 3.0e7);
+	beta_phasespace -> SetParameter("E0", 5636.46);
+	
+	
+	return beta_phasespace;
+}
+*/
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 TF1 * make_Wtilde_1()  // x-axis is beta kinetic energy in keV.  "E_scint".
 {

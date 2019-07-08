@@ -25,40 +25,8 @@ using std::string;
 bool use_only_summed_forchain = true;
 
 /*
-//#define metachain_on_trinatdaq 1
-
 //#define XSTR(x) #x
 //#define STR(x) XSTR(x)
-
-#ifdef on_trinatdaq  // define this (or not) in whatever code calls this.  
-	string br_path = "/data/trinat/S1188_2014_blinded/";
-	string be_path = "/data/trinat/S1188_2014_blinded/";
-	string bf_path = "/home/trinat/anholm/Friends/";  // BAD!!
-
-	string ur_path = "/home/trinat/online/analyzedFiles_2014/";
-	string ue_path = "/home/trinat/online/analyzedFiles_2014/";
-	string uf_path = "/home/trinat/anholm/Friends/";  
-
-	string g4_path  = "/home/trinat/anholm/G4_Output/";
-	string g4f_path = "/home/trinat/anholm/G4_Output/";
-	string metadata_name = "/home/trinat/anholm/G4_Output/MetaData.txt";
-#else
-	string br_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
-	string be_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
-	string bf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Friends_2014/";
-
-	string ur_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Recoils_2014/";
-	string ue_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Electrons_2014/";
-	string uf_path = "/Users/spiffyzha/Desktop/Anal-Ysis/Unblinded_Friends_2014/";
-
-	string g4_path  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
-	string g4f_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
-	string metadata_name = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/MetaData.txt";
-#endif
-
-string g4f_path = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/Friends/";
-string metadata_name = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/MetaData.txt";
-#endif
 */
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
@@ -66,7 +34,7 @@ string metadata_name = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/MetaD
 // ====================================== // ====================================== //
 // Newer TChains for Simulations:
 string get_simfilename(string path, int runno)  // don't use this.
-{	
+{ 
 	string fname;
 	std::stringstream ss;
 	ss.str( std::string() );
@@ -81,7 +49,7 @@ string get_simfilename(string path, int runno)  // don't use this.
 }
 
 string get_simfilename(TTree * MetaTree, int runno)  // from the MetaTree.
-{	
+{ 
 	string namestub = "";
 	string fname;
 	
@@ -141,7 +109,7 @@ string get_matched_runletter(TTree * MetaTree, int runno)  //
 
 
 string get_simfriendname(string path, int runno)
-{	
+{ 
 	string fname;
 	std::stringstream ss;
 	ss.str( std::string() );
@@ -229,7 +197,6 @@ vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, string runset_str
 	return set_of_runs;
 }
 
-
 TChain * get_chain_from_rho(TTree * MetaTree, double rho, string runset_string, int maxrun=0)
 {
 	cout << "rho = " << rho << endl;
@@ -308,6 +275,91 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, string runset_string, 
 	return tree_chain;
 }
 
+vector<int> make_runlist_from_args( int argc, char* argv[] )
+{
+	vector<int> the_runlist;
+	int thisrun;
+	for (int k=1; k<argc; k++)
+	{
+		thisrun = atoi(argv[k]);  
+		the_runlist.push_back(thisrun);
+	}
+	return the_runlist;
+}
+
+int check_runmatch(int the_run, vector<int> the_list) // returns the index of matching in the list, or -1 if there's no match.
+{
+	int have_match = -1;
+	int listlength = the_list.size();
+	
+	for(int i=0; i<listlength; i++)
+	{
+		if(the_run == the_list.at(i) )
+		{
+	//		cout << "It's a match!  run " << the_run << " is run " << the_list.at(i) << endl;
+			have_match = i;
+			return have_match;
+		}
+		else
+		{
+	//		cout << "run " << the_run << " isn't run " << the_list.at(i) << endl;
+		}
+	}
+	return -1;
+}
+TChain * get_chain_from_runlist(TTree * MetaTree, vector<int> the_runlist) // this can break if the metadata has recorded more than one of the same run number.
+{
+	string path       = g4_path;
+	string friendpath = g4f_path;
+
+	int nentries = MetaTree -> GetEntries();
+
+	int run = 0;
+	MetaTree -> SetBranchAddress("Run", &run);
+	int this_neventsgenerated = 0;
+	int this_neventssaved = 0;
+	MetaTree -> SetBranchAddress("EventsGenerated", &this_neventsgenerated);
+	MetaTree -> SetBranchAddress("EventsSaved",     &this_neventssaved);
+	
+	int total_events_generated = 0;
+	int total_events_recorded = 0;
+
+	TChain * tree_chain   = new TChain("ntuple");
+	TChain * friend_chain = new TChain("friendtuple");
+	string filename;
+	string friendname;
+//	cout << "nentries = " << nentries << endl;
+	for(int i=0; i<nentries; i++)
+	{
+		MetaTree -> GetEntry(i);
+		
+		int run_index = check_runmatch(run, the_runlist);
+		if( run_index != -1 )
+		{
+			cout << "Using run " << run << "  (i=" << i << "),\tN_gen=" << this_neventsgenerated << ",\tN_saved=" << this_neventssaved << endl;
+			total_events_generated = total_events_generated + this_neventsgenerated;
+			total_events_recorded = total_events_recorded + this_neventssaved;
+		
+			filename   = get_simfilename( (TChain*)MetaTree->Clone(), run);
+			friendname = get_simfriendname(friendpath, run);  // check if friend exists???
+			tree_chain -> Add(filename.c_str());
+			friend_chain -> Add(friendname.c_str());
+
+			filename = string();
+			filename.clear();
+			friendname = string();
+			friendname.clear();
+		}
+	}
+	tree_chain -> AddFriend(friend_chain);
+	return tree_chain;
+}
+TChain * get_chain_from_runlist(int argc, char* argv[], TTree * MetaTree) // this can break if the metadata has recorded more than one of the same run number.
+{
+	vector<int> the_runlist = make_runlist_from_args(argc, argv);  // am I calling this correctly????
+	return get_chain_from_runlist(MetaTree, the_runlist);
+}
+
 
 // ====================================== //
 // TChains for Simulations (do I ever even use these?):
@@ -327,17 +379,6 @@ string make_simfilename(string namestub, int runno)  // no, don't..
 }
 
 
-
-/*
-TTree * MetaTuple::LoadMetaData()
-{
-	TTree *MetaTree = new TTree();
-//	int nrows = toftree -> ReadFile(metadatafilename.c_str());
-	nentries = MetaTree -> ReadFile(metadatafilename.c_str());
-	return MetaTree;
-}
-*/
-// Load up the metadata as an ntuple.
 
 
 // ====================================== //

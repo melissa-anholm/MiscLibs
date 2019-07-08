@@ -49,8 +49,8 @@ string ur_path_wisely = "/Users/anholm/Desktop/Anal-Ysis/ReAnalyzed_2014/";
 string ue_path_wisely = "/Users/anholm/Desktop/Anal-Ysis/ReAnalyzed_2014/";
 string uf_path_wisely = "/Users/anholm/Desktop/Anal-Ysis/ReAnalyzedFriends_2014/";
 
-//string g4_path_wisely  = "/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
-string g4_path_wisely  = "/Users/anholm/Desktop/Anal-Ysis/G4_Data/";
+string g4_path_wisely  = "/Users/anholm/Desktop/Trinat_Geant/build/Output/";
+//string g4_path_wisely  = "/Users/anholm/Desktop/Anal-Ysis/G4_Data/";
 string bb1_prefix_wisely = "/Users/anholm/Packages/MiscLibs/BB1/";
 //
 string br_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
@@ -135,7 +135,10 @@ string env_location_string = char_to_string(env_location);
 //
 bool setup_location()
 {
+//	cout << "Called setup_location ..." << endl;
 	const char* this_location = std::getenv("LOCATION");
+//	cout << "this_location = " << this_location << endl;
+	
 	//
 	if(strcmp(this_location, "fifteen")==0)
 	{

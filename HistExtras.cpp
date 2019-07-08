@@ -19,6 +19,40 @@ double v1192_to_ns = 100.0/1024.0;
 
 // ====================================== //
 // Histogram Functions 
+/*
+TH1D * make_hist_like(TH1D * this_hist, int this_color=int(kBlack) )
+{
+//	TH1D * new_hist = (TH1D*)this_hist -> Clone( this_tf1->GetName() );
+	TH1D * new_hist = (TH1D*)this_hist -> Clone();
+	new_hist -> GetListOfFunctions() -> Clear();
+	
+//	new_hist -> Sumw2(kFALSE);
+	new_hist -> SetMarkerColor(this_color);
+	new_hist -> SetLineColor(this_color);
+	int n_bins = new_hist->GetNbinsX();
+	// well shit, it probably needs some parameters or something.
+	double xmax, xmin;
+	xmax = this_tf1->GetXmax();
+	xmin = this_tf1->GetXmin();
+	
+	for (int i=1; i<n_bins; i++)  // Bins i=0, i=n_bins are the underflow and overflow?
+	{
+	//	this_tf1->Eval(this_hist->GetBinCenter(i));
+	//	cout << "i = " << i << endl;
+		if( new_hist->GetBinCenter(i)>=xmin &&  new_hist->GetBinCenter(i)<=xmax )
+		{
+			new_hist -> SetBinContent(i, this_tf1->Eval(this_hist->GetBinCenter(i)) );
+		}
+		else
+		{
+			new_hist -> SetBinContent(i, 0);
+		}
+	}
+//	cout << "Returning the hist." << endl;
+	return new_hist;
+}
+*/
+
 class hist_type
 {
 private:
@@ -324,6 +358,15 @@ int hist_type::set_other_parameters()
 		user_xmin = xmin;
 		user_xmax = 6000.5;
 	}
+	else if (type==std::string("Mapping_Ebeta"))
+	{
+		nbins = 6000;
+		xmin =  0.0-0.5;
+		xmax = 6000.0-0.5;
+		units = std::string("beta kinetic energy (keV)");
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
 	else if (type == std::string("acmottime"))
 	{
 		nbins = 1000;
@@ -609,6 +652,78 @@ int hist_type::set_other_parameters()
 		user_xmin = 0.5;
 		user_xmax = 8.5;
 	}
+	else if(type==std::string("scaled_probability"))
+	{
+		nbins = 170;
+		xmin = 0.0;
+		xmax = 0.17;
+		units = std::string("Scaled Probability");
+		user_xmin = 0.0;
+		user_xmax = 0.17;
+	}
+	else if(type==std::string("costheta"))
+	{
+		nbins = 6000;
+		xmin = -1.0;
+		xmax = 1.0;
+		units = std::string("Cos(theta)");
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	else if(type==std::string("mmcostheta"))
+	{
+		nbins = 4000;
+		xmin = -1.0;
+		xmax = -0.9;
+		units = std::string("Cos(theta)");
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	else if (type == std::string("holstein_betatof"))
+	{
+		nbins = 600;
+		xmin = 0.34e-6;
+		xmax = 0.4e-6;
+		units = std::string("ns?  maybe??");
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	else if(type==std::string("bb1_r")) 
+	{
+		units = std::string("bb1 x^2 + y^2 (mm)");
+		xmin = -0.5;
+		xmax = 40.5;
+		nbins = 82;
+		user_xmin = xmin;
+		user_xmax = 20.5;
+	}
+	else if (type == std::string("holstein_pbeta"))  
+	{
+		nbins = 1200;
+		xmin = -6000.0;
+		xmax =  6000.0;
+		units = std::string("beta momentum [keV]");
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	else if (type == std::string("holstein_pbeta_squared"))  
+	{
+		nbins = 1200;
+		xmin = 0.0;
+		xmax = 5500.0*5500.0;
+		units = std::string("p_beta^2 [keV]");
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	else if (type == std::string("holstein_pbeta_radial"))  
+	{
+		nbins = 6000;
+		xmin = -0.5;
+		xmax =  6000.0 - 1.0;
+		units = std::string("Beta Perpendicular Momentum, sqrt(px^2 + py^2) [keV]");
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
 	else
 	{
 		cout << endl;
@@ -832,5 +947,7 @@ TH2D * CreateHist2d(std::string title, std::string x_type, std::string y_type)
 	int rebin_y = 1;
 	return CreateHist2d(title, x_type, y_type, rebin_x, rebin_y);
 }
+
+
 
 #endif

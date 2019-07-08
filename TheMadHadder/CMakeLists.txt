@@ -35,7 +35,7 @@ target_link_libraries (madhadd
               ##         minuit   # trinat01 can't find minuit, even though it's right there...
                        Gui
                        Core
-                       Cint #doesn't work with rootv6.  I can comment it out, but then does root still work?!
+                  #     Cint #doesn't work with rootv6.  I can comment it out, but then does root still work?!
                        RIO
                        Net
                        Hist

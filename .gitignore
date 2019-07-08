@@ -16,3 +16,4 @@ TheMadHadder/CMakeCache.txt
 madhadd
 *.d
 *.so
+*.dSYM

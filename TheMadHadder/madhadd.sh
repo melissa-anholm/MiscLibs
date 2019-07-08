@@ -6,7 +6,7 @@ iteration=$3
 ##result=`./madhadder 200 212`; 
 ###r1=200;
 ###r2=212;
-datapath="/Users/spiffyzha/Desktop/Trinat_Geant/build/Output/";
+datapath="/Users/anholm/Desktop/Trinat_Geant/build/Output/";
 #./madhadder 200 212;
 ./madhadder $r1 $r2;
 result=$?;

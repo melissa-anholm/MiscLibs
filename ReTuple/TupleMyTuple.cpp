@@ -67,7 +67,7 @@ using std::min;
 
 //
 bool is_blinded            = false;
-bool is_g4                 = false;
+bool is_g4                 = true;
 bool use_g4_metadata       = true;
 bool apply_scint_res_on_g4 = true;
 bool doEmpirical           = true;  // empirical noise on BB1s.
@@ -575,9 +575,16 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-				cout << "Could not find matched runset:  " << matched_runset << endl;
-				cout << "Scintillator resolution will not be applied." << endl;
-				apply_scint_res_on_g4 = false;
+				cout << "************************************************************************" << endl;
+				cout << "WARNING!!  Could not find matched runset:  " << matched_runset << endl;
+				cout << "Applying the late runsets' resolution for the scintillators anyway, " << endl;
+				cout << "but it's not *really* the correct thing to do..." << endl;
+				cout << "************************************************************************" << endl;
+				cout << endl;
+			//	cout << "Scintillator resolution will not be applied." << endl;
+			//	apply_scint_res_on_g4 = false;
+				lambda_g4_res_t = 1.42;  // +/- 0.08
+				lambda_g4_res_b = 1.32;  // +/- 0.08
 			}
 		}
 		else
