@@ -1237,7 +1237,8 @@ int main(int argc, char *argv[])
 						had_Nhits_bb1_b=2;
 					}
 					//
-					if(bb1_sechit[detector].pass == true /* && bb1_hit[detector].energy >= bb1_energy_threshold */)
+		//			if(bb1_sechit[detector].pass == true /* && bb1_hit[detector].energy >= bb1_energy_threshold */)
+					if(bb1_sechit[detector].pass == true && bb1_hit[detector].energy >= bb1_energy_threshold )
 					{
 						if(detector == t)
 						{

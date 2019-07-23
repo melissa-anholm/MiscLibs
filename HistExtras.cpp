@@ -661,6 +661,15 @@ int hist_type::set_other_parameters()
 		user_xmin = 0.0;
 		user_xmax = 0.17;
 	}
+	else if(type==std::string("delta_costheta"))
+	{
+		nbins = 4000;
+		xmin = -2.0;
+		xmax = 2.0;
+		units = std::string("Delta Cos(theta)");
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
 	else if(type==std::string("costheta"))
 	{
 		nbins = 6000;
