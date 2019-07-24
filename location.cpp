@@ -100,7 +100,7 @@ string ue_path_trinat01 = "/pool/anholm/Data_2014/Unblinded_Electrons_2014/";
 string uf_path_trinat01 = "/pool/anholm/Data_2014/Unblinded_Friends_2014/";  
 
 string g4_path_trinat01  = "/pool/anholm/Output/";
-string bb1_prefix_trinat01 = "/home/anholm/MiscLibs/BB1/";
+string bb1_prefix_trinat01 = "/home/trinat/anholm/Packages/MiscLibs/BB1/";
 
 //
 string br_path = br_path_fifteen;
@@ -110,6 +110,9 @@ string bf_path = bf_path_fifteen;
 string ur_path = ur_path_fifteen;
 string ue_path = ue_path_fifteen;
 string uf_path = uf_path_fifteen;
+
+string rb_path = "/pool/trinat/analyzedFiles_2018/";
+string rbfpath = "/pool/trinat/analyzedFiles_2018/Friends/";
 
 string g4_path  = g4_path_fifteen;
 string g4f_path = g4_path+"Friends/";

@@ -4,6 +4,8 @@
 
 #include <vector>
 using std::vector;
+using std::cout;
+using std::endl;
 
 #include <TH1D.h>
 #include <TH2D.h>
@@ -267,6 +269,15 @@ int hist_type::set_other_parameters()
 		units = std::string("Scintillator Energy (keV)");
 		user_xmin = xmin;
 		user_xmax = 5500.0;
+	}
+	else if (type == std::string("Rb_Ebeta") )
+	{
+		nbins = 900;
+		xmin = -0.5;
+		xmax = 9000.5-1.0;
+		units = std::string("Scintillator Energy (keV)");
+		user_xmin = xmin;
+		user_xmax = xmax;
 	}
 	else if (type == std::string("E_beta") )
 	{
@@ -577,6 +588,15 @@ int hist_type::set_other_parameters()
 		xmin = -20.5;
 		xmax = 20.5;
 		nbins = 82;
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	else if(type==std::string("bb1_strip")) 
+	{
+		units = std::string("bb1 strip number");
+		xmin = -0.5;
+		xmax = 40.5-1.0;
+		nbins = 40;
 		user_xmin = xmin;
 		user_xmax = xmax;
 	}

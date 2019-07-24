@@ -67,10 +67,12 @@ using std::min;
 
 //
 bool is_blinded            = false;
-bool is_g4                 = true;
+bool is_g4                 = false;
 bool use_g4_metadata       = true;
 bool apply_scint_res_on_g4 = true;
-bool doEmpirical           = true;  // empirical noise on BB1s.
+bool doEmpirical           = true;  // empirical noise on BB1s.  for G4 data.
+bool do_rubidium           = true;  // Rb
+bool is_old                = true;  // before trailing edge/leading edge madness.
 
 int version = 10;
 
@@ -235,6 +237,31 @@ Double_t get_lower_E(double qdc, int run, bool g4data=false)
 	return E;
 }
 
+Double_t get_upper_E_Rb(double ch)  // preliminary calibrations from James  (what units?)
+{
+	double E;
+	
+	double ch0=  -7519.72;
+	double A  =  10867.51; 
+	double E0 = -12641.56;
+	double w  =  13591.53;
+	
+	E = E0 + w*log( (ch-ch0)/(A + ch -ch0) );
+	return E;
+}
+Double_t get_lower_E_Rb(double ch)  // preliminary calibrations from James  (what units?)
+{
+	double E;
+	
+	double ch0= -17700.94;
+	double A  =  20616.53; 
+	double E0 = -20920.88;
+	double w  =  15194.39;
+	
+	E = E0 + w*log( (ch-ch0)/(A + ch -ch0) );
+	return E;
+}
+
 Double_t get_upper_E_res(double upper_E, int run, bool g4data=false)
 { // E is in units of keV.
 	double lambda;
@@ -364,7 +391,7 @@ int my_prev_event::ts_prev()
 }
 // AC/Pol classification:
 /*
-bool check_pol(int acmottime, double op_delay)
+bool check_pol_orig(int acmottime, double op_delay)  // what MJA expected.  but actually, use the thing Ben did below instead.
 {
 	int ac_cycle_mus = 97260*50/1000; // in microseconds.  4863 mus.
 	int actime = 2956;
@@ -381,8 +408,8 @@ bool check_pol(int acmottime, double op_delay)
 	return polarized;
 }
 */
-bool check_pol2(int acmottime, double op_delay)
-{  // check_pol2 tries to follow Ben's timing cuts convention...
+bool check_pol(int acmottime, double op_delay)
+{  // this version of check_pol tries to follow Ben's timing cuts convention...
 	int ac_cycle_mus = 97260*50/1000; // in microseconds.  4863 mus.
 	int actime = 2956;  // 4863 - 2956 = 1907
 //	double time_to_polarize = 100.0;
@@ -490,52 +517,66 @@ int main(int argc, char *argv[])
 	gRandom = new TRandom3();
 	// = load_metadata_tree(metadata_name);
 	if(!is_g4)
-	{
-		// polarization classification overhead:
-		set_of_runs runs;  // Do NOT use a '*'.  It breaks.  Dunno why.
-		this_opdelay = runs.OP_Delay[runno];
-		if(is_blinded)
+	{	
+		if(do_rubidium)
 		{
-			cout << "Running retuple on blinded datasets." << endl;
-			if( runs.good_recoil[runno]==true )
-			{
-				cout << "Run " << runno << " is a recoil run." << endl;
-				fname  = make_rootfilename(br_path+"output00", runno, "_blinded");
-				cout << "Using file:  " << fname << endl;
-			}
-			else if(runs.good_electron[runno]==true)
-			{
-				cout << "Run " << runno << " is an electron run." << endl;
-				fname  = make_rootfilename(be_path+"output00", runno, "_blinded");
-				cout << "Using file:  " << fname << endl;
-			}
-			else
-			{
-				cout << "BAD.  Check run number." << endl;
-				return 0;
-			}
-			friend_fname = make_rootfilename(bf_path+"friend00",runno, "_blinded");
+			// for rubidium, it's neither blinded nor polarized...
+			cout << "Running retuple on Rubidium data." << endl;
+			is_blinded = false;
+			this_opdelay = 0.0;  //  this really shouldn't ever get used..
+			fname  = make_rootfilename(rb_path+"output0", runno);
+			cout << "Using file:  " << fname << endl;
+			//
+			friend_fname = make_rootfilename(rbfpath+"friend0",runno);
 		}
 		else
 		{
-			if( runs.good_recoil[runno]==true )
+			// polarization classification overhead:
+			set_of_runs runs;  // Do NOT use a '*'.  It breaks.  Dunno why.
+			this_opdelay = runs.OP_Delay[runno];
+			if(is_blinded)
 			{
-				cout << "Run " << runno << " is a recoil run." << endl;
-				fname  = make_rootfilename(ur_path+"output00", runno);
-				cout << "Using file:  " << fname << endl;
-			}
-			else if(runs.good_electron[runno]==true)
-			{
-				cout << "Run " << runno << " is an electron run." << endl;
-				fname  = make_rootfilename(ue_path+"output00", runno);
-				cout << "Using file:  " << fname << endl;
+				cout << "Running retuple on blinded datasets." << endl;
+				if( runs.good_recoil[runno]==true )
+				{
+					cout << "Run " << runno << " is a recoil run." << endl;
+					fname  = make_rootfilename(br_path+"output00", runno, "_blinded");
+					cout << "Using file:  " << fname << endl;
+				}
+				else if(runs.good_electron[runno]==true)
+				{
+					cout << "Run " << runno << " is an electron run." << endl;
+					fname  = make_rootfilename(be_path+"output00", runno, "_blinded");
+					cout << "Using file:  " << fname << endl;
+				}
+				else
+				{
+					cout << "BAD.  Check run number." << endl;
+					return 0;
+				}
+				friend_fname = make_rootfilename(bf_path+"friend00",runno, "_blinded");
 			}
 			else
 			{
-				cout << "BAD.  Check run number." << endl;
-				return 0;
+				if( runs.good_recoil[runno]==true )
+				{
+					cout << "Run " << runno << " is a recoil run." << endl;
+					fname  = make_rootfilename(ur_path+"output00", runno);
+					cout << "Using file:  " << fname << endl;
+				}
+				else if(runs.good_electron[runno]==true)
+				{
+					cout << "Run " << runno << " is an electron run." << endl;
+					fname  = make_rootfilename(ue_path+"output00", runno);
+					cout << "Using file:  " << fname << endl;
+				}
+				else
+				{
+					cout << "BAD.  Check run number." << endl;
+					return 0;
+				}
+				friend_fname = make_rootfilename(uf_path+"friend00",runno);
 			}
-			friend_fname = make_rootfilename(uf_path+"friend00",runno);
 		}
 	}
 	else // 
@@ -652,6 +693,10 @@ int main(int argc, char *argv[])
 	Bool_t is_polarized   = kFALSE;
 	Bool_t is_unpolarized = kFALSE;
 	Bool_t is_ac          = kFALSE;
+	if(do_rubidium) 
+	{ 
+		is_unpolarized = kTRUE; 
+	}
 	TBranch *all_okay_b       = friend_tree -> Branch("all_okay", &all_okay);  
 	TBranch *is_polarized_b   = friend_tree -> Branch("is_polarized", &is_polarized);  
 	TBranch *is_unpolarized_b = friend_tree -> Branch("is_unpolarized", &is_unpolarized);  
@@ -673,18 +718,27 @@ int main(int argc, char *argv[])
 	UInt_t photodiode_count = 0;
 	vector<double> *tdc_photodiode = 0;
 	vector<double> *tdc_pulser_led = 0;
-	if(!is_g4)
+	if(!is_g4) // 37K or Rb, run through the new analyzer.
 	{
-	//	tree -> SetBranchAddress("TDC_PULSER_LED_Count",  &led_count);
-	//	tree -> SetBranchAddress("TDC_PHOTO_DIODE_Count", &photodiode_count);
-		tree -> SetBranchAddress("TDC_PULSER_LED_LE_Count",  &led_count);
-		tree -> SetBranchAddress("TDC_PHOTO_DIODE_LE_Count", &photodiode_count);
+		if(!is_old)
+		{
+		//	tree -> SetBranchAddress("TDC_PULSER_LED_Count",  &led_count);
+		//	tree -> SetBranchAddress("TDC_PHOTO_DIODE_Count", &photodiode_count);
+			tree -> SetBranchAddress("TDC_PULSER_LED_LE_Count",  &led_count);
+			tree -> SetBranchAddress("TDC_PHOTO_DIODE_LE_Count", &photodiode_count);
+		}
+		else if(is_old)
+		{
+			tree -> SetBranchAddress("TDC_PULSER_LED_Count",  &led_count);
+			tree -> SetBranchAddress("TDC_PHOTO_DIODE_Count", &photodiode_count);
+		}
 	}
-	if(is_g4)
+	else if(is_g4)
 	{
 		// these are defined above, but only need to create new branches for g4 runs.  it's to prevent segfaults later.
 		TBranch *led_count_branch        = friend_tree -> Branch("TDC_PULSER_LED_LE_Count",  &led_count);
 		TBranch *photodiode_count_branch = friend_tree -> Branch("TDC_PHOTO_DIODE_LE_Count", &photodiode_count);
+		
 		TBranch *photodiode_vec_branch   = friend_tree -> Branch("TDC_PHOTO_DIODE_LE",       &tdc_photodiode);
 		TBranch *led_vec_branch          = friend_tree -> Branch("TDC_PULSER_LED_LE",        &tdc_pulser_led);
 		
@@ -697,7 +751,7 @@ int main(int argc, char *argv[])
 	//
 	vector<double> * scint_time_t = 0;  
 	vector<double> * scint_time_b = 0;  
-	if(is_g4)
+	if(is_g4 || is_old)
 	{
 		tree -> SetBranchAddress("TDC_SCINT_TOP",    &scint_time_t);  
 		tree -> SetBranchAddress("TDC_SCINT_BOTTOM", &scint_time_b);  
@@ -713,7 +767,7 @@ int main(int argc, char *argv[])
 	// rmcp delay line stuff:
 
 	vector<double> *ion_events = 0;
-	if(is_g4)
+	if(is_g4 || is_old)
 	{
 		tree -> SetBranchAddress("TDC_ION_MCP", &ion_events);
 	}
@@ -738,15 +792,20 @@ int main(int argc, char *argv[])
 	vector<double> *prev_dlz = 0;
 	if(!is_g4)
 	{
-	//	tree -> SetBranchAddress("TDC_DL_X1",&x1_dla);
-	//	tree -> SetBranchAddress("TDC_DL_X2",&x2_dla);
-	//	tree -> SetBranchAddress("TDC_DL_Z1",&z1_dla);
-	//	tree -> SetBranchAddress("TDC_DL_Z2",&z2_dla);
-		
-		tree -> SetBranchAddress("TDC_DL_X1_LE",&x1_dla);
-		tree -> SetBranchAddress("TDC_DL_X2_LE",&x2_dla);
-		tree -> SetBranchAddress("TDC_DL_Z1_LE",&z1_dla);
-		tree -> SetBranchAddress("TDC_DL_Z2_LE",&z2_dla);
+		if(is_old)
+		{
+			tree -> SetBranchAddress("TDC_DL_X1",&x1_dla);
+			tree -> SetBranchAddress("TDC_DL_X2",&x2_dla);
+			tree -> SetBranchAddress("TDC_DL_Z1",&z1_dla);
+			tree -> SetBranchAddress("TDC_DL_Z2",&z2_dla);
+		}
+		else if( !is_old )
+		{
+			tree -> SetBranchAddress("TDC_DL_X1_LE",&x1_dla);
+			tree -> SetBranchAddress("TDC_DL_X2_LE",&x2_dla);
+			tree -> SetBranchAddress("TDC_DL_Z1_LE",&z1_dla);
+			tree -> SetBranchAddress("TDC_DL_Z2_LE",&z2_dla);
+		}
 	}
 	else if(is_g4)
 	{
@@ -1069,28 +1128,53 @@ int main(int argc, char *argv[])
 		ion_count = ion_events->size();
 		if(!is_g4)
 		{
-			upper_E = get_upper_E(upper_qdc_int, runno, is_g4);
-			lower_E = get_lower_E(lower_qdc_int, runno, is_g4);
-			upper_E_res = get_upper_E_res(upper_E, runno, is_g4);
-			lower_E_res = get_lower_E_res(lower_E, runno, is_g4);
-			
-			all_okay = get_all_okay_for_event(unix_time, badtimesforrun, &badint, &skipped);
-			
-			x1_count = x1_dla->size();
-			x2_count = x2_dla->size();
-			z1_count = z1_dla->size();
-			z2_count = z2_dla->size();
-			
-			nhits = min(ion_count, min(min(x1_count, x2_count), min(z1_count, z2_count)));
-			for(int j=0; j<nhits; j++)  // WONG ORDER?!? ...nah, it's fine.
+			if(!do_rubidium)
 			{
-				coordinates = my_cals -> 
-					apply_calibration((*x1_dla)[j], (*x2_dla)[j], (*z1_dla)[j], (*z2_dla)[j], 5);
-				dl_x_pos -> push_back(coordinates.first);
-				dl_z_pos -> push_back(coordinates.second);
+				upper_E = get_upper_E(upper_qdc_int, runno, is_g4);
+				lower_E = get_lower_E(lower_qdc_int, runno, is_g4);
+				upper_E_res = get_upper_E_res(upper_E, runno, is_g4);
+				lower_E_res = get_lower_E_res(lower_E, runno, is_g4);
+			
+				all_okay = get_all_okay_for_event(unix_time, badtimesforrun, &badint, &skipped);
+			
+				x1_count = x1_dla->size();
+				x2_count = x2_dla->size();
+				z1_count = z1_dla->size();
+				z2_count = z2_dla->size();
+			
+				nhits = min(ion_count, min(min(x1_count, x2_count), min(z1_count, z2_count)));
+				for(int j=0; j<nhits; j++)  // WONG ORDER?!? ...nah, it's fine.
+				{
+					coordinates = my_cals -> 
+						apply_calibration((*x1_dla)[j], (*x2_dla)[j], (*z1_dla)[j], (*z2_dla)[j], 5);
+					dl_x_pos -> push_back(coordinates.first);
+					dl_z_pos -> push_back(coordinates.second);
+				}
+			}
+			else if(do_rubidium)
+			{
+				upper_E = get_upper_E_Rb(upper_qdc_int);
+				lower_E = get_lower_E_Rb(lower_qdc_int);
+				upper_E_res = 0.0;  // doesn't really work for Rb, but again, I don't care atm.
+				lower_E_res = 0.0;  
+
+				all_okay = kTRUE;	
+				
+				x1_count = x1_dla->size();
+				x2_count = x2_dla->size();
+				z1_count = z1_dla->size();
+				z2_count = z2_dla->size();
+				
+				for(int j=0; j<nhits; j++)  // this shit isn't going to work well for Rb data, but wev.  
+				{
+					coordinates = my_cals -> 
+						apply_calibration((*x1_dla)[j], (*x2_dla)[j], (*z1_dla)[j], (*z2_dla)[j], 5);
+					dl_x_pos -> push_back(coordinates.first);
+					dl_z_pos -> push_back(coordinates.second);
+				}
 			}
 		}
-		else // if(is_g4)
+		else if(is_g4)
 		{
 			all_okay = kTRUE;	
 			
@@ -1136,13 +1220,18 @@ int main(int argc, char *argv[])
 		// BB1 shizzle:
 		N_hits_bb1_t = 0;
 		N_hits_bb1_b = 0;
+		
 		N_hits_scint_t = scint_time_t->size();
 		N_hits_scint_b = scint_time_b->size();
+		
 		had_Nhits_bb1_t = 0;
 		had_Nhits_bb1_b = 0;
 		
-		if(upper_E < 10.0) {N_hits_scint_t=0;}
-		if(lower_E < 10.0) {N_hits_scint_b=0;}
+		if(!do_rubidium)  // this is broken for Rb, because the scint calibrations are still all wrong.
+		{
+			if(upper_E < 10.0) { N_hits_scint_t=0; }
+			if(lower_E < 10.0) { N_hits_scint_b=0; }
+		}
 		
 		if(N_hits_scint_t>0 || N_hits_scint_b>0)
 		{
@@ -1150,10 +1239,15 @@ int main(int argc, char *argv[])
 			is_other = kTRUE;
 		}
 		
+	//	cout << "N_hits_scint_t=" << N_hits_scint_t << "\tN_hits_scint_b=" << N_hits_scint_b;
+	//	cout << "\tQDC_UpperPMT=" << upper_qdc_int << "\tQDC_LowerPMT=" << lower_qdc_int;
+	//	cout << "\tscint_time_t->size()=" << scint_time_t->size() << "\tscint_time_b->size()=" << scint_time_b->size() << endl;
+		
 		if( led_count==0 && photodiode_count==0 && (N_hits_scint_t>0 || N_hits_scint_b>0) )
 		{
+	//		cout << "OK, but we at **least** got here..." << endl;
 			for(int detector=0; detector <=1; detector++)
-			{
+			{ // loop over top/bottom
 				for (int axis = 0; axis<=1; axis++) 
 				{ // loop over bb1 axes.
 					if (strip_E[detector][axis] -> size() != 40) 
@@ -1193,6 +1287,7 @@ int main(int argc, char *argv[])
 				
 				if(bb1_hit[detector].pass == true)
 				{
+				//	cout << "Got here at least though." << endl;
 					if(detector == t)
 					{
 						had_Nhits_bb1_t=1;
@@ -1205,6 +1300,7 @@ int main(int argc, char *argv[])
 					{
 						if(detector == t)
 						{
+					//		cout << "Got here ... ever." << endl;
 					//		bb1_t_pass = kTRUE;
 							bb1_t_x -> push_back( bb1_hit[detector].xpos );
 							bb1_t_y -> push_back( bb1_hit[detector].ypos );
@@ -1327,7 +1423,7 @@ int main(int argc, char *argv[])
 		}
 		
 		// Is this event polarized?
-		if(is_g4)
+		if(is_g4 || do_rubidium)
 		{
 			all_okay = kTRUE;  // covered.
 			is_polarized = kTRUE;
@@ -1342,9 +1438,9 @@ int main(int argc, char *argv[])
 	//		vector<double> *dl_x_pos = 0;  // ok  // huh?  this is already there.
 	//		vector<double> *dl_z_pos = 0;  // ok  // 
 		}
-		else // if(!is_g4)
+		else // 37K run, and not from G4.
 		{
-			is_polarized = check_pol2(acmot_last, this_opdelay);
+			is_polarized = check_pol(acmot_last, this_opdelay);
 			is_unpolarized = check_unpol(acmot_last, this_opdelay);
 			is_ac = check_ac(acmot_last, this_opdelay);
 		

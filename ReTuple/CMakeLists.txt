@@ -6,6 +6,8 @@ project (Blah CXX)
 IF( $ENV{USER} STREQUAL "trinat")
 	IF( $ENV{HOST} STREQUAL "trinat02.triumf.ca")
 		INCLUDE(/home1/trinat/anholm/Packages/MiscLibs/FindROOT.cmake)   # trinat02.
+	ELSEIF( $ENV{HOST} STREQUAL "trinat01.triumf.ca" )
+		INCLUDE($ENV{MISC_INCLUDE_DIR}/FindROOT.cmake) # trinat01.  /home/trinat/anholm/Packages/MiscLibs/
 	ELSE()
 		INCLUDE(/home/trinat/anholm/MiscLibs/FindROOT.cmake)   # Trinatdaq.
 	ENDIF()
@@ -41,16 +43,17 @@ SET(CMAKE_BUILD_TYPE ReLWithDebInfo)
 IF( $ENV{USER} STREQUAL "trinat")  #
 	IF($ENV{HOST} STREQUAL "trinat02.triumf.ca")  
 		add_library (bb1_strip /home1/trinat/anholm/Packages/MiscLibs/BB1/bb1_strip.cpp)
-		#ELSEIF( $ENV{USER} STREQUAL "trinat")  # on trinatdaq.
+	ELSEIF( $ENV{HOST} STREQUAL "trinat01.triumf.ca" )
+		add_library (bb1_strip $ENV{MISC_INCLUDE_DIR}/BB1/bb1_strip.cpp)
 	ELSE()  # on trinatdaq.
 		add_library (bb1_strip /home/trinat/anholm/MiscLibs/BB1/bb1_strip.cpp)
 	ENDIF()
 ELSE()
-	IF($ENV{LOCATION} STREQUAL "trinat01")
-	add_library (bb1_strip /home/anholm/MiscLibs/BB1/bb1_strip.cpp)  # 
-	ELSE()
-	add_library (bb1_strip $ENV{MISC_INCLUDE_DIR}/BB1/bb1_strip.cpp)  # Home.
-	ENDIF()
+#	IF($ENV{LOCATION} STREQUAL "trinat01")
+#	add_library (bb1_strip /home/anholm/MiscLibs/BB1/bb1_strip.cpp)  # ...does this even work???
+#	ELSE()
+		add_library (bb1_strip $ENV{MISC_INCLUDE_DIR}/BB1/bb1_strip.cpp)  # Home.
+#	ENDIF()
 ENDIF()
 
 #Linking the Executable ================

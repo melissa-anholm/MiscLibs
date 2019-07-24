@@ -36,7 +36,16 @@ string get_datafilename(string path, int runno, bool use_blinded=false)
 	ss.str( std::string() );
 	ss.clear();
 	
-	ss << path << "output00" << runno;
+//	ss << path << "output00" << runno;
+	if(runno<1000)
+	{
+		ss << path << "output00" << runno;
+	}
+	else
+	{
+		ss << path << "output0" << runno;
+	}
+	
 	if (use_blinded)
 	{
 		ss << "_blinded";
@@ -55,7 +64,16 @@ string get_datafriendname(string path, int runno, bool use_blinded=false)
 	ss.str( std::string() );
 	ss.clear();
 	
-	ss << path << "friend00" << runno;
+//	ss << path << "friend00" << runno;
+	if(runno<1000)
+	{
+		ss << path << "friend00" << runno;
+	}
+	else
+	{
+		ss << path << "friend0" << runno;
+	}
+	
 	if (use_blinded)
 	{
 		ss << "_blinded";
