@@ -282,7 +282,7 @@ int can_hadd(int run1, int run2, bool relax_alreadysummed)
 {
 	return can_hadd(metadata_name, run1, metadata_name, run2, metadata_name, relax_alreadysummed);
 }
-int can_hadd(string filename1, int run1, string filename2, int run2, string filename3, bool relax_alreadysummed=false)
+int can_hadd(string filename1, int run1, string filename2, int run2, string filename3, bool relax_alreadysummed=false)  // **this function** is what we have to adjust when we add new columns/branches to the Metadata file.
 {
 	int verbose = 0;
 //	Run/I:Filename/C:has_been_summed/I:Efield/D:Rho/D:EventsGenerated/I:EventsSaved/I:SaveEventTypes/C:Polarization/D:Alignment/D:MinCosTheta/D:Efield_Uniformity/O:StepperType/I:StepperName/C:StepMax_mm/D:PhysicsListName/C:is_a_sum/I:Trap_x_mm/D:Trap_y_mm/D:Trap_z_mm/D:Trap_sigma_x/D:Trap_sigma_y/D:Trap_sigma_z/D:Temperature/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:SailVelocity_x_mm_per_ms/D:SailVelocity_y_mm_per_ms/D:SailVelocity_z_mm_per_ms/D:ChargeState/I
@@ -380,51 +380,95 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	
 	//
 	double Efield1, Efield2;
-	double rho1, rho2;
+//	double rho1, rho2;
 	double pol1, pol2;
 	double align1, align2;
+	double MonoEnergy1, MonoEnergy2;
+	
 	MetaTree1 -> SetBranchAddress("Efield",         &Efield1);
-	MetaTree1 -> SetBranchAddress("Rho",            &rho1);
+//	MetaTree1 -> SetBranchAddress("Rho",            &rho1);
 	MetaTree1 -> SetBranchAddress("Polarization",   &pol1);
 	MetaTree1 -> SetBranchAddress("Alignment",      &align1);
+	MetaTree1 -> SetBranchAddress("MonoEnergy_MeV", &MonoEnergy1);
+	
 	MetaTree2 -> SetBranchAddress("Efield",         &Efield2);
-	MetaTree2 -> SetBranchAddress("Rho",            &rho2);
+//	MetaTree2 -> SetBranchAddress("Rho",            &rho2);
 	MetaTree2 -> SetBranchAddress("Polarization",   &pol2);
 	MetaTree2 -> SetBranchAddress("Alignment",      &align2);
+	MetaTree2 -> SetBranchAddress("MonoEnergy_MeV", &MonoEnergy2);
+
+	double Mz_1, Mz2_1, Mz3_1;
+	double Mz_2, Mz2_2, Mz3_2;
+	MetaTree1 -> SetBranchAddress("Mz",             &Mz_1);  //
+	MetaTree1 -> SetBranchAddress("Mz2",            &Mz2_1); //
+	MetaTree1 -> SetBranchAddress("Mz3",            &Mz3_1); //
+	MetaTree2 -> SetBranchAddress("Mz",             &Mz_2);  //
+	MetaTree2 -> SetBranchAddress("Mz2",            &Mz2_2); //
+	MetaTree2 -> SetBranchAddress("Mz3",            &Mz3_2); //
+	
+	
 	//
 	double stepmax1, stepmax2;
 	double mincostheta1, mincostheta2;
 	int steppertype1, steppertype2;
-	int chargestate1, chargestate2;
-	MetaTree1 -> SetBranchAddress("StepMax_mm",      &stepmax1);
+//	int chargestate1, chargestate2;
+	MetaTree1 -> SetBranchAddress("StepMin_mm",      &stepmax1);
 	MetaTree1 -> SetBranchAddress("MinCosTheta",     &mincostheta1);
 	MetaTree1 -> SetBranchAddress("StepperType",     &steppertype1);
-	MetaTree1 -> SetBranchAddress("ChargeState",     &chargestate1);
-	MetaTree2 -> SetBranchAddress("StepMax_mm",      &stepmax2);
+//	MetaTree1 -> SetBranchAddress("ChargeState",     &chargestate1);
+	MetaTree2 -> SetBranchAddress("StepMin_mm",      &stepmax2);
 	MetaTree2 -> SetBranchAddress("MinCosTheta",     &mincostheta2);
 	MetaTree2 -> SetBranchAddress("StepperType",     &steppertype2);
-	MetaTree2 -> SetBranchAddress("ChargeState",     &chargestate2);
+//	MetaTree2 -> SetBranchAddress("ChargeState",     &chargestate2);
 	char this_StepperName1[256];
 	char this_SaveEventTypes1[256];
 	char this_PhysicsListName1[256];
+	char this_EventGenerator1[256];
+	
 	char this_StepperName2[256];
 	char this_SaveEventTypes2[256];
 	char this_PhysicsListName2[256];
+	char this_EventGenerator2[256];
 	MetaTree1 -> SetBranchAddress("StepperName",     &this_StepperName1);
 	MetaTree1 -> SetBranchAddress("SaveEventTypes",  &this_SaveEventTypes1);
 	MetaTree1 -> SetBranchAddress("PhysicsListName", &this_PhysicsListName1);
+	MetaTree1 -> SetBranchAddress("EventGenerator",  &this_EventGenerator1);  //
 	MetaTree2 -> SetBranchAddress("StepperName",     &this_StepperName2);
 	MetaTree2 -> SetBranchAddress("SaveEventTypes",  &this_SaveEventTypes2);
 	MetaTree2 -> SetBranchAddress("PhysicsListName", &this_PhysicsListName2);
+	MetaTree2 -> SetBranchAddress("EventGenerator",  &this_EventGenerator2);  //
 	//
-	double trap_x1, trap_y1, trap_z1;
-	double trap_x2, trap_y2, trap_z2;
-	MetaTree1 -> SetBranchAddress("Trap_x_mm",       &trap_x1);
-	MetaTree1 -> SetBranchAddress("Trap_y_mm",       &trap_y1);
-	MetaTree1 -> SetBranchAddress("Trap_z_mm",       &trap_z1);
-	MetaTree2 -> SetBranchAddress("Trap_x_mm",       &trap_x2);
-	MetaTree2 -> SetBranchAddress("Trap_y_mm",       &trap_y2);
-	MetaTree2 -> SetBranchAddress("Trap_z_mm",       &trap_z2);
+	double trap_x1i, trap_y1i, trap_z1i, trap_x1f, trap_y1f, trap_z1f;
+	double trap_x2i, trap_y2i, trap_z2i, trap_x2f, trap_y2f, trap_z2f;
+	MetaTree1 -> SetBranchAddress("Trap_x_i_mm",       &trap_x1i);
+	MetaTree1 -> SetBranchAddress("Trap_y_i_mm",       &trap_y1i);
+	MetaTree1 -> SetBranchAddress("Trap_z_i_mm",       &trap_z1i);
+	MetaTree1 -> SetBranchAddress("Trap_x_f_mm",       &trap_x1f);
+	MetaTree1 -> SetBranchAddress("Trap_y_f_mm",       &trap_y1f);
+	MetaTree1 -> SetBranchAddress("Trap_z_f_mm",       &trap_z1f);
+	MetaTree2 -> SetBranchAddress("Trap_x_i_mm",       &trap_x2i);
+	MetaTree2 -> SetBranchAddress("Trap_y_i_mm",       &trap_y2i);
+	MetaTree2 -> SetBranchAddress("Trap_z_i_mm",       &trap_z2i);
+	MetaTree2 -> SetBranchAddress("Trap_x_f_mm",       &trap_x2f);
+	MetaTree2 -> SetBranchAddress("Trap_y_f_mm",       &trap_y2f);
+	MetaTree2 -> SetBranchAddress("Trap_z_f_mm",       &trap_z2f);
+	
+	double trap_sigmax1i, trap_sigmay1i, trap_sigmaz1i, trap_sigmax1f, trap_sigmay1f, trap_sigmaz1f;
+	double trap_sigmax2i, trap_sigmay2i, trap_sigmaz2i, trap_sigmax2f, trap_sigmay2f, trap_sigmaz2f;
+	MetaTree1 -> SetBranchAddress("Trap_sigma_x_i_mm",    &trap_sigmax1i);
+	MetaTree1 -> SetBranchAddress("Trap_sigma_y_i_mm",    &trap_sigmay1i);
+	MetaTree1 -> SetBranchAddress("Trap_sigma_z_i_mm",    &trap_sigmaz1i);
+	MetaTree1 -> SetBranchAddress("Trap_sigma_x_f_mm",    &trap_sigmax1f);
+	MetaTree1 -> SetBranchAddress("Trap_sigma_y_f_mm",    &trap_sigmay1f);
+	MetaTree1 -> SetBranchAddress("Trap_sigma_z_f_mm",    &trap_sigmaz1f);
+	MetaTree2 -> SetBranchAddress("Trap_sigma_x_i_mm",    &trap_sigmax2i);
+	MetaTree2 -> SetBranchAddress("Trap_sigma_y_i_mm",    &trap_sigmay2i);
+	MetaTree2 -> SetBranchAddress("Trap_sigma_z_i_mm",    &trap_sigmaz2i);
+	MetaTree2 -> SetBranchAddress("Trap_sigma_x_f_mm",    &trap_sigmax2f);
+	MetaTree2 -> SetBranchAddress("Trap_sigma_y_f_mm",    &trap_sigmay2f);
+	MetaTree2 -> SetBranchAddress("Trap_sigma_z_f_mm",    &trap_sigmaz2f);
+	
+	/*
 	double temp1x, temp1y, temp1z;
 	double temp2x, temp2y, temp2z;
 	MetaTree1 -> SetBranchAddress("Temperature_x_mK",     &temp1x);
@@ -433,14 +477,6 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	MetaTree2 -> SetBranchAddress("Temperature_x_mK",     &temp2x);
 	MetaTree2 -> SetBranchAddress("Temperature_y_mK",     &temp2y);
 	MetaTree2 -> SetBranchAddress("Temperature_z_mK",     &temp2z);
-	double trap_sigmax1, trap_sigmay1, trap_sigmaz1;
-	double trap_sigmax2, trap_sigmay2, trap_sigmaz2;
-	MetaTree1 -> SetBranchAddress("Trap_sigma_x",    &trap_sigmax1);
-	MetaTree1 -> SetBranchAddress("Trap_sigma_y",    &trap_sigmay1);
-	MetaTree1 -> SetBranchAddress("Trap_sigma_z",    &trap_sigmaz1);
-	MetaTree2 -> SetBranchAddress("Trap_sigma_x",    &trap_sigmax2);
-	MetaTree2 -> SetBranchAddress("Trap_sigma_y",    &trap_sigmay2);
-	MetaTree2 -> SetBranchAddress("Trap_sigma_z",    &trap_sigmaz2);
 	double sail_x1, sail_y1, sail_z1;
 	double sail_x2, sail_y2, sail_z2;
 	MetaTree1 -> SetBranchAddress("SailVelocity_x_mm_per_ms",   &sail_x1);
@@ -449,6 +485,7 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	MetaTree2 -> SetBranchAddress("SailVelocity_x_mm_per_ms",   &sail_x2);
 	MetaTree2 -> SetBranchAddress("SailVelocity_y_mm_per_ms",   &sail_y2);
 	MetaTree2 -> SetBranchAddress("SailVelocity_z_mm_per_ms",   &sail_z2);
+	*/
 	
 	double expansiontime1, expansiontime2;
 	MetaTree1 -> SetBranchAddress("ExpandBeforePolarized_ms",   &expansiontime1);
@@ -476,31 +513,46 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	//
 	if( Efield1 != Efield2) {match = false;}
 		if(verbose>1 && !match) { cout << "Efields are inconsistent." << endl;       return -1;}
-	if( rho1    != rho2)    {match = false;}
-		if(verbose>1 && !match) { cout << "rho values are inconsistent." << endl;    return -1;}
+//	if( rho1    != rho2)    {match = false;}
+//		if(verbose>1 && !match) { cout << "rho values are inconsistent." << endl;    return -1;}
 	if( pol1    != pol1)    {match = false;}
 		if(verbose>1 && !match) { cout << "polarizations are inconsistent." << endl; return -1;}
 	if( align1  != align2)  {match = false;}
 		if(verbose>1 && !match) { cout << "alignments are inconsistent." << endl;    return -1;}
 	//
+	if( Mz_1  != Mz_2)   {match = false;}
+	if( Mz2_1 != Mz2_2)  {match = false;}
+	if( Mz3_1 != Mz3_2)  {match = false;}
+	//
 	if( stepmax1     != stepmax2)     {match = false;}
 	if( mincostheta1 != mincostheta2) {match = false;}
 	if( steppertype1 != steppertype2) {match = false;}
-	if( chargestate1 != chargestate2) {match = false;}
+//	if( chargestate1 != chargestate2) {match = false;}
 	//
 	if( strcmp(this_StepperName1,    this_StepperName2)     !=0 ) {match=false;}
 	if( strcmp(this_SaveEventTypes1, this_SaveEventTypes2)  !=0 ) {match=false;}
 	if( strcmp(this_PhysicsListName1,this_PhysicsListName2) !=0 ) {match=false;}
+	if( strcmp(this_EventGenerator1, this_EventGenerator2)  !=0 ) {match=false;}
 	//
-	if( trap_x1        != trap_x2)        {match = false;}
-	if( trap_y1        != trap_y2)        {match = false;}
-	if( trap_z1        != trap_z2)        {match = false;}
-	if( temp1x         != temp2x)         {match = false;}
-	if( temp1y         != temp2y)         {match = false;}
-	if( temp1z         != temp2z)         {match = false;}
-	if( trap_sigmax1   != trap_sigmax2)   {match = false;}
-	if( trap_sigmay1   != trap_sigmay2)   {match = false;}
-	if( trap_sigmaz1   != trap_sigmaz2)   {match = false;}
+	if( trap_x1i        != trap_x2i)        {match = false;}
+	if( trap_y1i        != trap_y2i)        {match = false;}
+	if( trap_z1i        != trap_z2i)        {match = false;}
+	if( trap_x1f        != trap_x2f)        {match = false;}
+	if( trap_y1f        != trap_y2f)        {match = false;}
+	if( trap_z1f        != trap_z2f)        {match = false;}
+	if( trap_sigmax1i   != trap_sigmax2i)   {match = false;}
+	if( trap_sigmay1i   != trap_sigmay2i)   {match = false;}
+	if( trap_sigmaz1i   != trap_sigmaz2i)   {match = false;}
+	if( trap_sigmax1f   != trap_sigmax2f)   {match = false;}
+	if( trap_sigmay1f   != trap_sigmay2f)   {match = false;}
+	if( trap_sigmaz1f   != trap_sigmaz2f)   {match = false;}
+	
+//	if( temp1x         != temp2x)         {match = false;}
+//	if( temp1y         != temp2y)         {match = false;}
+//	if( temp1z         != temp2z)         {match = false;}
+	
+	if ( (MonoEnergy1 == -10 || MonoEnergy2 == -10) && (MonoEnergy1 != MonoEnergy2) )    {match = false;} // if they don't match *and* one of them is "make the whole spectrum"
+	
 	//
 	if( expansiontime1 != expansiontime2) {match = false;}
 	if( OP_cycletime1  != OP_cycletime2)  {match = false;}
@@ -714,14 +766,17 @@ string getlinestring_for_run(int runno, string metafilename)
 string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int total_ngenerated, int total_nsaved, string firstrunline, int branchpos_runno, int branchpos_eventsgenerated, int branchpos_eventssaved, /*int branchpos_isbad,*/ int branchpos_issummed, int branchpos_filename)
 {
 	bool verbose=false;
-/*
-	if(verbose) cout << "branchpos_runno           = " << branchpos_runno << endl;
-	if(verbose) cout << "branchpos_eventsgenerated = " << branchpos_eventsgenerated << endl;
-	if(verbose) cout << "branchpos_eventssaved     = " << branchpos_eventssaved << endl;
-	if(verbose) cout << "branchpos_isbad           = " << branchpos_isbad << endl;
-	if(verbose) cout << "branchpos_issummed        = " << branchpos_issummed << endl;
-	if(verbose) cout << "branchpos_filename        = " << branchpos_filename << endl;
-*/
+
+	if(verbose)
+	{
+		if(verbose) cout << "branchpos_runno           = " << branchpos_runno << endl;
+		if(verbose) cout << "branchpos_eventsgenerated = " << branchpos_eventsgenerated << endl;
+		if(verbose) cout << "branchpos_eventssaved     = " << branchpos_eventssaved << endl;
+	//	if(verbose) cout << "branchpos_isbad           = " << branchpos_isbad << endl;
+		if(verbose) cout << "branchpos_issummed        = " << branchpos_issummed << endl;
+		if(verbose) cout << "branchpos_filename        = " << branchpos_filename << endl;
+	}
+	
 	std::stringstream ss_out;
 	ss_out.str( std::string() );
 	ss_out.clear();

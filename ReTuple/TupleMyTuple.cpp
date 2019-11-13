@@ -67,14 +67,14 @@ using std::min;
 
 //
 bool is_blinded            = false;
-bool is_g4                 = false;
+bool is_g4                 = true;
 bool use_g4_metadata       = true;
 bool apply_scint_res_on_g4 = true;
 bool doEmpirical           = true;  // empirical noise on BB1s.  for G4 data.
-bool do_rubidium           = true;  // Rb
+bool do_rubidium           = false;  // Rb
 bool is_old                = true;  // before trailing edge/leading edge madness.
 
-int version = 10;
+int version = 11;
 
 //#define XSTR(x) #x
 //#define STR(x) XSTR(x)

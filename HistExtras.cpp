@@ -288,6 +288,15 @@ int hist_type::set_other_parameters()
 		user_xmin = xmin;
 		user_xmax = 5500.0;
 	}
+	else if (type == std::string("E_beta_mono") )
+	{
+		nbins = 650;
+		xmin = -0.5;
+		xmax = 6500.5-1.0;
+		units = std::string("Scintillator Energy (keV)");
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
 	else if (type == std::string("Ben_Ebeta") )
 	{
 		nbins = 60;

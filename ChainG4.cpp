@@ -307,6 +307,7 @@ int check_runmatch(int the_run, vector<int> the_list) // returns the index of ma
 	}
 	return -1;
 }
+
 TChain * get_chain_from_runlist(TTree * MetaTree, vector<int> the_runlist) // this can break if the metadata has recorded more than one of the same run number.
 {
 	string path       = g4_path;
@@ -353,6 +354,11 @@ TChain * get_chain_from_runlist(TTree * MetaTree, vector<int> the_runlist) // th
 	}
 	tree_chain -> AddFriend(friend_chain);
 	return tree_chain;
+}
+TChain * get_chain_from_runlist(vector<int> the_runlist) // this can break if the metadata has recorded more than one of the same run number.
+{
+	TTree *MetaTree = load_metadata_tree(metadata_name);
+	return get_chain_from_runlist(MetaTree, the_runlist);
 }
 TChain * get_chain_from_runlist(int argc, char* argv[], TTree * MetaTree) // this can break if the metadata has recorded more than one of the same run number.
 {

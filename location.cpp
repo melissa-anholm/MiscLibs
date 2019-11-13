@@ -10,6 +10,11 @@
 #include <sstream>
 //#include <cstdio>
 #include <iostream>
+#include <string>
+
+using std::string;
+using std::cout;
+using std::endl;
 
 //#include <fstream>
 //#include <iostream>
