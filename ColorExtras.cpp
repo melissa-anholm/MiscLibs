@@ -1,6 +1,7 @@
 #ifndef INCLUDE_COLOREXTRAS
 #define INCLUDE_COLOREXTRAS 1
 
+#include <cstdio>
 
 //#include <vector>
 #include "TColor.h"
@@ -9,6 +10,8 @@
 //#include "TPaletteAxis.h"
 
 using std::string;
+using std::cout;
+using std::endl;
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 /*

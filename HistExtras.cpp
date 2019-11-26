@@ -288,6 +288,15 @@ int hist_type::set_other_parameters()
 		user_xmin = xmin;
 		user_xmax = 5500.0;
 	}
+	else if (type == std::string("energy_bins") )  // for SOE_TOF.
+	{
+		nbins = 7;
+		xmin = -1.0;
+		xmax = 6.0;
+		units = std::string("Beta Energy (keV)");
+		user_xmin = xmin;
+		user_xmax = 5.0;
+	}
 	else if (type == std::string("E_beta_mono") )
 	{
 		nbins = 650;

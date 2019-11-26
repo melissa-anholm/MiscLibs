@@ -353,6 +353,7 @@ asym_histset * get_pair_ben_B()
 	pair_benB->h_asym -> SetMarkerSize(1.5);
 	pair_benB->h_asym -> SetLineWidth(1);
 	
+	// bool asym_histset::init_counthists(string filename, string name_tp, string name_tm, string name_bp, string name_bm)
 	pair_benB->init_counthists(ben_fname_B, 
 		name_tp_default, name_tm_default, name_bp_default, name_bm_default);
 	if(pair_benB->has_counthists && verbose) { cout << "Successfully initialized counthists for Set B." << endl; }
@@ -436,6 +437,45 @@ asym_histset * get_pair_ben_D()
 
 	return pair_benD;
 }
+
+asym_histset * get_pair_ben_all()
+{
+	asym_histset * pair_all = get_pair_ben_B();
+//	asym_histset * pairB = get_pair_ben_B();
+
+	asym_histset * pairC = get_pair_ben_C();
+	pair_all->h_tp -> Add( pairC->h_tp );
+	pair_all->h_tm -> Add( pairC->h_tm );
+	pair_all->h_bp -> Add( pairC->h_bp );
+	pair_all->h_bm -> Add( pairC->h_bm );
+
+	asym_histset * pairD = get_pair_ben_D();
+	pair_all->h_tp -> Add( pairD->h_tp );
+	pair_all->h_tm -> Add( pairD->h_tm );
+	pair_all->h_bp -> Add( pairD->h_bp );
+	pair_all->h_bm -> Add( pairD->h_bm );
+	
+	pair_all -> set_name("Sets BCD" );
+	pair_all->h_tp -> SetName( (string("Sets BCD:  ")+string(pair_all->h_tp->GetName())).c_str() );
+	pair_all->h_tm -> SetName( (string("Sets BCD:  ")+string(pair_all->h_tm->GetName())).c_str() );
+	pair_all->h_bp -> SetName( (string("Sets BCD:  ")+string(pair_all->h_bp->GetName())).c_str() );
+	pair_all->h_bm -> SetName( (string("Sets BCD:  ")+string(pair_all->h_bm->GetName())).c_str() );
+
+	pair_all->h_counts->Add( pairC->h_counts);
+	pair_all->h_counts->Add( pairD->h_counts);
+//	pair_all->h_counts->Set
+//	asym_histset::init_counthists(TH1D* h_tp_, TH1D* h_tm_, TH1D* h_bp_, TH1D* h_bm_)
+
+	
+	// ok, now construct the asymmetry...
+	
+	TH1D * h = make_asymmetry_histogram(pair_all->h_tp, pair_all->h_tm, pair_all->h_bp, pair_all->h_bm, string("Sets BCD:  A_beta"));
+	pair_all->h_asym = h;
+	
+	return pair_all;
+}
+
+
 asym_histset * get_g4_asymhist_pair(double rho, string setletter)
 {
 	string string_asym = "Super-er A_beta (from E_scint)";
@@ -477,6 +517,7 @@ public:
 	void setup_counts_like_B();
 	void setup_counts_like_C();
 	void setup_counts_like_D();
+	void setup_counts_like_all();
 	void scale_stats(double n_total_counts);
 	void set_use_errs(bool this_use_errs) { use_errs = this_use_errs; };
 	
@@ -639,6 +680,21 @@ void created_histset::setup_counts_like_D()
 	lambda_top    = 1.42;
 	lambda_bottom = 1.32;
 }
+
+void created_histset::setup_counts_like_all()  // APPROXIMATE SCALING ONLY!
+{
+	double n_total_counts = 196395+20177+232061;
+	double n_tp = 21843+2208+25493;
+	double n_tm = 72759+7426+85603;
+	double n_bp = 78222+8183+92961;
+	double n_bm = 23571+2360+28004;
+	setup_counts(n_total_counts, n_tp, n_tm, n_bp, n_bm);
+	
+	lambda_top    = (1.55+1.42)/2.0;
+	lambda_bottom = (1.28+1.32)/2.0;
+}
+
+
 
 void created_histset::setup_convolution_params(double flatfrac, double lambda_t, double lambda_b)
 {
