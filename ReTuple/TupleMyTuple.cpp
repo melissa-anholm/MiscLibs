@@ -54,6 +54,7 @@
 #include <TTree.h>
 #include <TObjString.h>
 #include <TRandom3.h>
+#include <TF1.h>
 
 using std::cout;
 using std::cin;
@@ -67,12 +68,12 @@ using std::min;
 
 //
 bool is_blinded            = false;
-bool is_g4                 = true;
+bool is_g4                 = false;
 bool use_g4_metadata       = true;
 bool apply_scint_res_on_g4 = true;
 bool doEmpirical           = true;  // empirical noise on BB1s.  for G4 data.
 bool do_rubidium           = false;  // Rb
-bool is_old                = true;  // before trailing edge/leading edge madness.
+bool is_old                = false;  // before trailing edge/leading edge madness.
 
 int version = 11;
 
@@ -84,6 +85,7 @@ int version = 11;
 #include "treeql_replacement.cpp"
 #include "BB1/bb1_strip.h"
 #include "mini_cal_maker.cpp"
+#include "HistExtras.cpp" // v1192_to_ns.
 
 //string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
 
@@ -476,6 +478,78 @@ double get_r(double x, double y)
 	double r2 = pow(x, 2) + pow(y, 2);
 	return sqrt(r2);
 }
+//
+//double etof_offset_le[] = {84.41+122.6, 86.61+120.4};  // not good values atm.  also, this was set up using the other detector numbering convention...
+//double etof_offset_le_t = 86.61+120.4;
+//double etof_offset_le_b = 84.41+122.6;
+
+
+
+double adjust_tof_t(double raw_tof_in, double Ebeta, TF1* fitfunc, int run)  
+// what units for Ebeta? ...whatever gets saved to the new friendtuple.
+// raw_tof_in is just electron_time - scint_time, in TDC units.
+{
+	double etof_offset_le_t = 86.61+120.4;
+	double extra_offset_t_byrun = 0;
+	//
+	raw_tof_in*=v1192_to_ns;
+	raw_tof_in+=etof_offset_le_t;
+	if(run>420)  // after set A.
+	{
+		if (run<=445)  // B
+		{
+			extra_offset_t_byrun = 3.24675e-02;
+		}
+		else if(run<=477) // C
+		{
+			extra_offset_t_byrun = -5.03717e-02;
+		}
+		else if(run<=513) // D
+		{
+			extra_offset_t_byrun = -5.81678e-02;
+		}
+	}
+	raw_tof_in+=extra_offset_t_byrun;
+	
+//	e_tof_in = ( electron_time - scint_time_t->at(j) )*v1192_to_ns + etof_offset_le_t;
+//	the_tof  = adjust_tof(tmp_e_tof, upper_E, f_t_le);
+
+	double adjustment;
+	if(!fitfunc) { adjustment = 9.8; }
+	else         { adjustment = fitfunc -> Eval(Ebeta); }
+	double tof_out = raw_tof_in - adjustment;
+	return tof_out;
+}
+double adjust_tof_b(double raw_tof_in, double Ebeta, TF1* fitfunc, int run)
+{
+	double etof_offset_le_b = 84.41+122.6;
+	double extra_offset_b_byrun = 0;
+	//
+	raw_tof_in*=v1192_to_ns;
+	raw_tof_in+=etof_offset_le_b;
+	if(run>420) // after set A.
+	{
+		if (run<=445)  // B
+		{
+		extra_offset_b_byrun = -4.73204e-03;
+		}
+		else if(run<=477) // C
+		{
+			extra_offset_b_byrun = -3.07881e-02;
+		}
+		else if(run<=513) // D
+		{
+			extra_offset_b_byrun = -4.44450e-02;
+		}
+	}
+	raw_tof_in+=extra_offset_b_byrun;
+
+	double adjustment;
+	if(!fitfunc) { adjustment = 9.8; }
+	else         { adjustment = fitfunc -> Eval(Ebeta); }
+	double tof_out = raw_tof_in - adjustment;
+	return tof_out;
+}
 
 //
 int main(int argc, char *argv[]) 
@@ -761,21 +835,25 @@ int main(int argc, char *argv[])
 		tree -> SetBranchAddress("TDC_SCINT_TOP_LE",    &scint_time_t);  
 		tree -> SetBranchAddress("TDC_SCINT_BOTTOM_LE", &scint_time_b);  
 	}
-
+	
 	
 	// --*-- // --*-- // --*-- // --*-- // --*-- // --*-- // --*-- // --*-- // --*-- // 
 	// rmcp delay line stuff:
 
 	vector<double> *ion_events = 0;
+	vector<double> *electron_events = 0;
 	if(is_g4 || is_old)
 	{
 		tree -> SetBranchAddress("TDC_ION_MCP", &ion_events);
+		tree -> SetBranchAddress("TDC_ELECTRON_MCP", &electron_events);
 	}
 	else
 	{
 		tree -> SetBranchAddress("TDC_ION_MCP_LE", &ion_events);
+		tree -> SetBranchAddress("TDC_ELECTRON_MCP_LE", &electron_events);
 	}
 	int ion_count = 0;
+	int electron_count = 0;
 
 	vector<double> *dl_x_pos = 0;
 	vector<double> *dl_z_pos = 0;
@@ -820,10 +898,28 @@ int main(int argc, char *argv[])
 	int x_count = 0;
 	int z_count = 0;
 	
+	// ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // 
+	// Correct for walk: 
+	vector<double> * scint_t_walk = 0;
+	vector<double> * scint_b_walk = 0;
+	TBranch *scint_t_walk_branch = friend_tree -> Branch("tdc_scint_t_corrected", &scint_t_walk);
+	TBranch *scint_b_walk_branch = friend_tree -> Branch("tdc_scint_b_corrected", &scint_b_walk);
+	scint_t_walk -> clear();
+	scint_b_walk -> clear();
+	
+	string fitresults_fname = "walkfit_all2.root";
+	TFile * fitresults_file = new TFile(fitresults_fname.c_str());
+	if(fitresults_file) { cout << "Using " << fitresults_fname << " for fit results." << endl; }
+	else { cout << "Couldn't find " << fitresults_fname << ".  Aborting." << endl;  return 0; }
+	
+	TF1 *f_t_le, *f_b_le;
+	f_t_le = (TF1*)fitresults_file->Get("Top LE Quartic");    // f1
+	f_b_le = (TF1*)fitresults_file->Get("Bottom LE Quartic"); // f2
+	
+	
 	
 	// ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // 
 	// BB1s:  
-	
 	BB1Detector stripdetector[2][2];
 	string tdiff_file[2] = {bb1_prefix+"bb1_u_tdiff.dat", bb1_prefix+"bb1_l_tdiff.dat"};  // WHAT DOES THIS SHIT EVEN DO FOR G4 DATA?  ... I think it's fine, because I'll just set everything to be the same.
 //	tdiff_file[0] = bb1_prefix+"bb1_u_tdiff.dat";  
@@ -1046,7 +1142,6 @@ int main(int argc, char *argv[])
 	TBranch * twohits_bb1_b_branch = friend_tree -> Branch("had_Nhits_bb1_b", &had_Nhits_bb1_b);
 	
 	
-	
 	// bad times overhead:
 	vector<pair<UInt_t, UInt_t> > badtimesforrun;
 	badtimesforrun = ProcessAllOkayForRunsInFile(runno);
@@ -1104,7 +1199,7 @@ int main(int argc, char *argv[])
 		}
 		
 		TBranch *sigma_plus_branch = friend_tree -> Branch("TTLBit_SigmaPlus", &sigma_plus);  
-		TBranch *sigma_plus_branch2 = friend_tree -> Branch("TTLBit_SigmaPlus2", &sigma_plus);  
+	//	TBranch *sigma_plus_branch2 = friend_tree -> Branch("TTLBit_SigmaPlus2", &sigma_plus);  
 		TBranch *pol_branch = friend_tree -> Branch("Polarization", &polarization);  
 	}
 	
@@ -1124,11 +1219,16 @@ int main(int argc, char *argv[])
 			tdc_pulser_led -> clear();
 		}
 		
-		// rMCP position stuff:
 		ion_count = ion_events->size();
+		electron_count = electron_events->size();
+		N_hits_scint_t = scint_time_t->size();
+		N_hits_scint_b = scint_time_b->size();
+		
+		// rMCP position stuff, scint. calibration, SOE TOF walk correction:
 		if(!is_g4)
 		{
-			if(!do_rubidium)
+			//
+			if(!do_rubidium)  // 37K real data
 			{
 				upper_E = get_upper_E(upper_qdc_int, runno, is_g4);
 				lower_E = get_lower_E(lower_qdc_int, runno, is_g4);
@@ -1157,7 +1257,7 @@ int main(int argc, char *argv[])
 				lower_E = get_lower_E_Rb(lower_qdc_int);
 				upper_E_res = 0.0;  // doesn't really work for Rb, but again, I don't care atm.
 				lower_E_res = 0.0;  
-
+				
 				all_okay = kTRUE;	
 				
 				x1_count = x1_dla->size();
@@ -1165,6 +1265,7 @@ int main(int argc, char *argv[])
 				z1_count = z1_dla->size();
 				z2_count = z2_dla->size();
 				
+				nhits = min(ion_count, min(min(x1_count, x2_count), min(z1_count, z2_count)));
 				for(int j=0; j<nhits; j++)  // this shit isn't going to work well for Rb data, but wev.  
 				{
 					coordinates = my_cals -> 
@@ -1198,6 +1299,47 @@ int main(int argc, char *argv[])
 			}
 		}
 		
+		// ok, apply the SOE TOF walk calibration.  we can re-use nhits.  
+		// we already figured out upper_E and lower_E.  if it's g4 or old, just fill with zeroes.
+		if(electron_count>0)
+		{
+			double electron_time = (*electron_events)[0];
+		//	double scint_time = 0;
+		//	scint_time = (*scint_time_b)[j];
+			double e_tof_in = 0;
+			double the_tof = 0;
+			// Top:
+			if(N_hits_scint_t>0)
+			{
+				nhits = N_hits_scint_t;
+				for(int j=0; j<nhits; j++) 
+				{
+				//	double adjust_tof_b(double tof_in, double Ebeta, TF1* fitfunc, int run)
+					
+				//	e_tof_in = ( electron_time - scint_time_t->at(j) )*v1192_to_ns + etof_offset_le_t;
+				//	the_tof  = adjust_tof(tmp_e_tof, upper_E, f_t_le);
+					
+					the_tof = adjust_tof_t(electron_time - scint_time_t->at(j), upper_E, f_t_le, runno);
+					scint_t_walk -> push_back(the_tof);
+				}
+			}
+			// Bottom:
+			if(N_hits_scint_b>0)
+			{
+				nhits = N_hits_scint_b;
+				for(int j=0; j<nhits; j++) 
+				{
+				//	e_tof_in = ( electron_time - scint_time_b->at(j) )*v1192_to_ns + etof_offset_le_b;
+				//	the_tof  = adjust_tof(tmp_e_tof, lower_E, f_b_le);
+					
+					the_tof = adjust_tof_b(electron_time - scint_time_b->at(j), lower_E, f_b_le, runno);
+					scint_b_walk -> push_back(the_tof);
+				}
+			}
+		}
+		
+		
+		
 		// Set up event types:
 		is_type1_t = kFALSE;
 		is_type1_b = kFALSE;
@@ -1220,9 +1362,6 @@ int main(int argc, char *argv[])
 		// BB1 shizzle:
 		N_hits_bb1_t = 0;
 		N_hits_bb1_b = 0;
-		
-		N_hits_scint_t = scint_time_t->size();
-		N_hits_scint_b = scint_time_b->size();
 		
 		had_Nhits_bb1_t = 0;
 		had_Nhits_bb1_b = 0;
@@ -1518,6 +1657,9 @@ int main(int argc, char *argv[])
 		bb1_b_y -> clear();
 		bb1_b_E -> clear();
 		bb1_b_r -> clear();
+		
+		scint_t_walk -> clear();
+		scint_b_walk -> clear();
 		
 	}
 	if(!is_g4)
