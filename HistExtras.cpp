@@ -213,8 +213,8 @@ int hist_type::set_other_parameters()
 		xmin = (-200.5+1.0)*v1192_to_ns;
 		xmax = (200.5)*v1192_to_ns;
 		units = std::string("electron - scint - offset [ns]");
-		user_xmin = 4.0;
-		user_xmax = 18.0;
+		user_xmin = -4.0;
+		user_xmax = 4.0;
 	}
 	else if (type == std::string("cal_scint_tof"))  // for eg: scint_t - scint_b.
 	{
@@ -279,6 +279,24 @@ int hist_type::set_other_parameters()
 		user_xmin = xmin;
 		user_xmax = xmax;
 	}
+	else if (type == std::string("E_scint") )
+	{
+		nbins = 650;
+		xmin = -0.5;
+		xmax = 6500.5-1.0;
+		units = std::string("Scintillator Energy (keV)");
+		user_xmin = xmin;
+		user_xmax = 5500.0;
+	}
+	else if (type == std::string("E_summed") )
+	{
+		nbins = 650;
+		xmin = -0.5;
+		xmax = 6500.5-1.0;
+		units = std::string("Scintillator+BB1 Energy (keV)");
+		user_xmin = xmin;
+		user_xmax = 5500.0;
+	}
 	else if (type == std::string("E_beta") )
 	{
 		nbins = 600;
@@ -288,12 +306,21 @@ int hist_type::set_other_parameters()
 		user_xmin = xmin;
 		user_xmax = 5500.0;
 	}
+	else if (type==std::string("beta_energy"))
+	{
+		nbins = 300;
+		xmin = -0.5;
+		xmax = 30000.5-1.0;
+		units = std::string("Beta Energy (keV)");
+		user_xmin = xmin;
+		user_xmax = 6000.5;
+	}
 	else if (type == std::string("energy_bins") )  // for SOE_TOF.
 	{
 		nbins = 7;
 		xmin = -1.0;
 		xmax = 6.0;
-		units = std::string("Beta Energy (keV)");
+		units = std::string("Beta Energy (MeV)");
 		user_xmin = xmin;
 		user_xmax = 5.0;
 	}
@@ -377,15 +404,6 @@ int hist_type::set_other_parameters()
 		units = std::string("SOE TOF [ns]");
 		user_xmin = -5.0;
 		user_xmax = 40.0;
-	}
-	else if (type==std::string("beta_energy"))
-	{
-		nbins = 300;
-		xmin = -0.5;
-		xmax = 30000.5-1.0;
-		units = std::string("beta energy (keV)");
-		user_xmin = xmin;
-		user_xmax = 6000.5;
 	}
 	else if (type==std::string("Mapping_Ebeta"))
 	{

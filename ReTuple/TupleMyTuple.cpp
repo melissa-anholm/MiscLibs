@@ -727,6 +727,10 @@ int main(int argc, char *argv[])
 	
 	// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 	
+	UInt_t runnumber = 0;
+	TBranch *runbranch = friend_tree -> Branch("RUN", &runnumber);
+	
+	
 	UInt_t upper_qdc_int;
 	UInt_t lower_qdc_int;
 	UInt_t unix_time;
@@ -1218,6 +1222,8 @@ int main(int argc, char *argv[])
 			tdc_photodiode -> clear();
 			tdc_pulser_led -> clear();
 		}
+		
+		runnumber = runno;
 		
 		ion_count = ion_events->size();
 		electron_count = electron_events->size();

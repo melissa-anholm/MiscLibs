@@ -59,7 +59,18 @@ public:
 	double sumdiff_x_max[N_runs][N_sumcut_types][N_sumcut_levels];
 	double sumdiff_z_min[N_runs][N_sumcut_types][N_sumcut_levels];
 	double sumdiff_z_max[N_runs][N_sumcut_types][N_sumcut_levels];
+	
+	void init_scintcal();
+	double upper_scint_caloffset[N_runs];
+	double upper_scint_dcaloffset[N_runs];
+	double upper_scint_calslope[N_runs];
+	double upper_scint_dcalslope[N_runs];
 
+	double lower_scint_caloffset[N_runs];
+	double lower_scint_dcaloffset[N_runs];
+	double lower_scint_calslope[N_runs];
+	double lower_scint_dcalslope[N_runs];
+	
 	void init_xz_mode();
 	void init_xz_maxcount();
 	void init_sumdiff_xmin();
@@ -128,6 +139,7 @@ public:
 	
 	set_of_runs(); // done.
 };
+
 
 void set_of_runs::init_sumdiffs_2()
 {
@@ -7416,6 +7428,51 @@ void set_of_runs::init_runsetletter()
 		}
 	}
 
+}
+
+void set_of_runs::init_scintcal()
+{
+	for(int i=0; i<N_runs; i++) // 		E = 1000.0*(qdc - offset) / slope;
+	{
+		if(i<450)  // electron and recoil runsets A and B.
+		{
+			// upper:
+			upper_scint_caloffset[i]  = 110.0;
+			upper_scint_dcaloffset[i] = 0.3;
+			upper_scint_calslope[i]   = 398.5;
+			upper_scint_dcalslope[i]  = 0.4;
+			
+		//	offset = 110.0;  // +/- 0.3
+		//	slope  = 398.5;  // +/- 0.4
+			// lower:
+			lower_scint_caloffset[i]  = 142.0;
+			lower_scint_dcaloffset[i] = 0.3;
+			lower_scint_calslope[i]   = 423.4;
+			lower_scint_dcalslope[i]  = 0.4;
+			
+		//	offset = 142.0;  // +/- 0.3
+		//	slope  = 423.4;  // +/- 0.4
+		}
+		else // sets C, D, E
+		{
+			// upper:
+			upper_scint_caloffset[i]  = 110.7;
+			upper_scint_dcaloffset[i] = 0.2;
+			upper_scint_calslope[i]   = 388.3;
+			upper_scint_dcalslope[i]  = 0.4;
+			
+		//	offset = 110.7;  // +/- 0.2
+		//	slope  = 388.3;  // +/- 0.4
+			// lower:
+			lower_scint_caloffset[i]  = 143.0;
+			lower_scint_dcaloffset[i] = 0.3;
+			lower_scint_calslope[i]   = 413.2;
+			lower_scint_dcalslope[i]  = 0.4;
+			
+		//	offset = 143.0;  // +/- 0.3
+		//	slope  = 413.2;  // +/- 0.4
+		}
+	}
 }
 
 set_of_runs::set_of_runs()

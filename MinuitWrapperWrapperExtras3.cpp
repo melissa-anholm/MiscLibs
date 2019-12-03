@@ -237,6 +237,7 @@ void SuperMinuit::SetupFCN_histfitter_superasym(superasym_histfitter * sahf)
 	the_sahf = sahf;
 	// check if they have the same binning?
 	bool same_binning = HistsHaveSameBinning(the_sahf->the_chs->make_all_Ehists(), the_sahf->get_FitHist() );
+	
 	if(!same_binning) 
 	{
 		cout << "ERROR!!  HISTS DON'T HAVE SAME BINNING!  (this is very bad...)" << endl;

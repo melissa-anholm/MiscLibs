@@ -50,7 +50,7 @@ string name_bm_default    = "Scint Energy (bottom&&bb1, sigma-)";
 string double_to_string(double thisnumber, int thisprecision=3)  // 
 {
 	std::ostringstream oss;
-	oss << fixed << setprecision(3) << thisnumber;
+	oss << fixed << setprecision(thisprecision) << thisnumber;
 	
 	string mynumberstring = oss.str();
 	return mynumberstring;
@@ -198,6 +198,8 @@ public:
 	
 	asym_histset();
 	asym_histset(TH1D* this_h_asym, TH1D* this_h_counts, double);
+	asym_histset(TH1D* this_htp, TH1D* this_htm, TH1D* this_hbp, TH1D* this_hbm);  // make it from data (or wev) hists.
+	
 	asym_histset(string filename, string hname_asym, string hname_counts, double);
 
 	void set_name(string);
@@ -239,6 +241,22 @@ asym_histset::asym_histset(string filename, string hname_asym, string hname_coun
 //	file -> Close();  // if I close it, it breaks.  :(
 	init_empty_counthists();
 }
+asym_histset::asym_histset(TH1D* this_htp, TH1D* this_htm, TH1D* this_hbp, TH1D* this_hbm)
+{
+	rho = 0.0;
+	if( !this_htp || !this_htm || !this_hbp || !this_hbm)
+	{
+		cout << "Nope.  asym_histset creation failed." << endl;
+		return;
+	}
+	init_counthists(this_htp, this_htm, this_hbp, this_hbm);  // also sets h_tp, h_tm, h_bp, h_bm.
+	// ok, but now create h_asym and h_counts from this?
+	
+	// create h_asym, h_superratio, h_supersum, ...
+	h_asym   = make_asymmetry_histogram (this_htp, this_htm, this_hbp, this_hbm);
+	h_counts = make_asymcounts_histogram(this_htp, this_htm, this_hbp, this_hbm);
+}
+
 void asym_histset::init_empty_counthists()
 {
 	has_counthists = false;
@@ -282,6 +300,11 @@ bool asym_histset::init_counthists(TH1D* h_tp_, TH1D* h_tm_, TH1D* h_bp_, TH1D* 
 	{
 		cout << "ERROR!  Some of the counthists aren't real hists.";
 	}
+//	h_tp -> Sumw2();
+//	h_tm -> Sumw2();
+//	h_bp -> Sumw2();
+//	h_bm -> Sumw2();
+	
 	return has_counthists;
 }
 
@@ -301,16 +324,32 @@ void asym_histset::set_color(int newcolor)
 	
 	h_counts -> SetMarkerColor(newcolor);
 	h_counts -> SetLineColor(newcolor);
+	
+	
+	if( h_tp ) { h_tp->SetMarkerColor(newcolor);  h_tp->SetLineColor(newcolor); }
+	if( h_tm ) { h_tm->SetMarkerColor(newcolor);  h_tm->SetLineColor(newcolor); }
+	if( h_bp ) { h_bp->SetMarkerColor(newcolor);  h_bp->SetLineColor(newcolor); }
+	if( h_bm ) { h_bm->SetMarkerColor(newcolor);  h_bm->SetLineColor(newcolor); }
 }
 void asym_histset::set_range_user(double lowlimit, double highlimit)
 {
 	h_asym   -> GetXaxis() -> SetRangeUser(lowlimit, highlimit);
 	h_counts -> GetXaxis() -> SetRangeUser(lowlimit, highlimit);
+	
+	if( h_tp ) { h_tp->GetXaxis() -> SetRangeUser(lowlimit, highlimit); }
+	if( h_tm ) { h_tm->GetXaxis() -> SetRangeUser(lowlimit, highlimit); }
+	if( h_bp ) { h_bp->GetXaxis() -> SetRangeUser(lowlimit, highlimit); }
+	if( h_bm ) { h_bm->GetXaxis() -> SetRangeUser(lowlimit, highlimit); }
 }
 void asym_histset::set_xaxis_name(string newname)
 {
 	h_asym   -> GetXaxis() -> SetName(newname.c_str());
 	h_counts -> GetXaxis() -> SetName(newname.c_str());
+	
+	if( h_tp ) { h_tp->GetXaxis() -> SetName(newname.c_str()); }
+	if( h_tm ) { h_tm->GetXaxis() -> SetName(newname.c_str()); }
+	if( h_bp ) { h_bp->GetXaxis() -> SetName(newname.c_str()); }
+	if( h_bm ) { h_bm->GetXaxis() -> SetName(newname.c_str()); }
 }
 string make_g4_asymhistpair_filename(double rho, string setletter)
 {
@@ -437,7 +476,6 @@ asym_histset * get_pair_ben_D()
 
 	return pair_benD;
 }
-
 asym_histset * get_pair_ben_all()
 {
 	asym_histset * pair_all = get_pair_ben_B();
@@ -474,8 +512,6 @@ asym_histset * get_pair_ben_all()
 	
 	return pair_all;
 }
-
-
 asym_histset * get_g4_asymhist_pair(double rho, string setletter)
 {
 	string string_asym = "Super-er A_beta (from E_scint)";
@@ -609,7 +645,8 @@ bool created_histset::set_hists(TH1D* w1, TH1D* wA, TH1D* wb)
 	
 	same_binning = HistsHaveSameBinning2(Wtilde_1_hist, Wtilde_A_hist) 
 		&& HistsHaveSameBinning2(Wtilde_1_hist, Wtilde_b_hist);
-		
+	
+//	cout << "I just checked the binning..." << endl;
 	if (!same_binning)
 	{
 		cout << "You fail at assigning histograms to this class." << endl;
@@ -754,7 +791,7 @@ TH1D* created_histset::make_an_Ehist_less(double par_one, double par_A, double p
 	
 	return tmp_Ehist;
 }
-TH1D* created_histset::make_all_Ehists()
+TH1D* created_histset::make_all_Ehists()  // gets its binning from internal Wtilde_1_hist.
 {
 	if(h_tp==0 || h_tm==0 || h_bp==0 || h_bm==0)
 	{
@@ -772,6 +809,11 @@ TH1D* created_histset::make_all_Ehists()
 	if(do_numerical_convolution)
 	{
 		convolute_hists();
+	}
+	
+	if( !HistsHaveSameBinning2(h_tp, h_tm) || !HistsHaveSameBinning2(h_bp, h_bm) || !HistsHaveSameBinning2(h_tp, h_bp) )
+	{
+		cout << "Trying to create all the Ehists, but binning is all wrong." << endl;
 	}
 	
 	h_asym = make_asymmetry_histogram(h_tp, h_tm, h_bp, h_bm, string("A_super"));
