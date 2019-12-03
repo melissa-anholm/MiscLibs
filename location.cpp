@@ -104,7 +104,8 @@ string ur_path_trinat01 = "/pool/anholm/Data_2014/Unblinded_Recoils_2014/";  // 
 string ue_path_trinat01 = "/pool/anholm/Data_2014/Unblinded_Electrons_2014/";  
 string uf_path_trinat01 = "/pool/anholm/Data_2014/Unblinded_Friends_2014/";  
 
-string g4_path_trinat01  = "/pool/anholm/Output/";
+//string g4_path_trinat01  = "/pool/anholm/Output/";
+string g4_path_trinat01    = "/home/trinat/anholm/K37/build/Output/";
 string bb1_prefix_trinat01 = "/home/trinat/anholm/Packages/MiscLibs/BB1/";
 
 //

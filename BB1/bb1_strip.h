@@ -15,11 +15,11 @@ enum Plane {X, Y, P_undef};
 class BB1Strip {
  private :
   int nn;                       /* ntuple number */
-  int sn;                  /* strip number */
+  int sn;                       /* strip number */
   double cal, dcal, res, dres;
   double energy;                /* keV */
   double denergy;               /* keV */
-  unsigned int maxT;                  /* chan */
+  unsigned int maxT;            /* chan */
   double pos;
   TH1D *noise;
  public :

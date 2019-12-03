@@ -16,6 +16,8 @@ LINK_DIRECTORIES(${ROOT_LIBRARY_DIR})
 #LINK_DIRECTORIES (/usr/local/mysql/lib)  # manually put in something that looks like MYSQL_LIBRARIES .
 LINK_DIRECTORIES (/usr/local/lib)  # for trinatdaq
 
+ADD_DEFINITIONS(-g -O3 -std=c++11 -W -Wall -Wpointer-arith)
+
 #Compiler Flags=========================
 SET(CMAKE_BUILD_TYPE ReLWithDebInfo)
 #SET(CMAKE_CXX_FLAGS "-std=c++0x") 

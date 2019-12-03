@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
 	setup_location();
 	
 	hadder_runlist this_hadder_runlist = check_hadd_multi();
+//	cout << "Made the runlist." << endl;
 	
 	vector<int> result = this_hadder_runlist.runlist;
 	int newrunno = this_hadder_runlist.newfilenum;
@@ -120,6 +121,7 @@ hadder_runlist check_hadd_multi()
 {
 	int verbose = 0;
 	TTree * MetaTree = load_metadata_tree(metadata_name);
+//	cout << "Loaded up MetaTree." << endl;
 	
 	bool found_unused = false;
 //	bool found_unused_notasum = false;
