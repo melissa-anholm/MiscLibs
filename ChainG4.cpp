@@ -355,7 +355,7 @@ TChain * get_chain_from_runlist(TTree * MetaTree, vector<int> the_runlist) // th
 	tree_chain -> AddFriend(friend_chain);
 	return tree_chain;
 }
-TChain * get_chain_from_runlist(vector<int> the_runlist) // this can break if the metadata has recorded more than one of the same run number.
+TChain * get_chain_from_runlist(vector<int> the_runlist) // wrapper
 {
 	TTree *MetaTree = load_metadata_tree(metadata_name);
 	return get_chain_from_runlist(MetaTree, the_runlist);
@@ -366,6 +366,93 @@ TChain * get_chain_from_runlist(int argc, char* argv[], TTree * MetaTree) // thi
 	return get_chain_from_runlist(MetaTree, the_runlist);
 }
 
+vector<int> get_summed_simlist(bool verbose=true)  // just use all the runs that "have_been_summed" yet not "is_a_sum".
+{
+	vector<int> set_of_runs;
+
+	// Get the MetaTree.
+	TTree * MetaTree = load_metadata_tree(metadata_name);
+	
+	int run = 0;
+	MetaTree -> SetBranchAddress("Run", &run);
+	int has_been_summed = 0;
+	MetaTree -> SetBranchAddress("has_been_summed",  &has_been_summed);
+	int is_a_sum = 0;
+	MetaTree -> SetBranchAddress("is_a_sum", &is_a_sum);
+	
+	int nentries = MetaTree -> GetEntries();
+
+	for(int i=0; i<nentries; i++)
+	{
+		MetaTree -> GetEntry(i);
+		if(has_been_summed==0)
+		{
+			if( is_a_sum==1 )
+			{
+				set_of_runs.push_back(run);
+				if(verbose) { cout << "adding " << run << " to the runlist vector." << endl; }
+			}
+		}
+	}
+	return set_of_runs;
+}
+
+vector<int> get_summed_monolist(double E, bool verbose=true)  // just use all the runs that "have_been_summed" yet not "is_a_sum".
+{
+	vector<int> set_of_runs;
+
+	// Get the MetaTree.
+	TTree * MetaTree = load_metadata_tree(metadata_name);
+	
+	int run = 0;
+	MetaTree -> SetBranchAddress("Run", &run);
+	int has_been_summed = 0;
+	MetaTree -> SetBranchAddress("has_been_summed",  &has_been_summed);
+	int is_a_sum = 0;
+	MetaTree -> SetBranchAddress("is_a_sum", &is_a_sum);
+	double the_monoenergy = 0;
+	MetaTree -> SetBranchAddress("MonoEnergy_MeV", &the_monoenergy);
+	
+	
+	int nentries = MetaTree -> GetEntries();
+	for(int i=0; i<nentries; i++)
+	{
+		MetaTree -> GetEntry(i);
+		if(has_been_summed==0 && is_a_sum==1 )
+		{
+			if( the_monoenergy != -10 ) // require that the run is mono-energetic.
+			{
+				if( E==-20 || the_monoenergy==E ) // require:  ((sum all mono-energies) || (this run is the correct mono-energy))
+				{
+					set_of_runs.push_back(run);
+					if(verbose) { cout << "adding " << run << " to the runlist vector." << endl; }
+				}
+			}
+		}
+	}
+	return set_of_runs;
+}
+
+
+TChain * get_summed_simtree()
+{
+	vector<int> the_runlist = get_summed_simlist(false);
+	TTree * MetaTree = load_metadata_tree(metadata_name);
+	
+	TChain * tree = get_chain_from_runlist(MetaTree, the_runlist);
+	return tree;
+}
+
+TChain * get_summed_monochain(double E=-20) // call with no arguments and it sums all mono-energies.
+{
+	// if E=-20 (the default value -- eg, it's called with no arguments), 
+	//     we'll just sum up *all* of the mono-energy runs to use here.  
+	
+	vector<int> the_runlist = get_summed_monolist(E, true);
+	
+	TChain * tree = get_chain_from_runlist(the_runlist);
+	return tree;
+}
 
 // ====================================== //
 // TChains for Simulations (do I ever even use these?):
@@ -383,9 +470,6 @@ string make_simfilename(string namestub, int runno)  // no, don't..
 //	cout << "see, because g4_path=" << g4_path << ", namestub=" << namestub << ", runno=" << runno << endl;
 	return fname;
 }
-
-
-
 
 // ====================================== //
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //

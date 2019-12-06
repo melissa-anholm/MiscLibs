@@ -277,7 +277,6 @@ string int_to_string(int this_int)
 int can_hadd(int run1, int run2)
 {
 	bool relax_alreadysummed=false;
-//	return can_hadd(int run1, int run2, relax_alreadysummed)
 	return can_hadd(metadata_name, run1, metadata_name, run2, metadata_name, relax_alreadysummed);
 }
 int can_hadd(int run1, int run2, bool relax_alreadysummed)
@@ -1064,12 +1063,14 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 	int position_of_isbad           = get_position_of_string(this_line, "has_been_summed");
 	int position_of_issummed        = get_position_of_string(this_line, "is_a_sum");
 	int position_of_filename        = get_position_of_string(this_line, "Filename");
+	int position_of_monoenergy      = get_position_of_string(this_line, "MonoEnergy_MeV");
 	if(verbose>1) cout << "position_of_eventsgenerated = " << position_of_eventsgenerated << endl;
 	if(verbose>1) cout << "position_of_eventssaved     = " << position_of_eventssaved << endl;
 	if(verbose>1) cout << "position_of_runno           = " << position_of_runno << endl;
 	if(verbose>1) cout << "position_of_isbad           = " << position_of_isbad << endl;
 	if(verbose>1) cout << "position_of_issummed        = " << position_of_issummed << endl;
 	if(verbose>1) cout << "position_of_filename        = " << position_of_filename << endl;
+	if(verbose>1) cout << "position_of_monoenergy      = " << position_of_monoenergy << endl;
 	if(verbose>1) cout << "--" << endl;
 	
 	// ok, we know where the EventsGenerated and EventsSaved entries are.  
@@ -1087,6 +1088,8 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 		delimiter_positions, length_of_line);
 	int branchpos_filename        = find_branchpos(position_of_filename, \
 		delimiter_positions, length_of_line);
+	int branchpos_monoenergy      = find_branchpos(position_of_monoenergy, \
+		delimiter_positions, length_of_line);
 
 	if(verbose>1) cout << "branchpos_eventsgenerated = " << branchpos_eventsgenerated << endl;
 	if(verbose>1) cout << "branchpos_eventssaved = " << branchpos_eventssaved << endl;
@@ -1094,6 +1097,7 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 	if(verbose>1) cout << "branchpos_isbad = " << branchpos_isbad << endl;
 	if(verbose>1) cout << "branchpos_issummed = " << branchpos_issummed << endl;
 	if(verbose>1) cout << "branchpos_filename = " << branchpos_filename << endl;
+	if(verbose>1) cout << "branchpos_monoenergy = " << branchpos_monoenergy << endl;
 	if(verbose>1) cout << "--" << endl;
 	// numbering starts at "0".
 	// k, we're done fucking around with the header line.
@@ -1114,6 +1118,7 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 	// ok, we have a vector of line info stuff.  now what?
 	
 	// Get total number of events generated and events saved.
+	vector<double> mono_energies;
 	vector<int> n_eventsgenerated;
 	vector<int> n_eventssaved;
 	stringstream ss;
@@ -1148,6 +1153,23 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 		ss >> this_eventssaved;
 		n_eventssaved.push_back(this_eventssaved);
 	}
+	//
+	ss.str( std::string() );
+	ss.clear();
+	for(int i=0; i<length_of_runlist; i++)
+	{
+		ss.str( std::string() );
+		ss.clear();
+		ss << (lineinfo_forruns.at(i)).linestring;
+		for(int j=0; j<branchpos_monoenergy; j++)
+		{
+			ss >> throwparam;
+		}
+		double this_monoenergy;
+		ss >> this_monoenergy;
+		mono_energies.push_back(this_monoenergy);
+	}
+	//
 	if(verbose)
 	{
 		cout << endl << "Vector of events generated:" << endl;
@@ -1157,10 +1179,18 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 	}
 	int total_eventsgenerated = 0;
 	int total_eventssaved = 0;
+	double total_monoenergy = 0;
 	for(int i=0; i<length_of_runlist; i++)
 	{
 		total_eventsgenerated = total_eventsgenerated+n_eventsgenerated.at(i);
 		total_eventssaved     = total_eventssaved+n_eventssaved.at(i);
+		if( mono_energies.at(i) != -10.0 ) // if not all energies
+		{
+			if( i>=1 && mono_energies.at(i) != mono_energies.at(i-1) ) // if the mono-energies aren't the same
+			{
+				total_monoenergy = -5.0;
+			}
+		}
 	}
 	if(verbose)
 	{

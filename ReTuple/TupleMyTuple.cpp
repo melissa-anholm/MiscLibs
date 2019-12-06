@@ -68,7 +68,7 @@ using std::min;
 
 //
 bool is_blinded            = false;
-bool is_g4                 = false;
+bool is_g4                 = true;
 bool use_g4_metadata       = true;
 bool apply_scint_res_on_g4 = true;
 bool doEmpirical           = true;  // empirical noise on BB1s.  for G4 data.
