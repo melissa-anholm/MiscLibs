@@ -126,7 +126,8 @@ string get_simfriendname(string path, int runno)
 TTree * load_metadata_tree(string metadatafilename)
 {
 	TTree *MetaTree = new TTree();
-	int nentries = MetaTree -> ReadFile(metadatafilename.c_str());
+//	int nentries = MetaTree -> ReadFile(metadatafilename.c_str());
+	MetaTree -> ReadFile(metadatafilename.c_str());
 	return MetaTree;
 }
 

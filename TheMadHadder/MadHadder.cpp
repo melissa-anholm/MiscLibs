@@ -64,7 +64,6 @@ int main(int argc, char *argv[])
 	setup_location();
 	
 	hadder_runlist this_hadder_runlist = check_hadd_multi();
-//	cout << "Made the runlist." << endl;
 	
 	vector<int> result = this_hadder_runlist.runlist;
 	int newrunno = this_hadder_runlist.newfilenum;
@@ -77,12 +76,11 @@ int main(int argc, char *argv[])
 	cout << "New file number:  " << newrunno << endl;
 	cout << "Runs that can be hadded: " << endl;
 	printout(result);
-//	metadata_name
-//	string hadder_command = generate_hadd_command(newrunno, result, metafilename);
+
+//	cout << "I'm about to generate the hadd command." << endl;
 	string hadder_command = generate_hadd_command(newrunno, result);
-//	cout << "Use this command:  " << endl;
-//	cout << hadder_command << endl;
 	
+//	cout << "I'm about to check whether it worked (and do the hadding)." << endl;
 	bool did_it_work = do_the_hadding(newrunno, result);
 	
 	cout << "Use this command:  " << endl;
@@ -214,7 +212,7 @@ hadder_runlist check_hadd_multi()
 
 string generate_hadd_command(int newrunno, vector<int> runlist, string output_namestub, string metafilename, string path_to_files) // path_to_files should have a "/" at the end.
 {
-	int verbose = 0;
+//	int verbose = 0;
 	TTree * MetaTree = load_metadata_tree(metafilename);
 	int nentries = MetaTree -> GetEntries();
 	
@@ -227,7 +225,7 @@ string generate_hadd_command(int newrunno, vector<int> runlist, string output_na
 	outstring = "hadd "+path_to_files+output_namestub+int_to_string(newrunno)+".root";
 	
 	int listsize = runlist.size();
-	for(int j=0; j<runlist.size(); j++)
+	for(int j=0; j<listsize; j++)
 	{
 		for(int i=0; i<nentries; i++)
 		{
@@ -528,7 +526,6 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	if( stepmax1     != stepmax2)     {match = false;}
 	if( mincostheta1 != mincostheta2) {match = false;}
 	if( steppertype1 != steppertype2) {match = false;}
-//	if( chargestate1 != chargestate2) {match = false;}
 	//
 	if( strcmp(this_StepperName1,    this_StepperName2)     !=0 ) {match=false;}
 	if( strcmp(this_SaveEventTypes1, this_SaveEventTypes2)  !=0 ) {match=false;}
@@ -553,6 +550,7 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 //	if( temp1z         != temp2z)         {match = false;}
 	
 	if ( (MonoEnergy1 == -10 || MonoEnergy2 == -10) && (MonoEnergy1 != MonoEnergy2) )    {match = false;} // if they don't match *and* one of them is "make the whole spectrum"
+	// in the future, kludge here to make it not hadd multiple monoenergies?
 	
 	//
 	if( expansiontime1 != expansiontime2) {match = false;}
@@ -637,21 +635,24 @@ vector<int> get_delimiter_positions(string thisline)
 			n_found++;
 		}
 	}
-	if(verbose>1) cout << "n_found = " << n_found << ",\t size=" << delimiter_positions.size() << endl;
-	if(verbose>1) cout << "** delimiter n_found = " << n_found << ",\tlast_position = " << last_position << endl;
+	// Add a fake delimiter at the end:
+	delimiter_positions.push_back(size_of_line);  // +1, or not?  probably doesn't matter, because we only need to have some other delimiter after the last real delimiter.
+	
+	if(verbose>0) cout << "n_found = " << n_found << ",\t size=" << delimiter_positions.size() << endl;
+	if(verbose>0) cout << "** delimiter n_found = " << n_found << ",\tlast_position = " << last_position << endl;
 	
 	return delimiter_positions;
 }
 int get_position_of_string(string thingtolookin, string thingtolookfor)
 {
 	int positioncounter = 0;
-	size_t last_position = 0;
+//	size_t last_position = 0;
 	int size_of_string = thingtolookin.size();
 	int position_of_thingimlookingfor = 0;
 	while (positioncounter<size_of_string)
 	{
 		positioncounter = thingtolookin.find(thingtolookfor.c_str(), 0);
-		last_position = positioncounter;
+	//	last_position = positioncounter;
 		if(positioncounter<size_of_string)
 		{
 			position_of_thingimlookingfor = positioncounter;
@@ -662,19 +663,23 @@ int get_position_of_string(string thingtolookin, string thingtolookfor)
 }
 int find_branchpos(int position_of_thing, vector<int> delimiter_positions, int totalsize)
 {
+	int verbose=0;
 	int this_branchpos = 0;
+	if(verbose>0) cout << "totalsize = " << totalsize << endl;
 	for(int i=0; i<totalsize; i++)
-	{
+	{	
+		if(verbose>1) cout << "i= " << i << ";\tposition_of_thing=" << position_of_thing << ";\tdelimiter_position=" << delimiter_positions.at(i) << endl;
 		if( position_of_thing > delimiter_positions.at(i) ) { this_branchpos++; }
 		else { break; }
 	}
+	if(verbose>0) cout << "branchpos has been found.  returning:  " << this_branchpos << endl;
 	return this_branchpos;
 }
 
 
 lineinfo get_lineinfo_for_run(int runno, string metafilename)
 {
-	bool verbose = false;
+//	bool verbose = false;
 	int this_iline = 0;
 	int this_runno;
 	string this_linestring;
@@ -733,7 +738,6 @@ int find_linenumber_for_run(int runno, string metafilename)
 	}
 	return this_iline;
 }
-
 string getlinestring_for_run(int runno, string metafilename)
 {
 	bool verbose = false;
@@ -764,7 +768,7 @@ string getlinestring_for_run(int runno, string metafilename)
 }
 */
 
-string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int total_ngenerated, int total_nsaved, string firstrunline, int branchpos_runno, int branchpos_eventsgenerated, int branchpos_eventssaved, /*int branchpos_isbad,*/ int branchpos_issummed, int branchpos_filename)
+string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int total_ngenerated, int total_nsaved, double total_monoenergy, string firstrunline, int branchpos_runno, int branchpos_eventsgenerated, int branchpos_eventssaved, /*int branchpos_isbad,*/ int branchpos_issummed, int branchpos_filename, int branchpos_monoenergy)
 {
 	bool verbose=false;
 
@@ -776,6 +780,7 @@ string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int 
 	//	if(verbose) cout << "branchpos_isbad           = " << branchpos_isbad << endl;
 		if(verbose) cout << "branchpos_issummed        = " << branchpos_issummed << endl;
 		if(verbose) cout << "branchpos_filename        = " << branchpos_filename << endl;
+		if(verbose) cout << "branchpos_monoenergy      = " << branchpos_monoenergy << endl;
 	}
 	
 	std::stringstream ss_out;
@@ -791,7 +796,7 @@ string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int 
 	string newstringline = "";
 	
 	int n_found = delimiter_positions.size();
-	for(int i=0; i<n_found+1; i++)
+	for(int i=0; i<n_found; i++)
 	{
 		if( !ss_out.good() ) 
 		{ 
@@ -845,11 +850,21 @@ string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int 
 			ss_tmp << "summedoutput_" << newrunno << ".root";
 			ss_tmp >> newstringterm;
 		}
+		if(i == branchpos_monoenergy)
+		{
+			newstringterm = "";
+			ss_tmp.str( std::string() );
+			ss_tmp.clear();
+			ss_tmp << std::fixed << std::setprecision(6) << total_monoenergy;
+			ss_tmp >> newstringterm;
+	//		cout << "total_monoenergy = " << total_monoenergy << ";\tnewstringterm = " << newstringterm << endl;
+		}
 		if( i != 0 )
 		{
 			newstringline = newstringline+"\t";
 		}
 		newstringline = newstringline+newstringterm;
+		if(verbose) cout << "i=" << i << ";\tnewstringline=" << newstringline << endl;
 	}
 //	newstringline = newstringline+"\t\n";
 	newstringline = newstringline+"\t";
@@ -858,14 +873,15 @@ string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int 
 	{
 		cout << endl;
 		cout << "newstringline:" << endl; 
-		cout << newstringline;// << endl;
+		cout << newstringline << endl;
 	}
 	return newstringline;
 }
 
 //
+/*
 bool do_the_hadding(int run1, int run2, int newrunno=1)
-{ 
+{
 	bool verbose = true;
 	string current_metadatafilename = metadata_name;
 	
@@ -893,12 +909,14 @@ bool do_the_hadding(int run1, int run2, int newrunno=1)
 	int position_of_isbad           = get_position_of_string(this_line, "has_been_summed");
 	int position_of_issummed        = get_position_of_string(this_line, "is_a_sum");
 	int position_of_filename        = get_position_of_string(this_line, "Filename");
+	int position_of_monoenergy      = get_position_of_string(this_line, "MonoEnergy_MeV");
 	if(verbose) cout << "position_of_eventsgenerated = " << position_of_eventsgenerated << endl;
 	if(verbose) cout << "position_of_eventssaved     = " << position_of_eventssaved << endl;
 	if(verbose) cout << "position_of_runno           = " << position_of_runno << endl;
 	if(verbose) cout << "position_of_isbad           = " << position_of_isbad << endl;
 	if(verbose) cout << "position_of_issummed        = " << position_of_issummed << endl;
 	if(verbose) cout << "position_of_filename        = " << position_of_filename << endl;
+	if(verbose) cout << "position_of_monoenergy      = " << position_of_monoenergy << endl;
 	if(verbose) cout << "--" << endl;
 	
 	// ok, we know where the EventsGenerated and EventsSaved entries are.  
@@ -916,6 +934,8 @@ bool do_the_hadding(int run1, int run2, int newrunno=1)
 		delimiter_positions, length_of_line);
 	int branchpos_filename        = find_branchpos(position_of_filename, \
 		delimiter_positions, length_of_line);
+	int branchpos_monoenergy        = find_branchpos(position_of_monoenergy, \
+		delimiter_positions, length_of_line);
 
 	if(verbose) cout << "branchpos_eventsgenerated = " << branchpos_eventsgenerated << endl;
 	if(verbose) cout << "branchpos_eventssaved     = " << branchpos_eventssaved << endl;
@@ -923,6 +943,7 @@ bool do_the_hadding(int run1, int run2, int newrunno=1)
 	if(verbose) cout << "branchpos_isbad           = " << branchpos_isbad << endl;
 	if(verbose) cout << "branchpos_issummed        = " << branchpos_issummed << endl;
 	if(verbose) cout << "branchpos_filename        = " << branchpos_filename << endl;
+	if(verbose) cout << "branchpos_monoenergy      = " << branchpos_monoenergy << endl;
 	if(verbose) cout << "--" << endl;
 	// numbering starts at "0".
 	// k, we're done fucking around with the first line.
@@ -992,6 +1013,41 @@ bool do_the_hadding(int run1, int run2, int newrunno=1)
 	if(verbose) cout << "total_ngenerated = " << total_ngenerated << endl;
 	if(verbose) cout << "total_nsaved = " << total_nsaved << endl;
 	
+	
+	//
+	ss1.str( std::string() );
+	ss1.clear();
+	ss1 << firstrunline;
+	ss2.str( std::string() );
+	ss2.clear();
+	ss2 << secondrunline;
+	for(int i=0; i<branchpos_monoenergy; i++)
+	{
+		ss1 >> throwparam;
+		ss2 >> throwparam;
+	}
+	int this_monoenergy1;
+	int this_monoenergy2;
+	ss1 >> this_monoenergy1;
+	if(verbose) cout << "this_monoenergy1 = " << this_monoenergy1 << endl;
+	ss2 >> this_monoenergy2;
+	if(verbose) cout << "this_monoenergy2 = " << this_monoenergy2 << endl;
+	
+	double total_monoenergy = -10;
+	if(this_monoenergy1 != this_monoenergy2 && this_monoenergy1 != -10 && this_monoenergy2 != -10)
+	{
+		total_monoenergy = -5.0;
+	}
+	else if( this_monoenergy1 != this_monoenergy2 ) // this should never happen.
+	{
+		total_monoenergy = -3.0;
+	}
+	else
+	{
+		total_monoenergy = this_monoenergy1;
+	}
+	//
+	
 	// assign a new run number?  somehow?!
 //	if(verbose) cout << "newrunno = " << newrunno << endl;
 
@@ -1006,7 +1062,7 @@ bool do_the_hadding(int run1, int run2, int newrunno=1)
 	
 	
 	string newstringline = "";
-	newstringline = make_thenewstringline(delimiter_positions, newrunno, total_ngenerated, total_nsaved, firstrunline, branchpos_runno, branchpos_eventsgenerated, branchpos_eventssaved, /*branchpos_isbad,*/ branchpos_issummed, branchpos_filename);
+	newstringline = make_thenewstringline(delimiter_positions, newrunno, total_ngenerated, total_nsaved, total_monoenergy, firstrunline, branchpos_runno, branchpos_eventsgenerated, branchpos_eventssaved, branchpos_issummed, branchpos_filename, branchpos_monoenergy);
 	
 	first_lineinfo = update_runline(first_lineinfo, branchpos_isbad, delimiter_positions.size());
 	second_lineinfo = update_runline(second_lineinfo, branchpos_isbad, delimiter_positions.size());
@@ -1020,7 +1076,7 @@ bool do_the_hadding(int run1, int run2, int newrunno=1)
 	
 	// ok, the lines are updated.  but now I need to read the whole (updated) file into a buffer...
 //	string filecontents = "";
-	string filecontents = make_filebuffer(lineinfo_forruns, newstringline, /*delimiter_positions.size(),*/ current_metadatafilename);
+	string filecontents = make_filebuffer(lineinfo_forruns, newstringline, current_metadatafilename);
 
 	std::ofstream this_ofilestream;
 	this_ofilestream.open(current_metadatafilename.c_str(), std::ios::trunc);
@@ -1039,6 +1095,16 @@ bool do_the_hadding(int run1, int run2, int newrunno=1)
 	
 	return true;
 }
+*/
+
+bool do_the_hadding(int run1, int run2, int newrunno=1)
+{
+	vector<int> runlist;
+	runlist.push_back(run1);
+	runlist.push_back(run2);
+	
+	return do_the_hadding(newrunno, runlist);
+}
 
 bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an option to specify the metadata filename...
 {
@@ -1054,7 +1120,10 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 	
 	vector<int> delimiter_positions;
 	delimiter_positions = get_delimiter_positions(this_line);
+	if(verbose>2) printout(delimiter_positions);
+	
 	int length_of_line = this_line.size();
+	if(verbose>1) cout << "length_of_line = " << length_of_line << endl;
 	// ok, we know where the delimiters are.
 	
 	int position_of_eventsgenerated = get_position_of_string(this_line, "EventsGenerated");
@@ -1076,20 +1145,13 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 	// ok, we know where the EventsGenerated and EventsSaved entries are.  
 	//    ...also Run, has_been_summed, and is_a_sum.
 	// now figure out where they go wrt the delimiters.
-	int branchpos_eventsgenerated = find_branchpos(position_of_eventsgenerated, \
-		delimiter_positions, length_of_line);
-	int branchpos_eventssaved     = find_branchpos(position_of_eventssaved, \
-		delimiter_positions, length_of_line);
-	int branchpos_runno           = find_branchpos(position_of_runno, \
-		delimiter_positions, length_of_line);
-	int branchpos_isbad           = find_branchpos(position_of_isbad, \
-		delimiter_positions, length_of_line);
-	int branchpos_issummed        = find_branchpos(position_of_issummed, \
-		delimiter_positions, length_of_line);
-	int branchpos_filename        = find_branchpos(position_of_filename, \
-		delimiter_positions, length_of_line);
-	int branchpos_monoenergy      = find_branchpos(position_of_monoenergy, \
-		delimiter_positions, length_of_line);
+	int branchpos_eventsgenerated = find_branchpos(position_of_eventsgenerated, delimiter_positions, length_of_line);
+	int branchpos_eventssaved     = find_branchpos(position_of_eventssaved,     delimiter_positions, length_of_line);
+	int branchpos_runno           = find_branchpos(position_of_runno,           delimiter_positions, length_of_line);
+	int branchpos_isbad           = find_branchpos(position_of_isbad,           delimiter_positions, length_of_line);
+	int branchpos_issummed        = find_branchpos(position_of_issummed,        delimiter_positions, length_of_line);
+	int branchpos_filename        = find_branchpos(position_of_filename,        delimiter_positions, length_of_line);
+	int branchpos_monoenergy      = find_branchpos(position_of_monoenergy,      delimiter_positions, length_of_line);
 
 	if(verbose>1) cout << "branchpos_eventsgenerated = " << branchpos_eventsgenerated << endl;
 	if(verbose>1) cout << "branchpos_eventssaved = " << branchpos_eventssaved << endl;
@@ -1099,9 +1161,10 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 	if(verbose>1) cout << "branchpos_filename = " << branchpos_filename << endl;
 	if(verbose>1) cout << "branchpos_monoenergy = " << branchpos_monoenergy << endl;
 	if(verbose>1) cout << "--" << endl;
+	
+	
 	// numbering starts at "0".
 	// k, we're done fucking around with the header line.
-	
 //	vector<int> runlist
 //	lineinfo first_lineinfo  = get_lineinfo_for_run(run1, current_metadatafilename);
 //	lineinfo second_lineinfo = get_lineinfo_for_run(run2, current_metadatafilename);
@@ -1109,12 +1172,17 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 	int length_of_runlist = runlist.size();
 	vector<lineinfo> lineinfo_forruns;
 	lineinfo thisline_info;
-
+	
+	if(verbose>1) cout << "length_of_runlist = " << length_of_runlist << endl;
 	for(int i=0; i<length_of_runlist; i++)
 	{
+	//	cout << "i = " << i << endl;
 		thisline_info = get_lineinfo_for_run(runlist.at(i), current_metadatafilename);
 		lineinfo_forruns.push_back(thisline_info);
+	//	if(verbose>2) cout << " (i=" << i << ", linenumber=" << thisline_info.linenumber << "):  " << thisline_info.linestring << endl;
 	}
+	
+	
 	// ok, we have a vector of line info stuff.  now what?
 	
 	// Get total number of events generated and events saved.
@@ -1184,12 +1252,17 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 	{
 		total_eventsgenerated = total_eventsgenerated+n_eventsgenerated.at(i);
 		total_eventssaved     = total_eventssaved+n_eventssaved.at(i);
+		if(verbose>2) cout << "mono_energies.at(" << i << " << )=" << mono_energies.at(i) << endl;
 		if( mono_energies.at(i) != -10.0 ) // if not all energies
 		{
 			if( i>=1 && mono_energies.at(i) != mono_energies.at(i-1) ) // if the mono-energies aren't the same
 			{
 				total_monoenergy = -5.0;
 			}
+		}
+		else
+		{
+			total_monoenergy = -10.0;
 		}
 	}
 	if(verbose)
@@ -1200,21 +1273,14 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 	// done getting events generated and events saved.
 	
 	string newstringline;
-	newstringline = make_thenewstringline(delimiter_positions, newrunno, total_eventsgenerated, total_eventssaved, (lineinfo_forruns.at(0)).linestring, branchpos_runno, branchpos_eventsgenerated, branchpos_eventssaved,  branchpos_issummed, branchpos_filename);
+	newstringline = make_thenewstringline(delimiter_positions, newrunno, total_eventsgenerated, total_eventssaved, total_monoenergy, (lineinfo_forruns.at(0)).linestring, branchpos_runno, branchpos_eventsgenerated, branchpos_eventssaved,  branchpos_issummed, branchpos_filename, branchpos_monoenergy);
 	
-	if(verbose)
-	{
-		cout << "newstringline: " << endl;
-		cout << newstringline << endl;
-	}
+//	if(verbose)
+//	{
+//	//	cout << "newstringline: " << endl;
+//	//	cout << newstringline << endl;
+//	}
 
-/*
-struct lineinfo
-{
-	int linenumber;
-	string linestring;
-};
-*/
 	// ok, we have the new line for the run that will be hadded.  How will we update the old run lines?
 	vector<lineinfo> oldstringlines;
 	for(int i=0; i<length_of_runlist; i++)
@@ -1310,7 +1376,7 @@ lineinfo update_runline(lineinfo thisline_info, int branchpos_isbad, int n_delim
 	this_new_line = string(this_term);
 	this_new_line = this_new_line+"\t";
 
-	for(int i=1; i<n_delimiters+1; i++)
+	for(int i=1; i<n_delimiters; i++)
 	{
 		iss2 >> this_term;
 		if(i==branchpos_isbad)
