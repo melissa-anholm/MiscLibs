@@ -27,7 +27,7 @@ using std::stringstream;
 //#include "MetaChain.cpp"
 #include "ChainG4.cpp"
 
-int extrafilenum = 1000;
+int extrafilenum = 10000;
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 struct hadder_runlist
@@ -49,7 +49,7 @@ int can_hadd(string, int, string, int, string);
 int can_hadd(string, int, string, int, string, bool);
 bool do_the_hadding(int, int, int);
 bool do_the_hadding(int, vector<int>);
-int try_to_hadd(int, int);
+//int try_to_hadd(int, int);
 hadder_runlist check_hadd_multi();
 int get_newrunno(string);
 string generate_hadd_command(int, vector<int>, string, string, string);
@@ -577,7 +577,6 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 int get_newrunno(string metafilename)
 {
 	int verbose = 0;
-//	int newrunno = 0;
 	int newrunno = 1;
 
 	// figure out what new run number to use for the new, hadded file:
@@ -592,7 +591,7 @@ int get_newrunno(string metafilename)
 	for(int i=0; i<nentries3; i++)
 	{
 		MetaTree3 -> GetEntry(i);
-		if( (newrunno == this_runno || newrunno == this_runno-extrafilenum ) && is_a_sum==1)
+		if( (newrunno == this_runno || newrunno == this_runno-extrafilenum ) && is_a_sum==1) // if this entry is a sum, and ... what??
 		{
 			newrunno++;
 			i=-1;
@@ -609,9 +608,7 @@ int get_newrunno(string metafilename)
 	if(verbose>0)
 	{
 		cout << "Files will be hadded into a new file with run number:\t" << mynewfilenum << endl;
-//		cout << "Files will be hadded into a new file with run number:\t" << newrunno << endl;
 	}
-//	return newrunno;
 	return mynewfilenum;
 }
 
@@ -1396,7 +1393,8 @@ lineinfo update_runline(lineinfo thisline_info, int branchpos_isbad, int n_delim
 	return thisline_info;
 }
 
-//
+// Not used?  Also, unreadable?
+/*
 int try_to_hadd(int run1, int run2)
 {
 	int can_behadded = -1;
@@ -1426,7 +1424,7 @@ int try_to_hadd(int run1, int run2)
 	return mynewfilenum;
 //	return is_hadded;
 }
-
+*/
 
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
