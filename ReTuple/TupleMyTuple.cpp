@@ -68,7 +68,7 @@ using std::min;
 
 //
 bool is_blinded            = false;
-bool is_g4                 = false;
+bool is_g4                 = true;
 bool use_g4_metadata       = true;
 bool apply_scint_res_on_g4 = true;
 bool doEmpirical           = true;  // empirical noise on BB1s.  for G4 data.
@@ -239,7 +239,7 @@ Double_t get_lower_E(double qdc, int run, bool g4data=false)
 	return E;
 }
 
-Double_t get_upper_DeltaE(double qdc, int run, bool g4data=false)  // it just returns 0 for G4.  Might want to fix that sometime.
+Double_t get_upper_DeltaE(int qdc, int run, bool g4data=false)  // it just returns 0 for G4.  Might want to fix that sometime.
 {
 	double DeltaE = 0;
 	if(g4data) { return DeltaE; }
@@ -265,7 +265,7 @@ Double_t get_upper_DeltaE(double qdc, int run, bool g4data=false)  // it just re
 		DeltaLambda = 0.4;
 	}
 	double x0 = 1000.0*offset;
-	double E = (1000.0*qdc - 1000.0*offset) / slope;
+	double E = (1000.0*(double)(qdc) - 1000.0*offset) / slope;
 	
 	double DeltaE2 = (-Deltax0/slope)*(-Deltax0/slope) + (-E/slope*DeltaLambda)*(-E/slope*DeltaLambda);
 	DeltaE = sqrt(DeltaE2);
@@ -273,7 +273,7 @@ Double_t get_upper_DeltaE(double qdc, int run, bool g4data=false)  // it just re
 	return DeltaE;
 }
 
-Double_t get_lower_DeltaE(double qdc, int run, bool g4data=false)  // just returns 0 for G4.  Might want to fix that sometime.
+Double_t get_lower_DeltaE(int qdc, int run, bool g4data=false)  // just returns 0 for G4.  Might want to fix that sometime.
 {
 	double DeltaE = 0;
 	if(g4data) { return DeltaE; }
@@ -298,7 +298,7 @@ Double_t get_lower_DeltaE(double qdc, int run, bool g4data=false)  // just retur
 		slope  = 413.2;  // +/- 0.4
 		DeltaLambda = 0.4;
 	}
-	double E = 1000.0*(qdc - offset) / slope;
+	double E = 1000.0*( (double)(qdc) - offset) / slope;
 	double x0 = 1000.0*offset;
 	
 	double DeltaE2 = (-Deltax0/slope)*(-Deltax0/slope) + (-E/slope*DeltaLambda)*(-E/slope*DeltaLambda);
@@ -399,7 +399,7 @@ Double_t get_lower_E_res(double lower_E, int run, bool g4data=false)
 	return E_res;
 }
 
-Double_t getE_withresolution(double E, double lambda)  // G4
+Double_t getE_withresolution(double E, double lambda)
 {
 //	int verbose=1;
 	
@@ -414,7 +414,7 @@ Double_t getE_withresolution(double E, double lambda)  // G4
 	return better_E;
 }
 
-Double_t getres_withresolution(double E, double lambda)  // G4
+Double_t getres_withresolution(double E, double lambda)  
 // call this function *after* you've applied the resolution to "E"
 {
 	double E_res = sqrt(lambda*E);
@@ -858,12 +858,6 @@ int main(int argc, char *argv[])
 	TBranch *lower_e_b          = friend_tree -> Branch("lower_scint_E", &lower_E);
 	TBranch *upper_e_res_branch = friend_tree -> Branch("upper_scint_E_res", &upper_E_res); // detector resolution
 	TBranch *lower_e_res_branch = friend_tree -> Branch("lower_scint_E_res", &lower_E_res); // 
-	//
-	Double_t upper_DeltaE;
-	Double_t lower_DeltaE;
-	TBranch *upper_deltaE_branch= friend_tree -> Branch("upper_scint_DeltaE", &upper_DeltaE); // how much do we change the energy if we change calibration by "one sigma"?
-	TBranch *lower_deltaE_branch= friend_tree -> Branch("lower_scint_DeltaE", &lower_DeltaE); // 
-	
 	
 	//
 	UInt_t led_count = 0;
@@ -1315,10 +1309,6 @@ int main(int argc, char *argv[])
 				upper_E_res = get_upper_E_res(upper_E, runno, is_g4);
 				lower_E_res = get_lower_E_res(lower_E, runno, is_g4);
 				//
-				upper_DeltaE = get_upper_DeltaE(upper_E, runno, is_g4);
-				lower_DeltaE = get_lower_DeltaE(lower_E, runno, is_g4);
-				
-				//
 				all_okay = get_all_okay_for_event(unix_time, badtimesforrun, &badint, &skipped);
 			
 				x1_count = x1_dla->size();
@@ -1342,9 +1332,6 @@ int main(int argc, char *argv[])
 				upper_E_res = 0.0;  // doesn't really work for Rb, but again, I don't care atm.
 				lower_E_res = 0.0;  
 				
-				upper_DeltaE = 0;  // not implemented for rubidium, but don't leave the branch empty.
-				lower_DeltaE = 0;  // not implemented for rubidium, but don't leave the branch empty.
-				
 				all_okay = kTRUE;	
 				
 				x1_count = x1_dla->size();
@@ -1365,23 +1352,19 @@ int main(int argc, char *argv[])
 		else if(is_g4)
 		{
 			all_okay = kTRUE;	
-			//
-			upper_DeltaE = get_upper_DeltaE(upper_E, runno, is_g4);  // it's just zero for G4, but don't leave the branch blank.
-			lower_DeltaE = get_lower_DeltaE(lower_E, runno, is_g4);  // it's just zero for G4, but don't leave the branch blank.
 			
-			if(apply_scint_res_on_g4) // G4 default.  apply a scint. resolution on G4 data.
+			upper_E = get_upper_E(upper_qdc_d, runno, is_g4);
+			lower_E = get_lower_E(lower_qdc_d, runno, is_g4);
+			upper_E_res = get_upper_E_res(upper_E, runno, is_g4);
+			lower_E_res = get_lower_E_res(lower_E, runno, is_g4);
+			
+			if(is_g4 && apply_scint_res_on_g4)
 			{
+				// apply a scint resolution on the G4 data.
 				upper_E = getE_withresolution(upper_E, lambda_g4_res_t);
 				lower_E = getE_withresolution(lower_E, lambda_g4_res_b);
 				upper_E_res = getres_withresolution(upper_E, lambda_g4_res_t);
 				lower_E_res = getres_withresolution(lower_E, lambda_g4_res_b);
-			}
-			else // don't apply any resolution.
-			{
-				upper_E = get_upper_E(upper_qdc_d, runno, is_g4);
-				lower_E = get_lower_E(lower_qdc_d, runno, is_g4);
-				upper_E_res = get_upper_E_res(upper_E, runno, is_g4);
-				lower_E_res = get_lower_E_res(lower_E, runno, is_g4);
 			}
 			if( ion_count>0 && prev_dlx->size() >0 && prev_dlz->size() > 0)
 			{
