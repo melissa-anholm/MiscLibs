@@ -858,6 +858,12 @@ int main(int argc, char *argv[])
 	TBranch *lower_e_b          = friend_tree -> Branch("lower_scint_E", &lower_E);
 	TBranch *upper_e_res_branch = friend_tree -> Branch("upper_scint_E_res", &upper_E_res); // detector resolution
 	TBranch *lower_e_res_branch = friend_tree -> Branch("lower_scint_E_res", &lower_E_res); // 
+
+	//
+	Double_t upper_DeltaE;
+	Double_t lower_DeltaE;
+//	TBranch *upper_deltaE_branch= friend_tree -> Branch("upper_scint_DeltaE", &upper_DeltaE); // how much do we change the energy if we change calibration by "one sigma"?
+//	TBranch *lower_deltaE_branch= friend_tree -> Branch("lower_scint_DeltaE", &lower_DeltaE); // 
 	
 	//
 	UInt_t led_count = 0;
@@ -1309,6 +1315,12 @@ int main(int argc, char *argv[])
 				upper_E_res = get_upper_E_res(upper_E, runno, is_g4);
 				lower_E_res = get_lower_E_res(lower_E, runno, is_g4);
 				//
+			//	upper_DeltaE = get_upper_DeltaE(upper_qdc_int, runno, is_g4);
+			//	lower_DeltaE = get_lower_DeltaE(lower_qdc_int, runno, is_g4);
+				upper_DeltaE = 0.0;
+				lower_DeltaE = 0.0;
+				
+				//
 				all_okay = get_all_okay_for_event(unix_time, badtimesforrun, &badint, &skipped);
 			
 				x1_count = x1_dla->size();
@@ -1331,6 +1343,9 @@ int main(int argc, char *argv[])
 				lower_E = get_lower_E_Rb(lower_qdc_int);
 				upper_E_res = 0.0;  // doesn't really work for Rb, but again, I don't care atm.
 				lower_E_res = 0.0;  
+				//
+				upper_DeltaE = 0.0;
+				lower_DeltaE = 0.0;
 				
 				all_okay = kTRUE;	
 				
@@ -1357,7 +1372,10 @@ int main(int argc, char *argv[])
 			lower_E = get_lower_E(lower_qdc_d, runno, is_g4);
 			upper_E_res = get_upper_E_res(upper_E, runno, is_g4);
 			lower_E_res = get_lower_E_res(lower_E, runno, is_g4);
-			
+			//
+			upper_DeltaE = 0.0;
+			lower_DeltaE = 0.0;
+
 			if(is_g4 && apply_scint_res_on_g4)
 			{
 				// apply a scint resolution on the G4 data.
