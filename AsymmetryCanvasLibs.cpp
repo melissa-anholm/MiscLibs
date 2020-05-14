@@ -155,6 +155,57 @@ double get_polcorrected_asymmetry(double p1, double p2, double r1p, double r1m, 
 }
 */
 
+double get_superratio(double r1p, double r1m, double r2p, double r2m)  //  the superratio itself, not the asymmetry.
+{
+	double A;
+	if(r1p==0 || r1m==0 || r2p==0 || r2m==0) // any zero.
+	{
+		A = 0.0;
+	}
+	else
+	{
+	//	A = (r1p*r2m)/(r1m*r2p);  // neutron Abeta 2008 convention
+		A = (r1m*r2p)/(r1p*r2m);  // our convention.  I think.
+	}
+	return A;
+}
+double get_superratio_err(double r1p, double r1m, double r2p, double r2m)  // make this a real function!
+{
+	double r = get_superratio(r1p, r1m, r2p, r2m);
+	if(r1p==0 || r1m==0 || r2p==0 || r2m==0)
+	{
+		if(r1p==0.0) {r1p=1.0;}
+		if(r1m==0.0) {r1m=1.0;}
+		if(r2p==0.0) {r2p=1.0;}
+		if(r2m==0.0) {r2m=1.0;}
+	}
+	double dr2 = r*r * (1.0/r1m + 1.0/r2p + 1.0/r1p + 1.0/r2m );  //
+	return sqrt(dr2);
+}
+
+
+double get_supersum(double r1p, double r1m, double r2p, double r2m)
+{
+	double A;
+//	if(r1p==0 || r1m==0 || r2p==0 || r2m==0) // any zero.
+//	{
+//		A = 0.0;
+//	}
+//	else
+//	{
+	A = 0.5*sqrt(r1p*r2m) + 0.5*sqrt(r1m*r2p);
+	//	A = ( sqrt(r1p*r2m) - sqrt(r1m*r2p) ) / ( sqrt(r1p*r2m) + sqrt(r1m*r2p) );
+//	}
+	return A;
+}
+double get_supersum_err(double r1p, double r1m, double r2p, double r2m)  // double-check result..
+{
+//	double ds = 0.25*( sqrt(r1p) + sqrt(r1m) + sqrt(r2p) + sqrt(r2m) );  Nope.
+	double ds2 = (1.0/16.0)*( r1p + r1m + r2p + r2m );
+	return sqrt(ds2);
+}
+
+
 double get_asymmetry(double r1p, double r1m, double r2p, double r2m)
 {
 	double A;
@@ -168,7 +219,6 @@ double get_asymmetry(double r1p, double r1m, double r2p, double r2m)
 	}
 	return A;
 }
-
 double get_asymmetry_err(double r1p, double r1m, double r2p, double r2m)
 {
 	double s;
@@ -191,7 +241,58 @@ double get_asymmetry_err(double r1p, double r1m, double r2p, double r2m)
 	return sqrt(DA2);  // if everything is zero, sqrt(DA2) = 1/4
 }
 
-TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, string hist_title = string("A_beta"), int color=int(kBlack), int plotmarkerstyle=20)
+TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, string hist_title = string("Superratio Asymmetry"), int color=int(kBlack), int plotmarkerstyle=20)
+{
+	int N_bins = 0;
+	N_bins = r1p_hist->GetNbinsX();
+
+	TH1D * super_asym = (TH1D*)r1p_hist -> Clone( hist_title.c_str() );
+	super_asym -> SetName(hist_title.c_str());
+	super_asym -> SetTitle(hist_title.c_str());
+	super_asym -> SetLineColor(color);
+	super_asym -> SetMarkerColor(color);
+//	super_asym -> SetLineWidth(2);
+	super_asym -> Sumw2(kFALSE);
+	super_asym -> Sumw2();
+	
+	double r1p, r1m, r2p, r2m;
+	double bin_content, bin_err;
+	
+	if( r1p_hist->GetNbinsX()==r1m_hist->GetNbinsX() && r2p_hist->GetNbinsX()==r2m_hist->GetNbinsX() && r1p_hist->GetNbinsX()==r2p_hist->GetNbinsX() )
+	{
+	//	for (int i=1; i<N_bins; i++)  // Bins i=0, i=N_bins are the underflow and overflow?
+		for (int i=0; i<=N_bins; i++)  // Bins i=0, i=N_bins are the underflow and overflow?
+		{
+			super_asym -> SetBinContent(i, 0.0);
+			r1p = r1p_hist -> GetBinContent(i);
+			r1m = r1m_hist -> GetBinContent(i);
+			r2p = r2p_hist -> GetBinContent(i);
+			r2m = r2m_hist -> GetBinContent(i);
+			
+		//	bin_content = get_asymmetry(r1p, r1m, r2p, r2m);
+		//	bin_err = get_asymmetry_err(r1p, r1m, r2p, r2m);
+	//		cout << "bin " << i << ":\t";
+	//		cout << bin_content << " +/- " << bin_err << endl;
+			
+			super_asym -> SetBinContent(i, get_asymmetry(r1p, r1m, r2p, r2m) );
+			super_asym -> SetBinError(i, get_asymmetry_err(r1p, r1m, r2p, r2m) );
+			// SetBinError(...) sets the sumw2 to be err^2.
+		}
+	}
+	else
+	{
+		cout << "Must use histograms with the same number of bins!" << endl;
+	}
+	
+	super_asym -> SetMarkerStyle(plotmarkerstyle);
+//	super_asym -> SetMarkerStyle(20);  // 20:  big circles.
+//	super_asym -> SetMarkerStyle(22);  // 22:  solid up-triangles.
+	
+	super_asym -> SetOption("E1L");  // which option even is this??
+	
+	return super_asym;
+}
+TH1D * make_superratio_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, string hist_title = string("Superratio"), int color=int(kBlack), int plotmarkerstyle=20)  // the superratio, NOT the asymmetry
 {
 	int N_bins = 0;
 	N_bins = r1p_hist->GetNbinsX();
@@ -224,8 +325,8 @@ TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_his
 	//		cout << "bin " << i << ":\t";
 	//		cout << bin_content << " +/- " << bin_err << endl;
 			
-			superratio -> SetBinContent(i, get_asymmetry(r1p, r1m, r2p, r2m) );
-			superratio -> SetBinError(i, get_asymmetry_err(r1p, r1m, r2p, r2m) );
+			superratio -> SetBinContent(i, get_superratio(r1p, r1m, r2p, r2m) );
+			superratio -> SetBinError(i, get_superratio_err(r1p, r1m, r2p, r2m) );
 			// SetBinError(...) sets the sumw2 to be err^2.
 		}
 	}
@@ -238,12 +339,84 @@ TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_his
 //	superratio -> SetMarkerStyle(20);  // 20:  big circles.
 //	superratio -> SetMarkerStyle(22);  // 22:  solid up-triangles.
 	
-	superratio -> SetOption("E1L");
+	superratio -> SetOption("E1L");  // which option even is this??
 	
 	return superratio;
 }
 
-TH1D * make_asymcounts_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, string hist_title = string("Counts for A_beta"), int color=int(kGray), int plotmarkerstyle=20)
+TH1D * make_supersum_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, string hist_title = string("Supersum"), int color=int(kBlack), int plotmarkerstyle=20)  // the superratio, NOT the asymmetry
+{
+	int N_bins = 0;
+	N_bins = r1p_hist->GetNbinsX();
+
+	TH1D * supersum = (TH1D*)r1p_hist -> Clone( hist_title.c_str() );
+	supersum -> SetName(hist_title.c_str());
+	supersum -> SetTitle(hist_title.c_str());
+	supersum -> SetLineColor(color);
+	supersum -> SetMarkerColor(color);
+//	supersum -> SetLineWidth(2);
+	supersum -> Sumw2(kFALSE);
+	supersum -> Sumw2();
+	
+	double r1p, r1m, r2p, r2m;
+	double bin_content, bin_err;
+	
+	if( r1p_hist->GetNbinsX()==r1m_hist->GetNbinsX() && r2p_hist->GetNbinsX()==r2m_hist->GetNbinsX() && r1p_hist->GetNbinsX()==r2p_hist->GetNbinsX() )
+	{
+	//	for (int i=1; i<N_bins; i++)  // Bins i=0, i=N_bins are the underflow and overflow?
+		for (int i=0; i<=N_bins; i++)  // Bins i=0, i=N_bins are the underflow and overflow?
+		{
+			supersum -> SetBinContent(i, 0.0);
+			r1p = r1p_hist -> GetBinContent(i);
+			r1m = r1m_hist -> GetBinContent(i);
+			r2p = r2p_hist -> GetBinContent(i);
+			r2m = r2m_hist -> GetBinContent(i);
+			
+		//	bin_content = get_asymmetry(r1p, r1m, r2p, r2m);
+		//	bin_err = get_asymmetry_err(r1p, r1m, r2p, r2m);
+	//		cout << "bin " << i << ":\t";
+	//		cout << bin_content << " +/- " << bin_err << endl;
+			
+			supersum -> SetBinContent(i, get_supersum(r1p, r1m, r2p, r2m) );
+			supersum -> SetBinError(i, get_supersum_err(r1p, r1m, r2p, r2m) );  // it's zero.
+			// SetBinError(...) sets the sumw2 to be err^2.
+		}
+	}
+	else
+	{
+		cout << "Must use histograms with the same number of bins!" << endl;
+	}
+	
+	supersum -> SetMarkerStyle(plotmarkerstyle);
+//	supersum -> SetMarkerStyle(20);  // 20:  big circles.
+//	supersum -> SetMarkerStyle(22);  // 22:  solid up-triangles.
+	
+	supersum -> SetOption("E1L");  // which option even is this??
+	
+	return supersum;
+}
+
+
+
+TH1D * make_rebinned_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, int N_rebin=1, string hist_title = string("Superratio Asymmetry"), int color=int(kBlack), int plotmarkerstyle=20 ) 
+{
+//	cout << "Called make_rebinned_asymmetry_histogram(...);  N_rebin = " << N_rebin << endl;
+	
+	TH1D * r1p_hist_rebinned = (TH1D*)r1p_hist -> Clone();
+	TH1D * r1m_hist_rebinned = (TH1D*)r1m_hist -> Clone();
+	TH1D * r2p_hist_rebinned = (TH1D*)r2p_hist -> Clone();
+	TH1D * r2m_hist_rebinned = (TH1D*)r2m_hist -> Clone();
+	
+	r1p_hist_rebinned -> Rebin(N_rebin);
+	r1m_hist_rebinned -> Rebin(N_rebin);
+	r2p_hist_rebinned -> Rebin(N_rebin);
+	r2m_hist_rebinned -> Rebin(N_rebin);
+	
+	return make_asymmetry_histogram(r1p_hist_rebinned, r1m_hist_rebinned, r2p_hist_rebinned, r2m_hist_rebinned, hist_title, color, plotmarkerstyle);
+}
+
+
+TH1D * make_asymcounts_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, string hist_title = string("Counts for Superratio Asymmetry"), int color=int(kGray), int plotmarkerstyle=20)
 {
 	TH1D * counts_hist = (TH1D*)r1p_hist -> Clone( hist_title.c_str() );
 	counts_hist -> SetName(hist_title.c_str());
@@ -277,6 +450,20 @@ TH1D * make_asymcounts_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hi
 		cout << "Must use histograms with the same number of bins!" << endl;
 	}
 	return counts_hist;
+}
+TH1D * make_rebinned_asymcounts_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, int N_rebin=1, string hist_title = string("Counts for Superratio Asymmetry"), int color=int(kBlack), int plotmarkerstyle=20 ) 
+{
+	TH1D * r1p_hist_rebinned = (TH1D*)r1p_hist -> Clone();
+	TH1D * r1m_hist_rebinned = (TH1D*)r1m_hist -> Clone();
+	TH1D * r2p_hist_rebinned = (TH1D*)r2p_hist -> Clone();
+	TH1D * r2m_hist_rebinned = (TH1D*)r2m_hist -> Clone();
+	
+	r1p_hist_rebinned -> Rebin(N_rebin);
+	r1m_hist_rebinned -> Rebin(N_rebin);
+	r2p_hist_rebinned -> Rebin(N_rebin);
+	r2m_hist_rebinned -> Rebin(N_rebin);
+	
+	return make_asymcounts_histogram(r1p_hist_rebinned, r1m_hist_rebinned, r2p_hist_rebinned, r2m_hist_rebinned, hist_title, color, plotmarkerstyle);
 }
 
 vector<TPad *> make_residupad(TH1D* top_hist, TH1D* bottom_hist, string top_draw_option=string("") )

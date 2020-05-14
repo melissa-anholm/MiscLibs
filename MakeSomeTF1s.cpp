@@ -30,17 +30,64 @@ using std::stringstream;
 using std::vector;
 using std::min;
 
+using std::setprecision;
+using std::fixed;
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+string double_to_string_again(double thisnumber, int thisprecision=12)  // 
+{
+	std::ostringstream oss;
+	oss << fixed << setprecision(thisprecision) << thisnumber;
+	
+	string mynumberstring = oss.str();
+	return mynumberstring;
+}
 
-TF1* make_Abeta_func()
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+TF1* make_Abeta_func()  // is this formula even correct?!?
 {
 //	TF1* Abeta_func_keV = new TF1("Abeta_func_keV", "[0]*sqrt(1.0 - 510.9989461^2/(x+510.9989461)^2)", 0.0, 5100.0);
 	TF1* Abeta_func_keV = new TF1("Abeta_func_keV", "[0]*sqrt(x^2 + 2*x*510.9989461) / (x+510.9989461)", 0.0, 5100.0);
 	//double m_e = 510.9989461;
 	Abeta_func_keV -> SetParNames("Abeta");
-	Abeta_func_keV -> SetParameter("Abeta", -0.56);
+//	Abeta_func_keV -> SetParameter("Abeta", -0.56);
+	Abeta_func_keV -> SetParameter("Abeta", -0.5680);  // K37 default txt inputs
+//	Abeta_func_keV -> SetParameter("Abeta", -0.5707);  // PRL
 	Abeta_func_keV -> SetParLimits(0, -0.59, -0.52);
+	
+	return Abeta_func_keV;
+}
+
+TF1* make_Abeta_func_withabsorption(double E_absorbed_keV)  // comes out as a function of kinetic energy.
+{
+	string E_absorbed_string = double_to_string_again(E_absorbed_keV, 6);
+	string func_string = "[0]*sqrt( (x+"+E_absorbed_string+"+510.9989461)^2 - (510.9989461)^2 ) / ((x+"+E_absorbed_string+")+510.9989461)";
+	
+//	cout << "func_string = " << func_string << endl;
+	
+	TF1* Abeta_func_keV = new TF1("Abeta_func_keV", func_string.c_str(), 0, 5100.0);
+	//double m_e = 510.9989461;
+	Abeta_func_keV -> SetParNames("Abeta");
+	Abeta_func_keV -> SetParameter("Abeta", -0.5680);  // K37 default txt inputs
+//	Abeta_func_keV -> SetParameter("Abeta", -0.5707);  // PRL
+	Abeta_func_keV -> SetParLimits(0, -0.59, -0.52);
+	
+	/*
+	double x;
+	x = 302.0;
+	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
+	x = 500.0;
+	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
+	x = 1000.0;
+	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
+	x = 3000.0;
+	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
+	x = 5000.0;
+	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
+	x = 10.0;
+	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
+	*/
 	
 	return Abeta_func_keV;
 }

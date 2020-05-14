@@ -3,6 +3,8 @@
 
 
 #include <vector>
+#include <iostream>  // cout
+
 using std::vector;
 using std::cout;
 using std::endl;
@@ -11,6 +13,8 @@ using std::endl;
 #include <TH2D.h>
 
 #include <TColor.h>
+
+#include "HistExtras.h"
 
 // Examples:
 // TH1D* OP_Cycle_Events_all = CreateHist(string("Electron Events - All"), string("acmottime"), int(kRed));
@@ -22,39 +26,6 @@ double v1192_to_ns = 100.0/1024.0;
 // ====================================== //
 // Histogram Functions 
 /*
-TH1D * make_hist_like(TH1D * this_hist, int this_color=int(kBlack) )
-{
-//	TH1D * new_hist = (TH1D*)this_hist -> Clone( this_tf1->GetName() );
-	TH1D * new_hist = (TH1D*)this_hist -> Clone();
-	new_hist -> GetListOfFunctions() -> Clear();
-	
-//	new_hist -> Sumw2(kFALSE);
-	new_hist -> SetMarkerColor(this_color);
-	new_hist -> SetLineColor(this_color);
-	int n_bins = new_hist->GetNbinsX();
-	// well shit, it probably needs some parameters or something.
-	double xmax, xmin;
-	xmax = this_tf1->GetXmax();
-	xmin = this_tf1->GetXmin();
-	
-	for (int i=1; i<n_bins; i++)  // Bins i=0, i=n_bins are the underflow and overflow?
-	{
-	//	this_tf1->Eval(this_hist->GetBinCenter(i));
-	//	cout << "i = " << i << endl;
-		if( new_hist->GetBinCenter(i)>=xmin &&  new_hist->GetBinCenter(i)<=xmax )
-		{
-			new_hist -> SetBinContent(i, this_tf1->Eval(this_hist->GetBinCenter(i)) );
-		}
-		else
-		{
-			new_hist -> SetBinContent(i, 0);
-		}
-	}
-//	cout << "Returning the hist." << endl;
-	return new_hist;
-}
-*/
-
 class hist_type
 {
 private:
@@ -77,6 +48,7 @@ hist_type::hist_type(std::string my_type)
 	type = my_type;
 	failed = set_other_parameters();
 }
+*/
 int hist_type::set_other_parameters()
 {
 	if (type == std::string("raw_tof"))
@@ -196,17 +168,6 @@ int hist_type::set_other_parameters()
 		user_xmin = 50;
 		user_xmax = 150;
 	}
-	/*
-	else if (type == std::string("cal_e_scint_tof")) // electron tof w.r.t. scint time // + offset.
-	{
-		nbins = 4000;
-		xmin = (-2000.5+1.0)*v1192_to_ns;
-		xmax = (2000.5)*v1192_to_ns;
-		units = std::string("electron - scint [ns]");
-		user_xmin = -90.0;
-		user_xmax = -50.0;
-	}
-	*/
 	else if (type == std::string("cal_e_scint_tof")) // electron tof w.r.t. scint time // + offset.
 	{
 		nbins = 400;
@@ -410,9 +371,19 @@ int hist_type::set_other_parameters()
 		nbins = 6000;
 		xmin =  0.0-0.5;
 		xmax = 6000.0-0.5;
-		units = std::string("beta kinetic energy (keV)");
+		units = std::string("Scintillator Energy (keV)");
 		user_xmin = xmin;
 		user_xmax = xmax;
+	}
+	else if (type==std::string("AmplitudeBinning_Ebeta"))
+	{
+	//	nbins = 6000;
+		nbins = 50*9*5*3;  // so I can rebin by 3, 5, 9.  if I feel like doing so.  total bins = 6750.
+		xmin =  0.0-125.0/2.0;
+		xmax = 6000.0-125.0/2.0+250.0;  // max at 6187.5.  I think.
+		units = std::string("Beta Kinetic Energy (keV)");
+		user_xmin = xmin;
+		user_xmax = 5270.0;  
 	}
 	else if (type == std::string("acmottime"))
 	{
@@ -641,7 +612,7 @@ int hist_type::set_other_parameters()
 		units = std::string("Calibrated BB1 Energy (keV)");
 		xmin = -0.5;
 		xmax = xmin + 6000.0;
-		nbins = 600;
+		nbins = 600*2;
 		user_xmin = xmin;
 		user_xmax = 400.5;
 	}
@@ -799,7 +770,8 @@ int hist_type::set_other_parameters()
 	return 0;
 }
 
-TH1D * CreateHist(std::string title, std::string type, int color, int rebin_factor=1)
+//TH1D * CreateHist(std::string title, std::string type, int color, int rebin_factor=1)
+TH1D * CreateHist(std::string title, std::string type, int color, int rebin_factor)
 {
 	hist_type my_hist_type = hist_type(type);
 	TH1D * this_hist = new TH1D(title.c_str(), title.c_str(), my_hist_type.nbins, my_hist_type.xmin, my_hist_type.xmax);
@@ -814,7 +786,8 @@ TH1D * CreateHist(std::string title, std::string type, int color, int rebin_fact
 }
 
 
-TH1D * CreateHist(std::string title, std::string type, TColor my_color, int rebin_factor=1)
+//TH1D * CreateHist(std::string title, std::string type, TColor my_color, int rebin_factor=1)
+TH1D * CreateHist(std::string title, std::string type, TColor my_color, int rebin_factor)
 {
 //	TColor *this_color;
 //	Int_t color = this_color -> GetFreeColorIndex(); // nope.  only in root 6.
@@ -910,7 +883,7 @@ TH1D * UnevenRebin(TH1D * horig, TH1D * htofill)
 	return htofill;
 }
 
-
+/*
 class hist_type_2d
 {
 private:
@@ -939,6 +912,7 @@ public:
 	
 	hist_type_2d(std::string my_type_x, std::string my_type_y, int my_rebin_x, int my_rebin_y);
 };
+*/
 
 hist_type_2d::hist_type_2d(std::string my_type_x, std::string my_type_y, int my_rebin_x, int my_rebin_y)
 {

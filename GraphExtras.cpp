@@ -199,7 +199,7 @@ TGraphErrors * make_TGraphErrors(int N_points, double * x_avg, double * y_avg, d
 }
 
 
-TGraphErrors * make_TGraphErrors(vector<double> x_avg, vector<double> y_avg, vector<double> delta_x, vector<double> delta_y)
+TGraphErrors * make_TGraphErrors(vector<double> x_avg, vector<double> y_avg, vector<double> delta_x, vector<double> delta_y, int color=kBlack, string name="")
 {
 	int N_points = std::min( std::min(x_avg.size(), y_avg.size()), std::min(delta_x.size(), delta_y.size()) );
 	
@@ -216,7 +216,14 @@ TGraphErrors * make_TGraphErrors(vector<double> x_avg, vector<double> y_avg, vec
 	
 	my_TGraphErrors->SetFillStyle(0);  // 0 =  not filled.
 	my_TGraphErrors->SetFillColor(kWhite);  // the box around the thing is white.
-
+	my_TGraphErrors->SetMarkerColor(color);
+	my_TGraphErrors->SetLineColor(color);
+	if(name.size()>0) // by default, we don't set the name here, so it'll have the default name "Graph".
+	{
+		my_TGraphErrors->SetName(name.c_str());
+		my_TGraphErrors->SetTitle(name.c_str());
+	}
+	
 	return my_TGraphErrors;
 }
 

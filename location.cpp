@@ -11,6 +11,7 @@
 //#include <cstdio>
 #include <iostream>
 #include <string>
+#include <cstring> // strcmp
 
 using std::string;
 using std::cout;

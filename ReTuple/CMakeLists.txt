@@ -59,7 +59,7 @@ ENDIF()
 #Linking the Executable ================
 #create exectuable
 add_executable (retuple TupleMyTuple.cpp)
-#add_executable (retuple TupleMyTuple_kludge.cpp)
+#add_executable (retuple TupleMyTuple_kludge.cpp)  # no G4 scint res or G4 BB1 res.
 #add_executable (testtuple TestTuple.cpp)
 #add_executable (calibrationator TheCalibrationator.cpp)
 

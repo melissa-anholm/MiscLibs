@@ -1267,17 +1267,15 @@ int main(int argc, char *argv[])
 		}
 		
 		polarization = final_pol;
-		if(final_pol >= 0.0)
-		{
-			sigma_plus = 0;
-		}
-		else
-		{
-			sigma_plus = 1;
-		}
 		
+	//	// below:  it was like this for some previous versions, but it's wrong. I'll just swap it.
+	//	if(final_pol >= 0.0) { sigma_plus = 0; }
+	//	else                 { sigma_plus = 1; }
+		
+		if(final_pol >= 0.0) { sigma_plus = 1; }
+		else                 { sigma_plus = 0; }
+	
 		TBranch *sigma_plus_branch = friend_tree -> Branch("TTLBit_SigmaPlus", &sigma_plus);  
-	//	TBranch *sigma_plus_branch2 = friend_tree -> Branch("TTLBit_SigmaPlus2", &sigma_plus);  
 		TBranch *pol_branch = friend_tree -> Branch("Polarization", &polarization);  
 	}
 	

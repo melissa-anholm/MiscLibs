@@ -21,9 +21,32 @@
 // already there in version 5.  New this version is backscatter 
 // event classification.
 // 
-// 11.12.2017:  version 7:  use overall BB1 threshold too!  60 keV.
+// 11.12.2017:  version 7: use overall BB1 threshold too!  60 keV.
 // 
+// 26.4.2018:  version 8:  added scintillator resolution 'blur' to g4 
+// output.  At some point during version 7, backscatter classifications 
+// were also added.  Also at some point the setup_location() function
+// was added specifically to manage the clusterfuck that arose from 
+// trying to use this code from multiple different computers.
+// 
+// 12.6.2018:  version 9:  added BB1 detector noise and resolution to 
+// g4 data processing.
+// 
+// 5.11.2018:  version 10:  added dl_x_pos and dl_z_pos branches to G4 output.  
+// previously the branches were there, but zero, and G4 position info
+// was (also still is) stored in only the DL_X_Pos (etc) branches.  
+// Also added at version 10:  partial LE/TE support.  Breaks retupling on 
+// files analyzed before the LE/TE analyzer, but LE/TE doesn't crash it.
+// 
+// still needs to just add all the "orig_LE" branch names back as "orig".
+// 
+
+// The kludge is that the detector resolution (G4) is zero/really small.
+// ... and also that bb1_energy_threshold = 0.
+// ... and also that we've gotten rid of the added BB1 noise.
+// ... and also that we've taken out BB1 resolution.
 // ==================================================================== //
+
 #include <stdlib.h>
 #include <fstream>
 #include <string>
@@ -35,6 +58,8 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TObjString.h>
+#include <TRandom3.h>
+#include <TF1.h>
 
 using std::cout;
 using std::cin;
@@ -46,79 +71,28 @@ using std::make_pair;  // unused?
 using std::pair;
 using std::min;
 
-//#define on_trinatdaq 1
-//#define on_trinat02 1
-
 //
-bool is_blinded      = false;
-bool is_g4           = true;
-bool use_g4_metadata = true;
+bool is_blinded            = false;
+bool is_g4                 = true;
+bool use_g4_metadata       = true;
+bool apply_scint_res_on_g4 = true;
+bool doEmpirical           = false;  // empirical noise on BB1s.  for G4 data.
+bool do_rubidium           = false;  // Rb
+bool is_old                = false;  // before trailing edge/leading edge madness.
 
-int version = 7;
+int version = 11;
 
 //#define XSTR(x) #x
 //#define STR(x) XSTR(x)
 
 #include "location.cpp"
-
 #include "MetaChain.cpp"
 #include "treeql_replacement.cpp"
 #include "BB1/bb1_strip.h"
 #include "mini_cal_maker.cpp"
+#include "HistExtras.cpp" // v1192_to_ns.
 
 //string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
-
-
-//
-/*
-#ifdef on_trinatdaq
-	#include "/home/trinat/anholm/MiscLibs/location.cpp"
-	
-	#include "/home/trinat/anholm/MiscLibs/MetaChain.cpp"
-	#include "/home/trinat/anholm/MiscLibs/treeql_replacement.cpp"
-	#include "/home/trinat/anholm/MiscLibs/BB1/bb1_strip.h"
-	#include "/home/trinat/anholm/MiscLibs/mini_cal_maker.cpp"
-	
-	string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
-//
-#else  // NOT on trinatdaq.
-#ifdef on_trinat02
-	#include "/home1/trinat/anholm/Packages/MiscLibs/location.cpp"
-	
-	#include "/home1/trinat/anholm/Packages/MiscLibs/MetaChain.cpp"
-	#include "/home1/trinat/anholm/Packages/MiscLibs/treeql_replacement.cpp"
-	#include "/home1/trinat/anholm/Packages/MiscLibs/BB1/bb1_strip.h"
-	#include "/home1/trinat/anholm/Packages/MiscLibs/mini_cal_maker.cpp"
-	
-	string bb1_prefix = "/home1/trinat/anholm/Packages/MiscLibs/BB1/";
-//
-#else // not on trinat02 (and also not on trinatdaq)
-	#include "/Users/spiffyzha/Packages/MiscLibs/location.cpp"
-	
-	#include "/Users/spiffyzha/Packages/MiscLibs/MetaChain.cpp"
-	#include "/Users/spiffyzha/Packages/MiscLibs/treeql_replacement.cpp"
-	#include "/Users/spiffyzha/Packages/MiscLibs/BB1/bb1_strip.h"
-	#include "/Users/spiffyzha/Packages/MiscLibs/mini_cal_maker.cpp"
-	
-	string bb1_prefix = "/Users/spiffyzha/Packages/MiscLibs/BB1/";  // 
-#endif
-#endif
-*/
-
-// import the old variable names from how they're defined in MetaChain.cpp:
-//setup_location();  // will this work??
-//string blind_r_path = br_path;
-//string blind_e_path = be_path;
-//string blind_o_path = bf_path;
-//
-//string unblind_r_path = ur_path;
-//string unblind_e_path = ue_path;
-//string unblind_o_path = uf_path;
-//
-//string g4_tree_path     = g4_path;
-//string g4_friend_path   = g4f_path;
-//string metadatafilename = metadata_name;
-
 
 string make_rootfilename(string name, int parameter, string name2=string(""))
 {
@@ -204,32 +178,12 @@ Double_t get_upper_E(double qdc, int run, bool g4data=false)
 	double E;
 	if(!g4data)
 	{
-		if (run < 450) 
-		{
-			offset = 110.019250;  // +/- 0.3
-			slope  = 0.398640;  // +/- 0.4
-		} 
-		else 
-		{
-			offset = 110.737860;  // +/- 0.2
-			slope  = 0.388328;  // +/- 0.4
-		}
-		E = (qdc - offset) / slope;
-	}
-	else
-	{
-		E = qdc;
-	}
-	
-/*
-	if(!g4data)
-	{
-		if (run < 450) 
+		if (run < 450) // A, B
 		{
 			offset = 110.0;  // +/- 0.3
 			slope  = 398.5;  // +/- 0.4
 		} 
-		else 
+		else // C, D, (E)
 		{
 			offset = 110.7;  // +/- 0.2
 			slope  = 388.3;  // +/- 0.4
@@ -239,36 +193,18 @@ Double_t get_upper_E(double qdc, int run, bool g4data=false)
 	else
 	{
 		E = qdc;
+		/*
+		if(!apply_scint_res_on_g4)
+		{
+			E = qdc;
+		}
+		else
+		{
+		// do something else here.
+			E = qdc;
+		}
+		*/
 	}
-	
-*/
-//	if (run <= 449) 
-//	{
-//		offset = 109.7;  // +/- 0.3
-//		slope = 0.3991;  // +/- 0.0004
-//	}
-//	else // if (run <= 513) 
-//	{
-//		offset = 110.5;  // +/- 0.3
-//		slope = 0.3890;  // +/- 0.0004
-//	}
-//	double E = (qdc - offset) / slope;
-//
-//	//	double offset = 107.48;
-//	//	double slope;
-//	//	if (run < 450) 
-//	//	{
-//	//		slope = 395.0;
-//	//	} 
-//	//	else if (run < 483) 
-//	//	{
-//	//		slope = 386.0;
-//	//	} 
-//	//	else 
-//	//	{
-//	//		slope = 385.0;
-//	//	}
-//	//	double E = 1000.0*(qdc - offset) / slope;
 	return E;
 }
 Double_t get_lower_E(double qdc, int run, bool g4data=false)
@@ -276,25 +212,6 @@ Double_t get_lower_E(double qdc, int run, bool g4data=false)
 	double offset;
 	double slope;
 	double E;
-	if(!g4data)
-	{
-		if (run < 450) 
-		{
-			offset = 142.036278;  // +/- 0.3
-			slope  = 0.423433;  // +/- 0.4
-		} 
-		else 
-		{
-			offset = 142.990866;  // +/- 0.3
-			slope  = 0.413197;  // +/- 0.4
-		}
-		E = (qdc - offset) / slope;
-	}
-	else
-	{
-		E = qdc;
-	}
-/*
 	if(!g4data)
 	{
 		if (run < 450) 
@@ -312,35 +229,111 @@ Double_t get_lower_E(double qdc, int run, bool g4data=false)
 	else
 	{
 		E = qdc;
+		/*
+		if(!apply_scint_res_on_g4)
+		{
+			E = qdc;
+		}
+		else
+		{
+		//	do something else here.
+			E = qdc;
+		}
+		*/
 	}
-*/
-//	if (run <= 449) 
-//	{
-//		offset = 141.8;  // +/- 0.3
-//		slope = 0.4242;  // +/- 0.0005
-//	}
-//	else // if (run <= 513) 
-//	{
-//		offset = 142.7;  // +/- 0.3
-//		slope = 0.4139;  // +/- 0.0004
-//	}
-//	double E = (qdc - offset) / slope;
-//
-//	//	double offset = 143.4;
-//	//	double slope;
-//	//	if (run < 450) 
-//	//	{
-//	//		slope = 419.2;
-//	//	} 
-//	//	else if (run < 483) 
-//	//	{
-//	//		slope = 410.8;
-//	//	} 
-//	//	else 
-//	//	{
-//	//		slope = 409.1;
-//	//	}
-//	//	double E = 1000.0*(qdc - offset) / slope;
+	return E;
+}
+
+Double_t get_upper_DeltaE(int qdc, int run, bool g4data=false)  // it just returns 0 for G4.  Might want to fix that sometime.
+{
+	double DeltaE = 0;
+	if(g4data) { return DeltaE; }
+	//
+	double offset;
+	double slope;
+	double DeltaLambda;
+	double Deltax0;
+	if (run < 450) // A, B
+	{
+		offset = 110.0;  // +/- 0.3
+		Deltax0 = 1000.0*0.3;
+		
+		slope  = 398.5;  // +/- 0.4
+		DeltaLambda = 0.4;
+	} 
+	else // C, D, (E)
+	{
+		offset = 110.7;  // +/- 0.2
+		Deltax0 = 1000.0*0.2;
+		
+		slope  = 388.3;  // +/- 0.4
+		DeltaLambda = 0.4;
+	}
+	double x0 = 1000.0*offset;
+	double E = (1000.0*(double)(qdc) - 1000.0*offset) / slope;
+	
+	double DeltaE2 = (-Deltax0/slope)*(-Deltax0/slope) + (-E/slope*DeltaLambda)*(-E/slope*DeltaLambda);
+	DeltaE = sqrt(DeltaE2);
+	//
+	return DeltaE;
+}
+
+Double_t get_lower_DeltaE(int qdc, int run, bool g4data=false)  // just returns 0 for G4.  Might want to fix that sometime.
+{
+	double DeltaE = 0;
+	if(g4data) { return DeltaE; }
+	//
+	double offset;
+	double slope;
+	double DeltaLambda;
+	double Deltax0;
+	if (run < 450) 
+	{
+		offset = 142.0;  // +/- 0.3
+		Deltax0 = 1000.0*0.3;
+		
+		slope  = 423.4;  // +/- 0.4
+		DeltaLambda = 0.4;
+	} 
+	else 
+	{
+		offset = 143.0;  // +/- 0.3
+		Deltax0 = 1000.0*0.3;
+		
+		slope  = 413.2;  // +/- 0.4
+		DeltaLambda = 0.4;
+	}
+	double E = 1000.0*( (double)(qdc) - offset) / slope;
+	double x0 = 1000.0*offset;
+	
+	double DeltaE2 = (-Deltax0/slope)*(-Deltax0/slope) + (-E/slope*DeltaLambda)*(-E/slope*DeltaLambda);
+	DeltaE = sqrt(DeltaE2);
+	//
+	return DeltaE;
+}
+
+Double_t get_upper_E_Rb(double ch)  // preliminary calibrations from James  (what units?)
+{
+	double E;
+	
+	double ch0=  -7519.72;
+	double A  =  10867.51; 
+	double E0 = -12641.56;
+	double w  =  13591.53;
+	
+	E = E0 + w*log( (ch-ch0)/(A + ch -ch0) );
+	return E;
+}
+Double_t get_lower_E_Rb(double ch)  // preliminary calibrations from James  (what units?)
+{
+	double E;
+	
+	double ch0= -17700.94;
+	double A  =  20616.53; 
+	double E0 = -20920.88;
+	double w  =  15194.39;
+	
+	E = E0 + w*log( (ch-ch0)/(A + ch -ch0) );
 	return E;
 }
 
@@ -363,20 +356,19 @@ Double_t get_upper_E_res(double upper_E, int run, bool g4data=false)
 	else
 	{
 		E_res = 0.0;
+		/*
+		if(!apply_scint_res_on_g4)
+		{
+			E_res = 0.0;
+		}
+		else
+		{
+		//	Do something else here.
+			E_res = 0.0;
+		}
+		*/
 	}
 	return E_res;
-	
-//	double res;
-//	if (run <= 449) 
-//	{
-//		res = 1.61;  // +/- 0.09
-//	}
-//	else // if (run <= 513) 
-//	{
-//		res = 1.45;  // +/- 0.08
-//	}
-//	double sigma = sqrt(res*E);
-//	return sigma;
 }
 Double_t get_lower_E_res(double lower_E, int run, bool g4data=false)  
 { // E is in units of keV.
@@ -397,22 +389,42 @@ Double_t get_lower_E_res(double lower_E, int run, bool g4data=false)
 	else
 	{
 		E_res = 0.0;
+		/*
+		if(!apply_scint_res_on_g4)
+		{
+			E_res = 0.0;
+		}
+		else
+		{
+		//	Do something else here.
+			E_res = 0.0;
+		}
+		*/
 	}
 	return E_res;
-
-//	double res;
-//	if (run <= 449) 
-//	{
-//		res = 1.32;  // +/- 0.08
-//	}
-//	else // if (run <= 513) 
-//	{
-//		res = 1.33;  // +/- 0.07
-//	}
-//	double sigma = sqrt(res*E);
-//	return sigma;
 }
 
+Double_t getE_withresolution(double E, double lambda)
+{
+//	int verbose=1;
+	
+	double better_E =-1.0;
+	double E_res = sqrt(lambda*E);
+	while(better_E<0)
+	{
+	//	double this_random = 0;
+		better_E = gRandom->Gaus(E, E_res);
+//		if(verbose) {cout << "this random number:  " << better_E << endl; }
+	}
+	return better_E;
+}
+
+Double_t getres_withresolution(double E, double lambda)  
+// call this function *after* you've applied the resolution to "E"
+{
+	double E_res = sqrt(lambda*E);
+	return E_res;
+}
 
 // Cycle Counter:
 double time_to_polarize = 100.0;   // microsec.
@@ -454,7 +466,7 @@ int my_prev_event::ts_prev()
 }
 // AC/Pol classification:
 /*
-bool check_pol(int acmottime, double op_delay)
+bool check_pol_orig(int acmottime, double op_delay)  // what MJA expected.  but actually, use the thing Ben did below instead.
 {
 	int ac_cycle_mus = 97260*50/1000; // in microseconds.  4863 mus.
 	int actime = 2956;
@@ -471,8 +483,8 @@ bool check_pol(int acmottime, double op_delay)
 	return polarized;
 }
 */
-bool check_pol2(int acmottime, double op_delay)
-{  // check_pol2 tries to follow Ben's timing cuts convention...
+bool check_pol(int acmottime, double op_delay)
+{  // this version of check_pol tries to follow Ben's timing cuts convention...
 	int ac_cycle_mus = 97260*50/1000; // in microseconds.  4863 mus.
 	int actime = 2956;  // 4863 - 2956 = 1907
 //	double time_to_polarize = 100.0;
@@ -520,8 +532,10 @@ bool check_ac(int acmottime, double op_delay)
 
 enum detector_position
 {
-	t = 1,
-	b = 0
+//	t = 1,
+//	b = 0
+	t = 0,
+	b = 1
 };
 enum bb1_axis
 {
@@ -530,17 +544,92 @@ enum bb1_axis
 };
 double sigma_cut = 3.0;
 int threshold_index = 0;
-double bb1_energy_threshold = 60.0;  // Ben uses 60 keV
+//double bb1_energy_threshold = 60.0;  // Ben uses 60 keV
+double bb1_energy_threshold = 0.0;  // kludge in a zero bb1 threshold.
 
 double get_r(double x, double y)
 {
 	double r2 = pow(x, 2) + pow(y, 2);
 	return sqrt(r2);
 }
+//
+//double etof_offset_le[] = {84.41+122.6, 86.61+120.4};  // not good values atm.  also, this was set up using the other detector numbering convention...
+//double etof_offset_le_t = 86.61+120.4;
+//double etof_offset_le_b = 84.41+122.6;
+
+
+
+double adjust_tof_t(double raw_tof_in, double Ebeta, TF1* fitfunc, int run)  
+// what units for Ebeta? ...whatever gets saved to the new friendtuple.
+// raw_tof_in is just electron_time - scint_time, in TDC units.
+{
+	double etof_offset_le_t = 86.61+120.4;
+	double extra_offset_t_byrun = 0;
+	//
+	raw_tof_in*=v1192_to_ns;
+	raw_tof_in+=etof_offset_le_t;
+	if(run>420)  // after set A.
+	{
+		if (run<=445)  // B
+		{
+			extra_offset_t_byrun = 3.24675e-02;
+		}
+		else if(run<=477) // C
+		{
+			extra_offset_t_byrun = -5.03717e-02;
+		}
+		else if(run<=513) // D
+		{
+			extra_offset_t_byrun = -5.81678e-02;
+		}
+	}
+	raw_tof_in+=extra_offset_t_byrun;
+	
+//	e_tof_in = ( electron_time - scint_time_t->at(j) )*v1192_to_ns + etof_offset_le_t;
+//	the_tof  = adjust_tof(tmp_e_tof, upper_E, f_t_le);
+
+	double adjustment;
+	if(!fitfunc) { adjustment = 9.8; }
+	else         { adjustment = fitfunc -> Eval(Ebeta); }
+	double tof_out = raw_tof_in - adjustment;
+	return tof_out;
+}
+double adjust_tof_b(double raw_tof_in, double Ebeta, TF1* fitfunc, int run)
+{
+	double etof_offset_le_b = 84.41+122.6;
+	double extra_offset_b_byrun = 0;
+	//
+	raw_tof_in*=v1192_to_ns;
+	raw_tof_in+=etof_offset_le_b;
+	if(run>420) // after set A.
+	{
+		if (run<=445)  // B
+		{
+		extra_offset_b_byrun = -4.73204e-03;
+		}
+		else if(run<=477) // C
+		{
+			extra_offset_b_byrun = -3.07881e-02;
+		}
+		else if(run<=513) // D
+		{
+			extra_offset_b_byrun = -4.44450e-02;
+		}
+	}
+	raw_tof_in+=extra_offset_b_byrun;
+
+	double adjustment;
+	if(!fitfunc) { adjustment = 9.8; }
+	else         { adjustment = fitfunc -> Eval(Ebeta); }
+	double tof_out = raw_tof_in - adjustment;
+	return tof_out;
+}
 
 //
 int main(int argc, char *argv[]) 
 {
+	setup_location();
+	
 	int runno;
 	if(argc==2)
 	{
@@ -556,97 +645,153 @@ int main(int argc, char *argv[])
 	cout << "For BB1s, we use a " << sigma_cut << " sigma energy agreement cut." << endl;
 	cout << "For BB1s, we use SNR threshold \'index\' " << threshold_index << "." << endl;
 	cout << "For BB1s, we use an energy threshold of " << bb1_energy_threshold << " keV." << endl;
-
-
-	setup_location();  // will this work??
-	string blind_r_path = br_path;
-	string blind_e_path = be_path;
-	string blind_o_path = bf_path;
-
-	string unblind_r_path = ur_path;
-	string unblind_e_path = ue_path;
-	string unblind_o_path = uf_path;
-
-	string g4_tree_path     = g4_path;
-	string g4_friend_path   = g4f_path;
-	string metadatafilename = metadata_name;
-
+	
+	if(is_g4)
+	{
+		cout << "We are using simulated data." << endl;
+	}
+	else
+	{
+		cout << "We are using experimental data." << endl;
+	}
 	
 	string fname;
 	string friend_fname;
 	double this_opdelay;
+	string matched_runset = "";
+	double lambda_g4_res_t = 0.0;
+	double lambda_g4_res_b = 0.0;
 	TTree * MetaTree;
-	// = load_metadata_tree(metadatafilename);
+	gRandom = new TRandom3();
+	// = load_metadata_tree(metadata_name);
 	if(!is_g4)
-	{
-		// polarization classification overhead:
-		set_of_runs runs;  // Do NOT use a '*'.  It breaks.  Dunno why.
-		this_opdelay = runs.OP_Delay[runno];
-		if(is_blinded)
+	{	
+		if(do_rubidium)
 		{
-			cout << "Running retuple on blinded datasets." << endl;
-			if( runs.good_recoil[runno]==true )
-			{
-				cout << "Run " << runno << " is a recoil run." << endl;
-				fname  = make_rootfilename(blind_r_path+"output00", runno, "_blinded");
-				cout << "Using file:  " << fname << endl;
-			}
-			else if(runs.good_electron[runno]==true)
-			{
-				cout << "Run " << runno << " is an electron run." << endl;
-				fname  = make_rootfilename(blind_e_path+"output00", runno, "_blinded");
-				cout << "Using file:  " << fname << endl;
-			}
-			else
-			{
-				cout << "BAD.  Check run number." << endl;
-				return 0;
-			}
-			friend_fname = make_rootfilename(blind_o_path+"friend00",runno, "_blinded");
+			// for rubidium, it's neither blinded nor polarized...
+			cout << "Running retuple on Rubidium data." << endl;
+			is_blinded = false;
+			this_opdelay = 0.0;  //  this really shouldn't ever get used..
+			fname  = make_rootfilename(rb_path+"output0", runno);
+			cout << "Using file:  " << fname << endl;
+			//
+			friend_fname = make_rootfilename(rbfpath+"friend0",runno);
 		}
 		else
 		{
-			if( runs.good_recoil[runno]==true )
+			// polarization classification overhead:
+			set_of_runs runs;  // Do NOT use a '*'.  It breaks.  Dunno why.
+			this_opdelay = runs.OP_Delay[runno];
+			if(is_blinded)
 			{
-				cout << "Run " << runno << " is a recoil run." << endl;
-				fname  = make_rootfilename(unblind_r_path+"output00", runno);
-				cout << "Using file:  " << fname << endl;
-			}
-			else if(runs.good_electron[runno]==true)
-			{
-				cout << "Run " << runno << " is an electron run." << endl;
-				fname  = make_rootfilename(unblind_e_path+"output00", runno);
-				cout << "Using file:  " << fname << endl;
+				cout << "Running retuple on blinded datasets." << endl;
+				if( runs.good_recoil[runno]==true )
+				{
+					cout << "Run " << runno << " is a recoil run." << endl;
+					fname  = make_rootfilename(br_path+"output00", runno, "_blinded");
+					cout << "Using file:  " << fname << endl;
+				}
+				else if(runs.good_electron[runno]==true)
+				{
+					cout << "Run " << runno << " is an electron run." << endl;
+					fname  = make_rootfilename(be_path+"output00", runno, "_blinded");
+					cout << "Using file:  " << fname << endl;
+				}
+				else
+				{
+					cout << "BAD.  Check run number." << endl;
+					return 0;
+				}
+				friend_fname = make_rootfilename(bf_path+"friend00",runno, "_blinded");
 			}
 			else
 			{
-				cout << "BAD.  Check run number." << endl;
-				return 0;
+				if( runs.good_recoil[runno]==true )
+				{
+					cout << "Run " << runno << " is a recoil run." << endl;
+					fname  = make_rootfilename(ur_path+"output00", runno);
+					cout << "Using file:  " << fname << endl;
+				}
+				else if(runs.good_electron[runno]==true)
+				{
+					cout << "Run " << runno << " is an electron run." << endl;
+					fname  = make_rootfilename(ue_path+"output00", runno);
+					cout << "Using file:  " << fname << endl;
+				}
+				else
+				{
+					cout << "BAD.  Check run number." << endl;
+					return 0;
+				}
+				friend_fname = make_rootfilename(uf_path+"friend00",runno);
 			}
-			friend_fname = make_rootfilename(unblind_o_path+"friend00",runno);
 		}
 	}
 	else // 
 	{
+		cout << "Original Rand. Seed:  " << endl;
+		cout << gRandom->GetSeed() << endl;
+		gRandom->SetSeed(0);  // sets seed to something something machine time.
+		cout << "New Rand. Seed:  " << endl;
+		cout << gRandom->GetSeed() << endl;
+		
+		
 		is_blinded = false; 
 		this_opdelay = 0.0;
 		// FIX THESE.
 		if(use_g4_metadata)
 		{
 			cout << "Looking at the metadata..." << endl;
-			MetaTree = load_metadata_tree(metadatafilename);
+			MetaTree = load_metadata_tree(metadata_name);
 			fname = get_simfilename(MetaTree, runno);
 			if(fname==string(""))
 			{
 				cout << "Exiting..." << endl;
 				return 0;
 			}
+			
+			// also, check what runset it's supposed to match.
+			matched_runset = get_matched_runletter(MetaTree, runno);  //
+			if( matched_runset==string("EA") || matched_runset==string("EB") || matched_runset==string("RA") || matched_runset==string("RB") )
+			{
+				// kludge goes here!!!
+			//	lambda_g4_res_t = 1.55;  // +/- 0.09
+			//	lambda_g4_res_b = 1.28;  // +/- 0.08
+				lambda_g4_res_t = 1.0e-4;  
+				lambda_g4_res_b = 1.0e-4;  
+			}
+			else if( matched_runset==string("EC") || matched_runset==string("ED") || matched_runset==string("RC") || matched_runset==string("RD") || matched_runset==string("RE") )
+			{
+				// kludge goes here!!!
+			//	lambda_g4_res_t = 1.42;  // +/- 0.08
+			//	lambda_g4_res_b = 1.32;  // +/- 0.08
+				lambda_g4_res_t = 1.0e-4;  
+				lambda_g4_res_b = 1.0e-4;  
+			}
+			else
+			{
+				cout << "************************************************************************" << endl;
+				cout << "WARNING!!  Could not find matched runset:  " << matched_runset << endl;
+				cout << "Applying the late runsets' resolution for the scintillators anyway, " << endl;
+				cout << "but it's not *really* the correct thing to do..." << endl;
+				cout << "************************************************************************" << endl;
+				cout << endl;
+			//	cout << "Scintillator resolution will not be applied." << endl;
+			//	apply_scint_res_on_g4 = false;
+				
+				
+				// kludge goes here!!!
+			//	lambda_g4_res_t = 1.42;  // +/- 0.08
+			//	lambda_g4_res_b = 1.32;  // +/- 0.08
+				lambda_g4_res_t = 1.0e-4;  // +/- 0.08
+				lambda_g4_res_b = 1.0e-4;  // +/- 0.08
+			}
 		}
 		else
 		{
-			fname  = make_rootfilename(g4_tree_path+"output_", runno);
+			fname  = make_rootfilename(g4_path+"output_", runno);
 		}
-		friend_fname = make_rootfilename(g4_friend_path+"friend_", runno);
+		friend_fname = make_rootfilename(g4f_path+"friend_", runno);
 	}
 	cout << "fname = " << fname << endl;
 	cout << "friend_fname = " << friend_fname << endl;
@@ -665,6 +810,12 @@ int main(int argc, char *argv[])
 	TTree *friend_tree = new TTree("friendtuple", "friendtuple");
 	cout << "Loaded up the ntuple and created the new friendtuple." << endl;
 	
+	// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+	
+	UInt_t runnumber = 0;
+	TBranch *runbranch = friend_tree -> Branch("RUN", &runnumber);
+	
+	
 	UInt_t upper_qdc_int;
 	UInt_t lower_qdc_int;
 	UInt_t unix_time;
@@ -681,25 +832,130 @@ int main(int argc, char *argv[])
 	{
 		tree -> SetBranchAddress("QDC_UpperPMT", &upper_qdc_int);
 		tree -> SetBranchAddress("QDC_LowerPMT", &lower_qdc_int);
-		tree -> SetBranchAddress("Unix_time", &unix_time);
-		
-		tree -> SetBranchAddress("TNIM_ACMOT_ON", &acmot_last);
-		tree -> SetBranchAddress("TNIM_DCMOT_OFF",&dcmot_last);
-		tree -> SetBranchAddress("TNIM_ACMOT_ON_all", &acmot_all);
-		tree -> SetBranchAddress("TNIM_DCMOT_OFF_all",&dcmot_all);
-		tree -> SetBranchAddress("TNIM_TIMESTAMP", &eventtime);  // 
 	}
-	else
+	else if(is_g4)
 	{
 		tree -> SetBranchAddress("QDC_UpperPMT", &upper_qdc_d);
 		tree -> SetBranchAddress("QDC_LowerPMT", &lower_qdc_d);
 	}
+	
+	if(!is_g4)
+	{
+		tree -> SetBranchAddress("Unix_time",         &unix_time);
+		tree -> SetBranchAddress("TNIM_ACMOT_ON",     &acmot_last);
+		tree -> SetBranchAddress("TNIM_DCMOT_OFF",    &dcmot_last);
+		tree -> SetBranchAddress("TNIM_ACMOT_ON_all", &acmot_all);
+		tree -> SetBranchAddress("TNIM_DCMOT_OFF_all",&dcmot_all);
+		tree -> SetBranchAddress("TNIM_TIMESTAMP",    &eventtime);  // 
+	}
 	int acmot_count;
 	int dcmot_count;
+		
+	// Some Friend Tree Stuff:
+	Bool_t all_okay       = kTRUE;
+	Bool_t is_polarized   = kFALSE;
+	Bool_t is_unpolarized = kFALSE;
+	Bool_t is_ac          = kFALSE;
+	if(do_rubidium) 
+	{ 
+		is_unpolarized = kTRUE; 
+	}
+	TBranch *all_okay_b       = friend_tree -> Branch("all_okay", &all_okay);  
+	TBranch *is_polarized_b   = friend_tree -> Branch("is_polarized", &is_polarized);  
+	TBranch *is_unpolarized_b = friend_tree -> Branch("is_unpolarized", &is_unpolarized);  
+	TBranch *is_ac_b          = friend_tree -> Branch("is_ac", &is_ac);  
+	int cyclecount = 50;
+	TBranch * cyclecount_branch = friend_tree -> Branch("AC_CycleCount", &cyclecount);  
 	
+	Double_t upper_E;
+	Double_t lower_E;
+	Double_t upper_E_res;
+	Double_t lower_E_res;
+	TBranch *upper_e_b          = friend_tree -> Branch("upper_scint_E", &upper_E);
+	TBranch *lower_e_b          = friend_tree -> Branch("lower_scint_E", &lower_E);
+	TBranch *upper_e_res_branch = friend_tree -> Branch("upper_scint_E_res", &upper_E_res); // detector resolution
+	TBranch *lower_e_res_branch = friend_tree -> Branch("lower_scint_E_res", &lower_E_res); // 
+	//
+	Double_t upper_DeltaE;
+	Double_t lower_DeltaE;
+	TBranch *upper_deltaE_branch= friend_tree -> Branch("upper_scint_DeltaE", &upper_DeltaE); // how much do we change the energy if we change calibration by "one sigma"?
+	TBranch *lower_deltaE_branch= friend_tree -> Branch("lower_scint_DeltaE", &lower_DeltaE); // 
+	
+	
+	//
+	UInt_t led_count = 0;
+	UInt_t photodiode_count = 0;
+	vector<double> *tdc_photodiode = 0;
+	vector<double> *tdc_pulser_led = 0;
+	if(!is_g4) // 37K or Rb, run through the new analyzer.
+	{
+		if(!is_old)
+		{
+		//	tree -> SetBranchAddress("TDC_PULSER_LED_Count",  &led_count);
+		//	tree -> SetBranchAddress("TDC_PHOTO_DIODE_Count", &photodiode_count);
+			tree -> SetBranchAddress("TDC_PULSER_LED_LE_Count",  &led_count);
+			tree -> SetBranchAddress("TDC_PHOTO_DIODE_LE_Count", &photodiode_count);
+		}
+		else if(is_old)
+		{
+			tree -> SetBranchAddress("TDC_PULSER_LED_Count",  &led_count);
+			tree -> SetBranchAddress("TDC_PHOTO_DIODE_Count", &photodiode_count);
+		}
+	}
+	else if(is_g4)
+	{
+		// these are defined above, but only need to create new branches for g4 runs.  it's to prevent segfaults later.
+		TBranch *led_count_branch        = friend_tree -> Branch("TDC_PULSER_LED_LE_Count",  &led_count);
+		TBranch *photodiode_count_branch = friend_tree -> Branch("TDC_PHOTO_DIODE_LE_Count", &photodiode_count);
+		
+		TBranch *photodiode_vec_branch   = friend_tree -> Branch("TDC_PHOTO_DIODE_LE",       &tdc_photodiode);
+		TBranch *led_vec_branch          = friend_tree -> Branch("TDC_PULSER_LED_LE",        &tdc_pulser_led);
+		
+	//	TBranch *led_count_branch        = friend_tree -> Branch("TDC_PULSER_LED_Count",  &led_count);
+	//	TBranch *photodiode_count_branch = friend_tree -> Branch("TDC_PHOTO_DIODE_Count", &photodiode_count);
+	//	TBranch *photodiode_vec_branch   = friend_tree -> Branch("TDC_PHOTO_DIODE",       &tdc_photodiode);
+	//	TBranch *led_vec_branch          = friend_tree -> Branch("TDC_PULSER_LED",        &tdc_pulser_led);
+	}
+	
+	//
+	vector<double> * scint_time_t = 0;  
+	vector<double> * scint_time_b = 0;  
+	if(is_g4 || is_old)
+	{
+		tree -> SetBranchAddress("TDC_SCINT_TOP",    &scint_time_t);  
+		tree -> SetBranchAddress("TDC_SCINT_BOTTOM", &scint_time_b);  
+	}
+	else
+	{
+		tree -> SetBranchAddress("TDC_SCINT_TOP_LE",    &scint_time_t);  
+		tree -> SetBranchAddress("TDC_SCINT_BOTTOM_LE", &scint_time_b);  
+	}
+	
+	
+	// --*-- // --*-- // --*-- // --*-- // --*-- // --*-- // --*-- // --*-- // --*-- // 
+	// rmcp delay line stuff:
+
 	vector<double> *ion_events = 0;
-	tree -> SetBranchAddress("TDC_ION_MCP", &ion_events);
+	vector<double> *electron_events = 0;
+	if(is_g4 || is_old)
+	{
+		tree -> SetBranchAddress("TDC_ION_MCP", &ion_events);
+		tree -> SetBranchAddress("TDC_ELECTRON_MCP", &electron_events);
+	}
+	else
+	{
+		tree -> SetBranchAddress("TDC_ION_MCP_LE", &ion_events);
+		tree -> SetBranchAddress("TDC_ELECTRON_MCP_LE", &electron_events);
+	}
 	int ion_count = 0;
+	int electron_count = 0;
+
+	vector<double> *dl_x_pos = 0;
+	vector<double> *dl_z_pos = 0;
+	TBranch *x_branch = friend_tree -> Branch("dl_x_pos", &dl_x_pos);
+	TBranch *z_branch = friend_tree -> Branch("dl_z_pos", &dl_z_pos);
+	dl_x_pos -> clear();
+	dl_z_pos -> clear();
 
 	vector<double> *x1_dla = 0;
 	vector<double> *x2_dla = 0;
@@ -709,12 +965,22 @@ int main(int argc, char *argv[])
 	vector<double> *prev_dlz = 0;
 	if(!is_g4)
 	{
-		tree -> SetBranchAddress("TDC_DL_X1",&x1_dla);
-		tree -> SetBranchAddress("TDC_DL_X2",&x2_dla);
-		tree -> SetBranchAddress("TDC_DL_Z1",&z1_dla);
-		tree -> SetBranchAddress("TDC_DL_Z2",&z2_dla);
+		if(is_old)
+		{
+			tree -> SetBranchAddress("TDC_DL_X1",&x1_dla);
+			tree -> SetBranchAddress("TDC_DL_X2",&x2_dla);
+			tree -> SetBranchAddress("TDC_DL_Z1",&z1_dla);
+			tree -> SetBranchAddress("TDC_DL_Z2",&z2_dla);
+		}
+		else if( !is_old )
+		{
+			tree -> SetBranchAddress("TDC_DL_X1_LE",&x1_dla);
+			tree -> SetBranchAddress("TDC_DL_X2_LE",&x2_dla);
+			tree -> SetBranchAddress("TDC_DL_Z1_LE",&z1_dla);
+			tree -> SetBranchAddress("TDC_DL_Z2_LE",&z2_dla);
+		}
 	}
-	else
+	else if(is_g4)
 	{
 		// branches for the x, z position info that already exists.
 		tree -> SetBranchAddress("DL_X_Pos",&prev_dlx);
@@ -727,20 +993,28 @@ int main(int argc, char *argv[])
 	int x_count = 0;
 	int z_count = 0;
 	
-	// BB1s:  
-	UInt_t led_count = 0;
-	UInt_t photodiode_count = 0;
-	if(!is_g4)
-	{
-		tree -> SetBranchAddress("TDC_PULSER_LED_Count", &led_count);
-		tree -> SetBranchAddress("TDC_PHOTO_DIODE_Count", &photodiode_count);
-	}
-
-	vector<double> * scint_time_t = 0;
-	vector<double> * scint_time_b = 0;
-	tree -> SetBranchAddress("TDC_SCINT_TOP",    &scint_time_t);  
-	tree -> SetBranchAddress("TDC_SCINT_BOTTOM", &scint_time_b);  
+	// ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // 
+	// Correct for walk: 
+	vector<double> * scint_t_walk = 0;
+	vector<double> * scint_b_walk = 0;
+	TBranch *scint_t_walk_branch = friend_tree -> Branch("tdc_scint_t_corrected", &scint_t_walk);
+	TBranch *scint_b_walk_branch = friend_tree -> Branch("tdc_scint_b_corrected", &scint_b_walk);
+	scint_t_walk -> clear();
+	scint_b_walk -> clear();
 	
+	string fitresults_fname = "walkfit_all2.root";
+	TFile * fitresults_file = new TFile(fitresults_fname.c_str());
+	if(fitresults_file) { cout << "Using " << fitresults_fname << " for fit results." << endl; }
+	else { cout << "Couldn't find " << fitresults_fname << ".  Aborting." << endl;  return 0; }
+	
+	TF1 *f_t_le, *f_b_le;
+	f_t_le = (TF1*)fitresults_file->Get("Top LE Quartic");    // f1
+	f_b_le = (TF1*)fitresults_file->Get("Bottom LE Quartic"); // f2
+	
+	
+	
+	// ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // 
+	// BB1s:  
 	BB1Detector stripdetector[2][2];
 	string tdiff_file[2] = {bb1_prefix+"bb1_u_tdiff.dat", bb1_prefix+"bb1_l_tdiff.dat"};  // WHAT DOES THIS SHIT EVEN DO FOR G4 DATA?  ... I think it's fine, because I'll just set everything to be the same.
 //	tdiff_file[0] = bb1_prefix+"bb1_u_tdiff.dat";  
@@ -770,6 +1044,7 @@ int main(int argc, char *argv[])
 			strip_E[detector][axis] = 0;
 			strip_T[detector][axis] = 0;
 			stripdetector[detector][axis].SetTDiffSigWithFile(tdiff_file[detector]);
+			// below:  sets in stone the t/b, x/y convention, as a point of calibration.
 			stripdetector[detector][axis].det = Detector(detector);  // t or b.
 			stripdetector[detector][axis].pl = Plane(axis);          // x or y.
 		}
@@ -779,6 +1054,18 @@ int main(int argc, char *argv[])
 	tree -> SetBranchAddress("BB1_AMPLITUDE_LX", &strip_E[b][x]);
 	tree -> SetBranchAddress("BB1_AMPLITUDE_LY", &strip_E[b][y]);
 	
+	if(is_g4)
+	{
+		// set noise file?  and load up the noise histograms.
+		// path?  same detector numbering?
+		stripdetector[t][x].SetupNoiseFromFile(bb1_prefix+"bb1_noise_UX.root");
+		stripdetector[t][y].SetupNoiseFromFile(bb1_prefix+"bb1_noise_UY.root");
+		stripdetector[b][x].SetupNoiseFromFile(bb1_prefix+"bb1_noise_LX.root");
+		stripdetector[b][y].SetupNoiseFromFile(bb1_prefix+"bb1_noise_LY.root");
+	}
+	vector<double> adc_with_res(40, 0.0);
+	
+	
 	if(!is_g4)
 	{
 		tree -> SetBranchAddress("BB1_UX_PEAKTIME", &strip_T[t][x]);
@@ -786,63 +1073,14 @@ int main(int argc, char *argv[])
 		tree -> SetBranchAddress("BB1_LX_PEAKTIME", &strip_T[b][x]);
 		tree -> SetBranchAddress("BB1_LY_PEAKTIME", &strip_T[b][y]);
 	}
-
-	vector<double> *electron_events = 0;
-	tree -> SetBranchAddress("TDC_ELECTRON_MCP", &electron_events);
-	UInt_t emcp_count;
-	if(!is_g4)
+	else if(is_g4)
 	{
-		tree -> SetBranchAddress("TDC_ELECTRON_MCP_Count", &emcp_count);
+		TBranch * bb1_ux_time = friend_tree -> Branch("BB1_UX_PEAKTIME", &strip_T[t][x]);
+		TBranch * bb1_uy_time = friend_tree -> Branch("BB1_UY_PEAKTIME", &strip_T[t][y]);
+		TBranch * bb1_lx_time = friend_tree -> Branch("BB1_LX_PEAKTIME", &strip_T[b][x]);
+		TBranch * bb1_ly_time = friend_tree -> Branch("BB1_LY_PEAKTIME", &strip_T[b][y]);
 	}
-	
-	
-	// 
-	// Friend Tree:
-	Bool_t double_allpass = kFALSE;
-	TBranch *double_allpass_b = friend_tree -> Branch("double_allpass", &double_allpass);  
-	
-	Bool_t all_okay = kTRUE;
-	Bool_t is_polarized = kFALSE;
-	Bool_t is_unpolarized = kFALSE;
-	Bool_t is_ac = kFALSE;
-	TBranch *all_okay_b = friend_tree -> Branch("all_okay", &all_okay);  
-	TBranch *is_polarized_b = friend_tree -> Branch("is_polarized", &is_polarized);  
-	TBranch *is_unpolarized_b = friend_tree -> Branch("is_unpolarized", &is_unpolarized);  
-	TBranch *is_ac_b = friend_tree -> Branch("is_ac", &is_ac);  
-	int cyclecount = 50;
-	TBranch * cyclecount_branch = friend_tree -> Branch("AC_CycleCount", &cyclecount);  
-	
-	Double_t upper_E;
-	Double_t lower_E;
-	Double_t upper_E_res;
-	Double_t lower_E_res;
-	TBranch *upper_e_b = friend_tree -> Branch("upper_scint_E", &upper_E);
-	TBranch *lower_e_b = friend_tree -> Branch("lower_scint_E", &lower_E);
-	TBranch *upper_e_res_branch = friend_tree -> Branch("upper_scint_E_res", &upper_E_res);
-	TBranch *lower_e_res_branch = friend_tree -> Branch("lower_scint_E_res", &lower_E_res);
 
-
-	vector<double> *dl_x_pos = 0;
-	vector<double> *dl_z_pos = 0;
-	TBranch *x_branch = friend_tree -> Branch("dl_x_pos", &dl_x_pos);
-	TBranch *z_branch = friend_tree -> Branch("dl_z_pos", &dl_z_pos);
-	dl_x_pos -> clear();
-	dl_z_pos -> clear();
-	
-	// these are defined above, but only need to create new branches for g4 runs.
-//	UInt_t led_count = 0;
-//	UInt_t photodiode_count = 0;
-	vector<double> *tdc_photodiode = 0;
-	vector<double> *tdc_pulser_led = 0;
-	if(is_g4)
-	{
-		TBranch *led_count_branch = friend_tree -> Branch("TDC_PULSER_LED_Count", &led_count);
-		TBranch *photodiode_count_branch = friend_tree -> Branch("TDC_PHOTO_DIODE_Count", &photodiode_count);
-		TBranch *photodiode_vec_branch = friend_tree -> Branch("TDC_PHOTO_DIODE",&tdc_photodiode);
-		TBranch *led_vec_branch = friend_tree -> Branch("TDC_PULSER_LED",&tdc_pulser_led);
-		TBranch *emcp_count_branch = friend_tree -> Branch("TDC_ELECTRON_MCP_Count", &emcp_count);
-	}
-	
 	// BB1s:  
 	vector<double> * bb1_t_x = 0;
 	vector<double> * bb1_t_y = 0;
@@ -875,17 +1113,8 @@ int main(int argc, char *argv[])
 //	TBranch *bb1_t_pass_b = friend_tree -> Branch("bb1_t_pass", &bb1_t_pass);  
 //	TBranch *bb1_b_pass_b = friend_tree -> Branch("bb1_b_pass", &bb1_b_pass);  
 	
-	
-	if(is_g4)
-	{
-		TBranch * bb1_ux_time = friend_tree -> Branch("BB1_UX_PEAKTIME", &strip_T[t][x]);
-		TBranch * bb1_uy_time = friend_tree -> Branch("BB1_UY_PEAKTIME", &strip_T[t][y]);
-		TBranch * bb1_lx_time = friend_tree -> Branch("BB1_LX_PEAKTIME", &strip_T[b][x]);
-		TBranch * bb1_ly_time = friend_tree -> Branch("BB1_LY_PEAKTIME", &strip_T[b][y]);
-	}
-	
-	BB1Hit bb1_hit[2] = {BB1Hit(), BB1Hit()};              // 2 detectors.
-	BB1Hit bb1_sechit[2] = {BB1Hit(), BB1Hit()};           // 2 detectors.
+	BB1Hit    bb1_hit[2]    = {BB1Hit(), BB1Hit()};        // 2 detectors.
+	BB1Hit    bb1_sechit[2] = {BB1Hit(), BB1Hit()};        // 2 detectors.
 	BB1Result bb1_result[2] = {BB1Result(), BB1Result()};  // 2 detectors.
 	//
 	
@@ -1008,7 +1237,6 @@ int main(int argc, char *argv[])
 	TBranch * twohits_bb1_b_branch = friend_tree -> Branch("had_Nhits_bb1_b", &had_Nhits_bb1_b);
 	
 	
-	
 	// bad times overhead:
 	vector<pair<UInt_t, UInt_t> > badtimesforrun;
 	badtimesforrun = ProcessAllOkayForRunsInFile(runno);
@@ -1035,7 +1263,7 @@ int main(int argc, char *argv[])
 	Double_t polarization = 0.0;
 	if(is_g4)
 	{
-		MetaTree = load_metadata_tree(metadatafilename);
+		MetaTree = load_metadata_tree(metadata_name);
 		int this_runno;
 		MetaTree -> SetBranchAddress("Run", &this_runno);
 		double this_pol;
@@ -1056,23 +1284,18 @@ int main(int argc, char *argv[])
 		}
 		
 		polarization = final_pol;
-		if(final_pol >= 0.0)
-		{
-			sigma_plus = 0;
-		}
-		else
-		{
-			sigma_plus = 1;
-		}
 		
+	//	// below:  it was like this for some previous versions, but it's wrong. I'll just swap it.
+	//	if(final_pol >= 0.0) { sigma_plus = 0; }
+	//	else                 { sigma_plus = 1; }
+		
+		if(final_pol >= 0.0) { sigma_plus = 1; }
+		else                 { sigma_plus = 0; }
+	
 		TBranch *sigma_plus_branch = friend_tree -> Branch("TTLBit_SigmaPlus", &sigma_plus);  
-		TBranch *sigma_plus_branch2 = friend_tree -> Branch("TTLBit_SigmaPlus2", &sigma_plus);  
 		TBranch *pol_branch = friend_tree -> Branch("Polarization", &polarization);  
 	}
 	
-	double scint_thresh = 500.;
-	double scint_max    = 5125.48;
-	double tmp_scint_E  = 0;
 	//
 	for(int i=0; i<nentries; i++)
 	{
@@ -1087,46 +1310,142 @@ int main(int argc, char *argv[])
 			photodiode_count = 0;
 			tdc_photodiode -> clear();
 			tdc_pulser_led -> clear();
-			emcp_count = electron_events -> size();
 		}
 		
-		upper_E = get_upper_E(upper_qdc_int, runno, is_g4);
-		lower_E = get_lower_E(lower_qdc_int, runno, is_g4);
-		upper_E_res = get_upper_E_res(upper_E, runno, is_g4);
-		lower_E_res = get_lower_E_res(lower_E, runno, is_g4);
+		runnumber = runno;
 		
-		// rMCP position stuff:
 		ion_count = ion_events->size();
+		electron_count = electron_events->size();
+		N_hits_scint_t = scint_time_t->size();
+		N_hits_scint_b = scint_time_b->size();
+		
+		// rMCP position stuff, scint. calibration, SOE TOF walk correction:
 		if(!is_g4)
 		{
-			all_okay = get_all_okay_for_event(unix_time, badtimesforrun, &badint, &skipped);
-			
-			x1_count = x1_dla->size();
-			x2_count = x2_dla->size();
-			z1_count = z1_dla->size();
-			z2_count = z2_dla->size();
-			
-			nhits = min(ion_count, min(min(x1_count, x2_count), min(z1_count, z2_count)));
-			for(int j=0; j<nhits; j++)  // WONG ORDER?!? ...nah, it's fine.
+			//
+			if(!do_rubidium)  // 37K real data
 			{
-				coordinates = my_cals -> 
-					apply_calibration((*x1_dla)[j], (*x2_dla)[j], (*z1_dla)[j], (*z2_dla)[j], 5);
-				dl_x_pos -> push_back(coordinates.first);
-				dl_z_pos -> push_back(coordinates.second);
+				upper_E = get_upper_E(upper_qdc_int, runno, is_g4);
+				lower_E = get_lower_E(lower_qdc_int, runno, is_g4);
+				upper_E_res = get_upper_E_res(upper_E, runno, is_g4);
+				lower_E_res = get_lower_E_res(lower_E, runno, is_g4);
+				//
+				upper_DeltaE = get_upper_DeltaE(upper_qdc_int, runno, is_g4);
+				lower_DeltaE = get_lower_DeltaE(lower_qdc_int, runno, is_g4);
+			//	upper_DeltaE = 0.0;
+			//	lower_DeltaE = 0.0;
+				
+				//
+				all_okay = get_all_okay_for_event(unix_time, badtimesforrun, &badint, &skipped);
+			
+				x1_count = x1_dla->size();
+				x2_count = x2_dla->size();
+				z1_count = z1_dla->size();
+				z2_count = z2_dla->size();
+			
+				nhits = min(ion_count, min(min(x1_count, x2_count), min(z1_count, z2_count)));
+				for(int j=0; j<nhits; j++)  // WONG ORDER?!? ...nah, it's fine.
+				{
+					coordinates = my_cals -> 
+						apply_calibration((*x1_dla)[j], (*x2_dla)[j], (*z1_dla)[j], (*z2_dla)[j], 5);
+					dl_x_pos -> push_back(coordinates.first);
+					dl_z_pos -> push_back(coordinates.second);
+				}
+			}
+			else if(do_rubidium)
+			{
+				upper_E = get_upper_E_Rb(upper_qdc_int);
+				lower_E = get_lower_E_Rb(lower_qdc_int);
+				upper_E_res = 0.0;  // doesn't really work for Rb, but again, I don't care atm.
+				lower_E_res = 0.0;  
+				//
+				upper_DeltaE = 0.0;
+				lower_DeltaE = 0.0;
+				
+				all_okay = kTRUE;	
+				
+				x1_count = x1_dla->size();
+				x2_count = x2_dla->size();
+				z1_count = z1_dla->size();
+				z2_count = z2_dla->size();
+				
+				nhits = min(ion_count, min(min(x1_count, x2_count), min(z1_count, z2_count)));
+				for(int j=0; j<nhits; j++)  // this shit isn't going to work well for Rb data, but wev.  
+				{
+					coordinates = my_cals -> 
+						apply_calibration((*x1_dla)[j], (*x2_dla)[j], (*z1_dla)[j], (*z2_dla)[j], 5);
+					dl_x_pos -> push_back(coordinates.first);
+					dl_z_pos -> push_back(coordinates.second);
+				}
 			}
 		}
-		else // if(is_g4)
+		else if(is_g4)
 		{
-			all_okay = kTRUE;
-			x_count = prev_dlx->size();
-			z_count = prev_dlz->size();
-			nhits = min( ion_count, min(x_count, z_count) );
-			for(int j=0; j<nhits; j++)  // 
+			all_okay = kTRUE;	
+			
+			upper_E = get_upper_E(upper_qdc_d, runno, is_g4);
+			lower_E = get_lower_E(lower_qdc_d, runno, is_g4);
+			upper_E_res = get_upper_E_res(upper_E, runno, is_g4);
+			lower_E_res = get_lower_E_res(lower_E, runno, is_g4);
+			//
+			upper_DeltaE = 0.0;
+			lower_DeltaE = 0.0;
+
+			if(is_g4 && apply_scint_res_on_g4)
 			{
-				dl_x_pos -> push_back((*prev_dlx)[j]);
-				dl_z_pos -> push_back((*prev_dlz)[j]);
+				// apply a scint resolution on the G4 data.
+				upper_E = getE_withresolution(upper_E, lambda_g4_res_t);
+				lower_E = getE_withresolution(lower_E, lambda_g4_res_b);
+				upper_E_res = getres_withresolution(upper_E, lambda_g4_res_t);
+				lower_E_res = getres_withresolution(lower_E, lambda_g4_res_b);
+			}
+			if( ion_count>0 && prev_dlx->size() >0 && prev_dlz->size() > 0)
+			{
+				dl_x_pos -> push_back( (*prev_dlx)[0] );
+				dl_z_pos -> push_back( (*prev_dlz)[0] );
 			}
 		}
+		
+		// ok, apply the SOE TOF walk calibration.  we can re-use nhits.  
+		// we already figured out upper_E and lower_E.  if it's g4 or old, just fill with zeroes.
+		if(electron_count>0)
+		{
+			double electron_time = (*electron_events)[0];
+		//	double scint_time = 0;
+		//	scint_time = (*scint_time_b)[j];
+			double e_tof_in = 0;
+			double the_tof = 0;
+			// Top:
+			if(N_hits_scint_t>0)
+			{
+				nhits = N_hits_scint_t;
+				for(int j=0; j<nhits; j++) 
+				{
+				//	double adjust_tof_b(double tof_in, double Ebeta, TF1* fitfunc, int run)
+					
+				//	e_tof_in = ( electron_time - scint_time_t->at(j) )*v1192_to_ns + etof_offset_le_t;
+				//	the_tof  = adjust_tof(tmp_e_tof, upper_E, f_t_le);
+					
+					the_tof = adjust_tof_t(electron_time - scint_time_t->at(j), upper_E, f_t_le, runno);
+					scint_t_walk -> push_back(the_tof);
+				}
+			}
+			// Bottom:
+			if(N_hits_scint_b>0)
+			{
+				nhits = N_hits_scint_b;
+				for(int j=0; j<nhits; j++) 
+				{
+				//	e_tof_in = ( electron_time - scint_time_b->at(j) )*v1192_to_ns + etof_offset_le_b;
+				//	the_tof  = adjust_tof(tmp_e_tof, lower_E, f_b_le);
+					
+					the_tof = adjust_tof_b(electron_time - scint_time_b->at(j), lower_E, f_b_le, runno);
+					scint_b_walk -> push_back(the_tof);
+				}
+			}
+		}
+		
+		
 		
 		// Set up event types:
 		is_type1_t = kFALSE;
@@ -1150,15 +1469,15 @@ int main(int argc, char *argv[])
 		// BB1 shizzle:
 		N_hits_bb1_t = 0;
 		N_hits_bb1_b = 0;
-		N_hits_scint_t = scint_time_t->size();
-		N_hits_scint_b = scint_time_b->size();
+		
 		had_Nhits_bb1_t = 0;
 		had_Nhits_bb1_b = 0;
 		
-		double_allpass = false;
-		
-	//	if(upper_E < 10.0) {N_hits_scint_t=0;}  // was this here for G4 ??
-	//	if(lower_E < 10.0) {N_hits_scint_b=0;}
+		if(!do_rubidium)  // this is broken for Rb, because the scint calibrations are still all wrong.
+		{
+			if(upper_E < 10.0) { N_hits_scint_t=0; }
+			if(lower_E < 10.0) { N_hits_scint_b=0; }
+		}
 		
 		if(N_hits_scint_t>0 || N_hits_scint_b>0)
 		{
@@ -1166,11 +1485,10 @@ int main(int argc, char *argv[])
 			is_other = kTRUE;
 		}
 		
-		bool allpass[2] = {false, false};
-		if( led_count==0 && photodiode_count==0 /* && (N_hits_scint_t>0 || N_hits_scint_b>0)*/ )
+		if( led_count==0 && photodiode_count==0 && (N_hits_scint_t>0 || N_hits_scint_b>0) )
 		{
 			for(int detector=0; detector <=1; detector++)
-			{
+			{ // loop over top/bottom
 				for (int axis = 0; axis<=1; axis++) 
 				{ // loop over bb1 axes.
 					if (strip_E[detector][axis] -> size() != 40) 
@@ -1178,84 +1496,88 @@ int main(int argc, char *argv[])
 						cout << "scint_time_t->size() = " << scint_time_t->size() << "; \tscint_time_b->size() = " << scint_time_b->size();
 						cout << ";\tStrip [" << detector << "][" << axis << "] has size " << strip_E[detector][axis] -> size() << endl;
 						continue;
-					}               
+					}
 					// calculate the energy for every single fucking strip.
-					stripdetector[detector][axis].CalcEnergy(*strip_E[detector][axis]);  
+					if(is_g4)
+					{
+						// kludge to take out BB1 resolution entirely.  ...it's probably fine.
+					//	adc_with_res = stripdetector[detector][axis].ApplyResolution(*strip_E[detector][axis], gRandom, doEmpirical);
+					//	stripdetector[detector][axis].CalcEnergy(adc_with_res);  
+						stripdetector[detector][axis].CalcEnergy(*strip_E[detector][axis]);  
+					}
+					else
+					{
+						stripdetector[detector][axis].CalcEnergy(*strip_E[detector][axis]);  
+						// strip_E[detector][axis] is a vector<double>*.
+					}
 					
-					// load up peak time for every fucking strip.
+					
+					// load up peak time for every fucking strip.  if it's real data.  
 					if(!is_g4)
-						{ stripdetector[detector][axis].SetMaxT(*strip_T[detector][axis]); }
+					{ 
+						stripdetector[detector][axis].SetMaxT(*strip_T[detector][axis]); 
+					}
 				//	else
 				//	{
 				//		// *set* the maxT time for each strip if it's a g4 thing too!  
 				//		// ... wait, I did.  Already.  
 				//	}
 				}
-				
 				bb1_result[detector] = GetResult(stripdetector[detector][x], stripdetector[detector][y], threshold_index, sigma_cut); 
+			
 				bb1_hit[detector] = bb1_result[detector].hit;
 				bb1_sechit[detector] = bb1_result[detector].secHit;
 				
-				if(detector==t) { tmp_scint_E = upper_E; }
-				else if(detector==b) { tmp_scint_E = lower_E; }
-				
-				// allpass *should* require no LED, and no photodiode.  
-				allpass[detector] = (bb1_hit[detector].pass && tmp_scint_E > scint_thresh && tmp_scint_E < scint_max && emcp_count > 0 && (!bb1_result[detector].twoHits) );
-				
-				
-				if(bb1_hit[detector].pass == true && bb1_hit[detector].energy >= bb1_energy_threshold)
-				{
-					if(detector == t)
-					{
-						had_Nhits_bb1_t = 1;
-						N_hits_bb1_t    = 1;
-					}
-					if(detector == b)
-					{
-						had_Nhits_bb1_b = 1;
-						N_hits_bb1_b    = 1;
-					}
-				}
-				if(bb1_result[detector].twoHits == true)
-				{
-					if(detector == t)
-					{
-						had_Nhits_bb1_t = 2;
-						N_hits_bb1_t    = 2;
-					}
-					if(detector == b)
-					{
-						had_Nhits_bb1_b = 2;
-						N_hits_bb1_b    = 2;
-					}
-				}
-				
 				if(bb1_hit[detector].pass == true)
 				{
-					double bb1_r = 30.0;
-					bb1_r = get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos);
-					if( bb1_hit[detector].energy >= bb1_energy_threshold /* && bb1_r < 15.5*/ )
+				//	cout << "Got here at least though." << endl;
+					if(detector == t)
 					{
-						if(detector == t )
+						had_Nhits_bb1_t=1;
+					}
+					if(detector == b)
+					{
+						had_Nhits_bb1_b=1;
+					}
+					if( bb1_hit[detector].energy >= bb1_energy_threshold )
+					{
+						if(detector == t)
 						{
+					//		cout << "Got here ... ever." << endl;
+					//		bb1_t_pass = kTRUE;
 							bb1_t_x -> push_back( bb1_hit[detector].xpos );
 							bb1_t_y -> push_back( bb1_hit[detector].ypos );
 							bb1_t_E -> push_back( bb1_hit[detector].energy );
 							bb1_t_r -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
+							N_hits_bb1_t++;
 						}
 						else if(detector == b)
 						{
+					//		bb1_b_pass = kTRUE;
 							bb1_b_x -> push_back( bb1_hit[detector].xpos );
 							bb1_b_y -> push_back( bb1_hit[detector].ypos );
 							bb1_b_E -> push_back( bb1_hit[detector].energy );
 							bb1_b_r -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
+							N_hits_bb1_b++;
 						}
 					}
 				}
 				//
 				if(bb1_result[detector].twoHits == true)
 				{
-					if(bb1_sechit[detector].pass == true /* && bb1_hit[detector].energy >= bb1_energy_threshold */)
+					if(detector == t)
+					{
+					//	has_bb1_twohits_t = true;
+						had_Nhits_bb1_t=2;
+					}
+					if(detector == b)
+					{
+					//	has_bb1_twohits_b = true;
+						had_Nhits_bb1_b=2;
+					}
+					//
+		//			if(bb1_sechit[detector].pass == true /* && bb1_hit[detector].energy >= bb1_energy_threshold */)
+					if(bb1_sechit[detector].pass == true && bb1_hit[detector].energy >= bb1_energy_threshold )
 					{
 						if(detector == t)
 						{
@@ -1263,7 +1585,7 @@ int main(int argc, char *argv[])
 							bb1_t_y -> push_back( bb1_sechit[detector].ypos );
 							bb1_t_E -> push_back( bb1_sechit[detector].energy );
 							bb1_t_r -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-						//	N_hits_bb1_t = 2;
+							N_hits_bb1_t++;
 						}
 						else if(detector == b)
 						{
@@ -1271,20 +1593,16 @@ int main(int argc, char *argv[])
 							bb1_b_y -> push_back( bb1_sechit[detector].ypos );
 							bb1_b_E -> push_back( bb1_sechit[detector].energy );
 							bb1_b_r -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-						//	N_hits_bb1_b = 2;
+							N_hits_bb1_b++;
 						}
 					}
 				}
 			//	}
-			} // done looping over detectors.
+			}
 			// that was the loop over BB1 detectors.  now these things have appropriate values:
 			//	N_hits_scint_t, N_hits_scint_b.
 			//	N_hits_bb1_t, N_hits_bb1_b,
 			//	Still inside the loop to get rid of events we don't want.
-			if( allpass[t] && allpass[b] )
-			{
-				double_allpass = kTRUE;
-			}
 			
 			// 1A
 			if( (N_hits_scint_t>=1 && N_hits_scint_b>=1) && (N_hits_bb1_t==2 && N_hits_bb1_b==1) )
@@ -1355,21 +1673,18 @@ int main(int argc, char *argv[])
 			is_unpolarized = kFALSE;
 			is_ac = kFALSE;
 			cyclecount = 50;
-	//		Bool_t is_unpolarized = kFALSE;
-	//		Bool_t is_ac = kFALSE;
-	//		int cyclecount = 50;
-	//			
-	//		Double_t upper_E;  // ok
-	//		Double_t lower_E;  // ok
-	//		Double_t upper_E_res;  // ok
-	//		Double_t lower_E_res;  // ok
-	//		
-	//		vector<double> *dl_x_pos = 0;  // ok  // huh?  this is already there.
-	//		vector<double> *dl_z_pos = 0;  // ok  // 
 		}
-		else // if(!is_g4)
+		else if( do_rubidium )
 		{
-			is_polarized = check_pol2(acmot_last, this_opdelay);
+			all_okay = kTRUE;  // because we don't have "all_okay" data for rubidium.
+			is_polarized = kFALSE;
+			is_unpolarized = kTRUE;
+			is_ac = kFALSE;
+			cyclecount = 50;  // doesn't actually have cycles, but we want this branch filled with something innocuous anyway.
+		}
+		else // 37K run, and not from G4.  Must figure out if the event is polarized, and what op/ac cycle it's on.
+		{
+			is_polarized = check_pol(acmot_last, this_opdelay);
 			is_unpolarized = check_unpol(acmot_last, this_opdelay);
 			is_ac = check_ac(acmot_last, this_opdelay);
 		
@@ -1448,6 +1763,9 @@ int main(int argc, char *argv[])
 		bb1_b_E -> clear();
 		bb1_b_r -> clear();
 		
+		scint_t_walk -> clear();
+		scint_b_walk -> clear();
+		
 	}
 	if(!is_g4)
 	{
@@ -1456,6 +1774,7 @@ int main(int argc, char *argv[])
 	}
 	
 	friend_tree -> GetCurrentFile() -> Write("",TObject::kOverwrite);  
+	friendfile -> cd();
 	version_string -> Write();
 	friend_tree -> GetCurrentFile() -> Close();
 	
