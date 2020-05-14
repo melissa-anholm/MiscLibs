@@ -149,7 +149,6 @@ TChain * get_single_simtree(int runno)
 	return tree_chain;
 }
 
-
 vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, string runset_string, int maxrun=0)
 {
 	vector<int> set_of_runs;
@@ -380,9 +379,10 @@ vector<int> get_summed_simlist(bool verbose=true)  // just use all the runs that
 	MetaTree -> SetBranchAddress("has_been_summed",  &has_been_summed);
 	int is_a_sum = 0;
 	MetaTree -> SetBranchAddress("is_a_sum", &is_a_sum);
-	
-	int nentries = MetaTree -> GetEntries();
+	double the_monoenergy = 0;
+	MetaTree -> SetBranchAddress("MonoEnergy_MeV", &the_monoenergy);
 
+	int nentries = MetaTree -> GetEntries();
 	for(int i=0; i<nentries; i++)
 	{
 		MetaTree -> GetEntry(i);
@@ -398,7 +398,75 @@ vector<int> get_summed_simlist(bool verbose=true)  // just use all the runs that
 	return set_of_runs;
 }
 
-vector<int> get_summed_monolist(double E, bool verbose=true)  // just use all the runs that "have_been_summed" yet not "is_a_sum".
+vector<int> get_summed_fullspectrumlist(bool verbose=true)  // use all the FullSpectrum runs that "have_been_summed" yet not "is_a_sum".
+{
+	vector<int> set_of_runs;
+
+	// Get the MetaTree.
+	TTree * MetaTree = load_metadata_tree(metadata_name);
+	
+	int run = 0;
+	MetaTree -> SetBranchAddress("Run", &run);
+	int has_been_summed = 0;
+	MetaTree -> SetBranchAddress("has_been_summed",  &has_been_summed);
+	int is_a_sum = 0;
+	MetaTree -> SetBranchAddress("is_a_sum", &is_a_sum);
+	double the_monoenergy = 0;
+	MetaTree -> SetBranchAddress("MonoEnergy_MeV", &the_monoenergy);
+
+	int nentries = MetaTree -> GetEntries();
+	for(int i=0; i<nentries; i++)
+	{
+		MetaTree -> GetEntry(i);
+		if(has_been_summed==0 && is_a_sum==1 )
+		{
+			if( the_monoenergy==-10.0 )
+			{
+				set_of_runs.push_back(run);
+				if(verbose) { cout << "adding " << run << " to the runlist vector." << endl; }
+			}
+		}
+	}
+	return set_of_runs;
+}
+vector<int> get_summed_multimonolist(bool verbose=true)  // use all the summed multi-mono MonoEnergetic runs that "have_been_summed" yet not "is_a_sum".
+{ // -5 is summed multi-mono.
+	vector<int> set_of_runs;
+
+	// Get the MetaTree.
+	TTree * MetaTree = load_metadata_tree(metadata_name);
+	
+	int run = 0;
+	MetaTree -> SetBranchAddress("Run", &run);
+	int has_been_summed = 0;
+	MetaTree -> SetBranchAddress("has_been_summed",  &has_been_summed);
+	int is_a_sum = 0;
+	MetaTree -> SetBranchAddress("is_a_sum", &is_a_sum);
+	double the_monoenergy = 0;
+	MetaTree -> SetBranchAddress("MonoEnergy_MeV", &the_monoenergy);
+	
+	double E=-5.0;  // summed mono multi 
+	int nentries = MetaTree -> GetEntries();
+	for(int i=0; i<nentries; i++)
+	{
+		MetaTree -> GetEntry(i);
+		if(has_been_summed==0 && is_a_sum==1 )
+		{
+			if( the_monoenergy != -10 ) // require that the run is mono-energetic.
+			{
+				if( the_monoenergy==E ) // require:  (this run is the correct mono-energy)
+				{
+					set_of_runs.push_back(run);
+					if(verbose) { cout << "adding " << run << " to the runlist vector." << endl; }
+				}
+			}
+		}
+	}
+	return set_of_runs;
+}
+
+
+vector<int> get_summed_monoenergetic_runlist(double the_energy, bool verbose=true) // include all polarizations.
 {
 	vector<int> set_of_runs;
 
@@ -414,25 +482,31 @@ vector<int> get_summed_monolist(double E, bool verbose=true)  // just use all th
 	double the_monoenergy = 0;
 	MetaTree -> SetBranchAddress("MonoEnergy_MeV", &the_monoenergy);
 	
-	
 	int nentries = MetaTree -> GetEntries();
 	for(int i=0; i<nentries; i++)
 	{
 		MetaTree -> GetEntry(i);
 		if(has_been_summed==0 && is_a_sum==1 )
 		{
-			if( the_monoenergy != -10 ) // require that the run is mono-energetic.
+			if( the_monoenergy==the_energy )
 			{
-				if( E==-20 || the_monoenergy==E ) // require:  ((sum all mono-energies) || (this run is the correct mono-energy))
-				{
-					set_of_runs.push_back(run);
-					if(verbose) { cout << "adding " << run << " to the runlist vector." << endl; }
-				}
+				set_of_runs.push_back(run);
+				if(verbose) { cout << "adding " << run << " to the runlist vector." << endl; }
 			}
 		}
 	}
 	return set_of_runs;
 }
+
+TChain * get_chain_from_monoenergy(double the_energy, bool verbose=true) // requires:  summed runs.  energy in MeV.
+{
+	if(verbose) { cout << "Fetching the monoenergetic chain:  " << the_energy << " MeV" << endl; }
+	//
+	vector<int> the_runset = get_summed_monoenergetic_runlist(the_energy, false);  // not *that* verbose!
+	TChain * the_chain = get_chain_from_runlist(the_runset);
+	return the_chain;
+}
+
 
 
 TChain * get_summed_simtree()
@@ -441,17 +515,6 @@ TChain * get_summed_simtree()
 	TTree * MetaTree = load_metadata_tree(metadata_name);
 	
 	TChain * tree = get_chain_from_runlist(MetaTree, the_runlist);
-	return tree;
-}
-
-TChain * get_summed_monochain(double E=-20) // call with no arguments and it sums all mono-energies.
-{
-	// if E=-20 (the default value -- eg, it's called with no arguments), 
-	//     we'll just sum up *all* of the mono-energy runs to use here.  
-	
-	vector<int> the_runlist = get_summed_monolist(E, true);
-	
-	TChain * tree = get_chain_from_runlist(the_runlist);
 	return tree;
 }
 

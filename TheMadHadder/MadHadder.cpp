@@ -29,11 +29,15 @@ using std::stringstream;
 
 int extrafilenum = 10000;
 
+//int N_maxgenerated = 200000000;  // to prevent my files from getting stupidly big.
+int N_maxgenerated = 200000000000000;  // to prevent my files from getting stupidly big.
+
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 struct hadder_runlist
 {
 	int newfilenum;
 	vector<int> runlist;
+	double the_energy;
 };
 struct lineinfo
 {
@@ -53,7 +57,8 @@ bool do_the_hadding(int, vector<int>);
 hadder_runlist check_hadd_multi();
 int get_newrunno(string);
 string generate_hadd_command(int, vector<int>, string, string, string);
-string generate_hadd_command(int, vector<int>);
+string generate_hadd_command(int, vector<int>, double);
+//string generate_hadd_command(int, vector<int>);
 lineinfo update_runline(lineinfo, int, int);
 string make_filebuffer(vector<lineinfo>, string, string);
 
@@ -72,13 +77,14 @@ int main(int argc, char *argv[])
 		cout << "Nope, nothing to hadd." << endl;
 		return 0;
 	}
+	double the_energy = this_hadder_runlist.the_energy;
 	
 	cout << "New file number:  " << newrunno << endl;
 	cout << "Runs that can be hadded: " << endl;
 	printout(result);
 
-//	cout << "I'm about to generate the hadd command." << endl;
-	string hadder_command = generate_hadd_command(newrunno, result);
+//	cout << "I'm about to generate the hadd command.  energy = " << the_energy << endl;
+	string hadder_command = generate_hadd_command(newrunno, result, the_energy);
 	
 //	cout << "I'm about to check whether it worked (and do the hadding)." << endl;
 	bool did_it_work = do_the_hadding(newrunno, result);
@@ -130,6 +136,13 @@ hadder_runlist check_hadd_multi()
 	MetaTree -> SetBranchAddress("has_been_summed",  &has_been_summed);
 	int is_a_sum = 0;
 	MetaTree -> SetBranchAddress("is_a_sum",  &is_a_sum);
+	double energy = 0;
+	MetaTree -> SetBranchAddress("MonoEnergy_MeV",  &energy);
+	int n_eventsgenerated = 0;
+	MetaTree -> SetBranchAddress("EventsGenerated", &n_eventsgenerated);
+	
+	double this_energy = -1;
+	
 	
 	vector<int> unsummed_runlist;
 	int nentries = MetaTree -> GetEntries();
@@ -141,8 +154,16 @@ hadder_runlist check_hadd_multi()
 			firstrun = run;
 			found_unused = true;
 			cout << "First run to look at (not a sum):  " << firstrun << endl;
+			this_energy = energy;
+			//
+			if( n_eventsgenerated >= N_maxgenerated)  // if this run has too many events already, don't hadd it.
+			{
+				found_unused = false;
+				firstrun = 0;
+				cout << "\tRun " << run << " already has " << n_eventsgenerated << " generated events, so we won't hadd it." << endl;
+			}
 		}
-		if(!has_been_summed)
+		if(!has_been_summed && (n_eventsgenerated < N_maxgenerated) )  // again, don't hadd it if it's already too big.
 		{
 			unsummed_runlist.push_back(run);
 		}
@@ -152,15 +173,22 @@ hadder_runlist check_hadd_multi()
 		for(int i=0; i<nentries; i++)
 		{
 			MetaTree -> GetEntry(i);
-			if(!has_been_summed && !found_unused)
+			if(!has_been_summed && !found_unused) // check this only until we've found an unused run.
 			{
 				firstrun = run;
 				found_unused = true;
 				cout << "First run to look at (is a sum):  " << firstrun << endl;
+				this_energy = energy;
+				if( n_eventsgenerated >= N_maxgenerated)  // if this run has too many events already, don't hadd it.
+				{
+					found_unused = false;
+					firstrun = 0;
+					cout << "\tRun " << run << " already has " << n_eventsgenerated << " generated events, so we won't hadd it." << endl;
+				}
 			}
 		}
 	}
-	// if !found_unused ..... no...
+	// found_unused doesn't get used again.
 	
 	//
 	int length_of_unsummedlist = unsummed_runlist.size();
@@ -187,11 +215,16 @@ hadder_runlist check_hadd_multi()
 			if(verbose>1) {cout << "It works!" << endl;}
 			runs_to_hadd.push_back(unsummed_runlist.at(i));
 			newfilenum = does_it_work;
+		//	this_energy = energy;  // no, we haven't gotten this entry !
+			
+		//	cout << "it works, and energy = " << energy << " for run " << unsummed_runlist.at(i) <<  endl;
+		//	cout << "it works, for some unknown energy, for run " << unsummed_runlist.at(i) <<  endl;
 		}
 		else
 		{
 			if(verbose>1) {cout << "It doesn't work.  :(" << endl;}
 		}
+		// the_energy = energy;  // the energy of *any* compatible run will be fine here.
 	}
 	// ok, now I have a list of runs that can be hadded together.
 	//	runs_to_hadd.insert(runs_to_hadd.begin(), newfilenum);
@@ -205,8 +238,28 @@ hadder_runlist check_hadd_multi()
 	hadder_runlist this_runlist;
 	this_runlist.newfilenum = newfilenum;
 	this_runlist.runlist = runs_to_hadd;
+	this_runlist.the_energy = this_energy;  // it'll be the energy from the last.
+	
+	
+//	cout << "from hadder_runlist check_hadd_multi() we find that the_energy = " << this_energy << endl;
 	
 	return this_runlist;
+}
+
+string make_outputnamestub(double total_monoenergy)
+{
+	string output_namestub;
+	
+	if(total_monoenergy==-10)
+	{
+		output_namestub = "summedfulloutput_";
+	}
+	else
+	{
+	//	output_namestub = "summedmonooutput_";
+		output_namestub = "summedoutput_";
+	}
+	return output_namestub;
 }
 
 
@@ -241,14 +294,18 @@ string generate_hadd_command(int newrunno, vector<int> runlist, string output_na
 			}
 		}
 	}
+//	cout << "returning outstring:  " << outstring << endl;
 	return outstring;
 }
 
 
-string generate_hadd_command(int newrunno, vector<int> runlist)
+
+string generate_hadd_command(int newrunno, vector<int> runlist, double total_monoenergy)
 {
-	string output_namestub = "summedoutput_";
+//	string output_namestub = "summedoutput_";
+	string output_namestub = make_outputnamestub(total_monoenergy);
 	string path_to_files = g4_path;
+//	cout << "Calling generate_hadd_command(...) with output_namestub:  " << output_namestub << ", because the mono-energy is:  " << total_monoenergy << endl;
 	return generate_hadd_command(newrunno, runlist, output_namestub, metadata_name, path_to_files);
 }
 
@@ -505,8 +562,11 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	MetaTree2 -> GetEntry(i_run2);
 	bool match = true;
 	//
+	if(n_eventsgenerated1>=N_maxgenerated || n_eventsgenerated2>=N_maxgenerated )  {match = false;}
+		if(verbose>1 && !match) { cout << "Too many events generated." << endl;      return -1;}
+	//
 	if(isbad1 || isbad2)       {match = false;}
-		if(verbose>1 && !match) { cout << "One or more of the runs is 'bad'." << endl;         return -1;}
+		if(verbose>1 && !match) { cout << "One or more of the runs is 'bad'." << endl;  return -1;}
 //	if(issummed1 || issummed2) {match = false;}
 //		if(verbose>1 && !match) { cout << "One or more of the runs is already a sum." << endl; return -1;}
 	//
@@ -549,9 +609,10 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 //	if( temp1y         != temp2y)         {match = false;}
 //	if( temp1z         != temp2z)         {match = false;}
 	
-	if ( (MonoEnergy1 == -10 || MonoEnergy2 == -10) && (MonoEnergy1 != MonoEnergy2) )    {match = false;} // if they don't match *and* one of them is "make the whole spectrum"
-	// in the future, kludge here to make it not hadd multiple monoenergies?
+//	if ( (MonoEnergy1 == -10 || MonoEnergy2 == -10) && (MonoEnergy1 != MonoEnergy2) )    {match = false;} // if they don't match *and* one of them is "make the whole spectrum"
+//	// in the future, kludge here to make it not hadd multiple monoenergies?
 	
+	if( MonoEnergy1 != MonoEnergy2 )      {match = false;}
 	//
 	if( expansiontime1 != expansiontime2) {match = false;}
 	if( OP_cycletime1  != OP_cycletime2)  {match = false;}
@@ -765,7 +826,7 @@ string getlinestring_for_run(int runno, string metafilename)
 }
 */
 
-string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int total_ngenerated, int total_nsaved, double total_monoenergy, string firstrunline, int branchpos_runno, int branchpos_eventsgenerated, int branchpos_eventssaved, /*int branchpos_isbad,*/ int branchpos_issummed, int branchpos_filename, int branchpos_monoenergy)
+string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int total_ngenerated, int total_nsaved, double total_monoenergy, string firstrunline, int branchpos_runno, int branchpos_eventsgenerated, int branchpos_eventssaved, /*int branchpos_isbad,*/ int branchpos_issummed, int branchpos_filename /*, int branchpos_monoenergy*/ )
 {
 	bool verbose=false;
 
@@ -777,7 +838,7 @@ string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int 
 	//	if(verbose) cout << "branchpos_isbad           = " << branchpos_isbad << endl;
 		if(verbose) cout << "branchpos_issummed        = " << branchpos_issummed << endl;
 		if(verbose) cout << "branchpos_filename        = " << branchpos_filename << endl;
-		if(verbose) cout << "branchpos_monoenergy      = " << branchpos_monoenergy << endl;
+	//	if(verbose) cout << "branchpos_monoenergy      = " << branchpos_monoenergy << endl;
 	}
 	
 	std::stringstream ss_out;
@@ -844,9 +905,11 @@ string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int 
 			newstringterm = "";
 			ss_tmp.str( std::string() );
 			ss_tmp.clear();
-			ss_tmp << "summedoutput_" << newrunno << ".root";
+		//	ss_tmp << "summedoutput_" << newrunno << ".root";
+			ss_tmp << make_outputnamestub(total_monoenergy) << newrunno << ".root";
 			ss_tmp >> newstringterm;
 		}
+		/*
 		if(i == branchpos_monoenergy)
 		{
 			newstringterm = "";
@@ -856,6 +919,7 @@ string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int 
 			ss_tmp >> newstringterm;
 	//		cout << "total_monoenergy = " << total_monoenergy << ";\tnewstringterm = " << newstringterm << endl;
 		}
+		*/
 		if( i != 0 )
 		{
 			newstringline = newstringline+"\t";
@@ -1219,6 +1283,7 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 		n_eventssaved.push_back(this_eventssaved);
 	}
 	//
+	
 	ss.str( std::string() );
 	ss.clear();
 	for(int i=0; i<length_of_runlist; i++)
@@ -1234,6 +1299,7 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 		ss >> this_monoenergy;
 		mono_energies.push_back(this_monoenergy);
 	}
+	
 	//
 	if(verbose)
 	{
@@ -1249,6 +1315,10 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 	{
 		total_eventsgenerated = total_eventsgenerated+n_eventsgenerated.at(i);
 		total_eventssaved     = total_eventssaved+n_eventssaved.at(i);
+		total_monoenergy      = mono_energies.at(i);  // just take whatever the last mono-energy is.  We checked earlier that they're consistent.
+		// ...... did we though???
+	//	cout << "i = " << i << ":  total_monoenergy = " << total_monoenergy << endl;
+		/*
 		if(verbose>2) cout << "mono_energies.at(" << i << " << )=" << mono_energies.at(i) << endl;
 		if( mono_energies.at(i) != -10.0 ) // if not all energies
 		{
@@ -1261,6 +1331,7 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 		{
 			total_monoenergy = -10.0;
 		}
+		*/
 	}
 	if(verbose)
 	{
@@ -1269,8 +1340,10 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 	}
 	// done getting events generated and events saved.
 	
+	
+	
 	string newstringline;
-	newstringline = make_thenewstringline(delimiter_positions, newrunno, total_eventsgenerated, total_eventssaved, total_monoenergy, (lineinfo_forruns.at(0)).linestring, branchpos_runno, branchpos_eventsgenerated, branchpos_eventssaved,  branchpos_issummed, branchpos_filename, branchpos_monoenergy);
+	newstringline = make_thenewstringline(delimiter_positions, newrunno, total_eventsgenerated, total_eventssaved, total_monoenergy, (lineinfo_forruns.at(0)).linestring, branchpos_runno, branchpos_eventsgenerated, branchpos_eventssaved,  branchpos_issummed, branchpos_filename/*, branchpos_monoenergy*/);
 	
 //	if(verbose)
 //	{
