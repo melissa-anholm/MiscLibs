@@ -5,9 +5,6 @@
 #include <string>
 #include <vector>
 #include <sstream>
-//#include <stdlib.h>
-//#include <stdio.h>
-//#include <ios.h>
 
 using std::cout;
 using std::endl;
@@ -24,7 +21,6 @@ using std::stringstream;
 
 #include "treeql_replacement.cpp"
 #include "location.cpp"
-//#include "MetaChain.cpp"
 #include "ChainG4.cpp"
 
 int extrafilenum = 10000;
@@ -53,12 +49,10 @@ int can_hadd(string, int, string, int, string);
 int can_hadd(string, int, string, int, string, bool);
 bool do_the_hadding(int, int, int);
 bool do_the_hadding(int, vector<int>);
-//int try_to_hadd(int, int);
 hadder_runlist check_hadd_multi();
 int get_newrunno(string);
 string generate_hadd_command(int, vector<int>, string, string, string);
 string generate_hadd_command(int, vector<int>, double);
-//string generate_hadd_command(int, vector<int>);
 lineinfo update_runline(lineinfo, int, int);
 string make_filebuffer(vector<lineinfo>, string, string);
 
@@ -83,10 +77,8 @@ int main(int argc, char *argv[])
 	cout << "Runs that can be hadded: " << endl;
 	printout(result);
 
-//	cout << "I'm about to generate the hadd command.  energy = " << the_energy << endl;
 	string hadder_command = generate_hadd_command(newrunno, result, the_energy);
 	
-//	cout << "I'm about to check whether it worked (and do the hadding)." << endl;
 	bool did_it_work = do_the_hadding(newrunno, result);
 	
 	cout << "Use this command:  " << endl;
@@ -99,27 +91,6 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-/*
-int main(int argc, char *argv[]) // hadd two runs together.
-{ 
-	int run1, run2;
-	string fname1, fname2;
-	if(argc == 3) // 2 arguments...
-	{
-		run1 = atoi(argv[1]);
-		run2 = atoi(argv[2]);
-	}
-	else
-	{
-		cout << "Can't hadd.  Wrong number of arguments." << endl;
-		return -1;
-	}
-	int filenum = try_to_hadd(run1, run2);
-	cout << "filenum = " << filenum << endl;
-	return filenum;
-}
-*/
-
 //
 hadder_runlist check_hadd_multi()
 {
@@ -128,7 +99,6 @@ hadder_runlist check_hadd_multi()
 //	cout << "Loaded up MetaTree." << endl;
 	
 	bool found_unused = false;
-//	bool found_unused_notasum = false;
 	int firstrun = 0;
 	int run = 0;
 	MetaTree -> SetBranchAddress("Run", &run);
@@ -215,16 +185,11 @@ hadder_runlist check_hadd_multi()
 			if(verbose>1) {cout << "It works!" << endl;}
 			runs_to_hadd.push_back(unsummed_runlist.at(i));
 			newfilenum = does_it_work;
-		//	this_energy = energy;  // no, we haven't gotten this entry !
-			
-		//	cout << "it works, and energy = " << energy << " for run " << unsummed_runlist.at(i) <<  endl;
-		//	cout << "it works, for some unknown energy, for run " << unsummed_runlist.at(i) <<  endl;
 		}
 		else
 		{
 			if(verbose>1) {cout << "It doesn't work.  :(" << endl;}
 		}
-		// the_energy = energy;  // the energy of *any* compatible run will be fine here.
 	}
 	// ok, now I have a list of runs that can be hadded together.
 	//	runs_to_hadd.insert(runs_to_hadd.begin(), newfilenum);
@@ -241,8 +206,6 @@ hadder_runlist check_hadd_multi()
 	this_runlist.the_energy = this_energy;  // it'll be the energy from the last.
 	
 	
-//	cout << "from hadder_runlist check_hadd_multi() we find that the_energy = " << this_energy << endl;
-	
 	return this_runlist;
 }
 
@@ -256,7 +219,6 @@ string make_outputnamestub(double total_monoenergy)
 	}
 	else
 	{
-	//	output_namestub = "summedmonooutput_";
 		output_namestub = "summedoutput_";
 	}
 	return output_namestub;
@@ -265,7 +227,6 @@ string make_outputnamestub(double total_monoenergy)
 
 string generate_hadd_command(int newrunno, vector<int> runlist, string output_namestub, string metafilename, string path_to_files) // path_to_files should have a "/" at the end.
 {
-//	int verbose = 0;
 	TTree * MetaTree = load_metadata_tree(metafilename);
 	int nentries = MetaTree -> GetEntries();
 	
@@ -294,7 +255,6 @@ string generate_hadd_command(int newrunno, vector<int> runlist, string output_na
 			}
 		}
 	}
-//	cout << "returning outstring:  " << outstring << endl;
 	return outstring;
 }
 
@@ -302,10 +262,8 @@ string generate_hadd_command(int newrunno, vector<int> runlist, string output_na
 
 string generate_hadd_command(int newrunno, vector<int> runlist, double total_monoenergy)
 {
-//	string output_namestub = "summedoutput_";
 	string output_namestub = make_outputnamestub(total_monoenergy);
 	string path_to_files = g4_path;
-//	cout << "Calling generate_hadd_command(...) with output_namestub:  " << output_namestub << ", because the mono-energy is:  " << total_monoenergy << endl;
 	return generate_hadd_command(newrunno, runlist, output_namestub, metadata_name, path_to_files);
 }
 
@@ -324,9 +282,6 @@ string int_to_string(int this_int)
 	this_string = ss.str();
 	return this_string;
 }
-
-// vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, int maxrun=0)
-
 
 //
 int can_hadd(int run1, int run2)
@@ -373,11 +328,6 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 		{
 			i_run1 = i;
 			foundrun_1 = true;
-		//	if(isbad1)
-		//	{ // this shouldn't happen if it's called from check_hadd_multi(...)
-		//		cout << "No, run " << run1 << " has already been summed." << endl;
-		//		return -1;
-		//	}
 		}
 		else if( this_run1 == run1 && foundrun_1 && !isbad1)
 		{
@@ -392,11 +342,6 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 		{
 			i_run2 = j;
 			foundrun_2 = true;
-		//	if(isbad2)
-		//	{ // this shouldn't happen if it's called from check_hadd_multi(...)
-		//		cout << "No, run " << run1 << " has already been summed." << endl;
-		//		return -1;
-		//	}
 		}
 		else if( this_run2 == run2 && foundrun_2 && !isbad2)
 		{
@@ -426,29 +371,19 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	MetaTree1 -> SetBranchAddress("EventsSaved",     &n_eventssaved1);
 	MetaTree2 -> SetBranchAddress("EventsGenerated", &n_eventsgenerated2);
 	MetaTree2 -> SetBranchAddress("EventsSaved",     &n_eventssaved2);
-	//
-//	int isbad1, isbad2;
-//	int issummed1, issummed2;
-//	MetaTree1 -> SetBranchAddress("has_been_summed", &isbad1);
-//	MetaTree2 -> SetBranchAddress("has_been_summed", &isbad2);
-//	MetaTree1 -> SetBranchAddress("is_a_sum", &issummed1);
-//	MetaTree2 -> SetBranchAddress("is_a_sum", &issummed2);
 	
 	//
 	double Efield1, Efield2;
-//	double rho1, rho2;
 	double pol1, pol2;
 	double align1, align2;
 	double MonoEnergy1, MonoEnergy2;
 	
 	MetaTree1 -> SetBranchAddress("Efield",         &Efield1);
-//	MetaTree1 -> SetBranchAddress("Rho",            &rho1);
 	MetaTree1 -> SetBranchAddress("Polarization",   &pol1);
 	MetaTree1 -> SetBranchAddress("Alignment",      &align1);
 	MetaTree1 -> SetBranchAddress("MonoEnergy_MeV", &MonoEnergy1);
 	
 	MetaTree2 -> SetBranchAddress("Efield",         &Efield2);
-//	MetaTree2 -> SetBranchAddress("Rho",            &rho2);
 	MetaTree2 -> SetBranchAddress("Polarization",   &pol2);
 	MetaTree2 -> SetBranchAddress("Alignment",      &align2);
 	MetaTree2 -> SetBranchAddress("MonoEnergy_MeV", &MonoEnergy2);
@@ -467,15 +402,12 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	double stepmax1, stepmax2;
 	double mincostheta1, mincostheta2;
 	int steppertype1, steppertype2;
-//	int chargestate1, chargestate2;
 	MetaTree1 -> SetBranchAddress("StepMin_mm",      &stepmax1);
 	MetaTree1 -> SetBranchAddress("MinCosTheta",     &mincostheta1);
 	MetaTree1 -> SetBranchAddress("StepperType",     &steppertype1);
-//	MetaTree1 -> SetBranchAddress("ChargeState",     &chargestate1);
 	MetaTree2 -> SetBranchAddress("StepMin_mm",      &stepmax2);
 	MetaTree2 -> SetBranchAddress("MinCosTheta",     &mincostheta2);
 	MetaTree2 -> SetBranchAddress("StepperType",     &steppertype2);
-//	MetaTree2 -> SetBranchAddress("ChargeState",     &chargestate2);
 	char this_StepperName1[256];
 	char this_SaveEventTypes1[256];
 	char this_PhysicsListName1[256];
@@ -524,25 +456,6 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	MetaTree2 -> SetBranchAddress("Trap_sigma_y_f_mm",    &trap_sigmay2f);
 	MetaTree2 -> SetBranchAddress("Trap_sigma_z_f_mm",    &trap_sigmaz2f);
 	
-	/*
-	double temp1x, temp1y, temp1z;
-	double temp2x, temp2y, temp2z;
-	MetaTree1 -> SetBranchAddress("Temperature_x_mK",     &temp1x);
-	MetaTree1 -> SetBranchAddress("Temperature_y_mK",     &temp1y);
-	MetaTree1 -> SetBranchAddress("Temperature_z_mK",     &temp1z);
-	MetaTree2 -> SetBranchAddress("Temperature_x_mK",     &temp2x);
-	MetaTree2 -> SetBranchAddress("Temperature_y_mK",     &temp2y);
-	MetaTree2 -> SetBranchAddress("Temperature_z_mK",     &temp2z);
-	double sail_x1, sail_y1, sail_z1;
-	double sail_x2, sail_y2, sail_z2;
-	MetaTree1 -> SetBranchAddress("SailVelocity_x_mm_per_ms",   &sail_x1);
-	MetaTree1 -> SetBranchAddress("SailVelocity_y_mm_per_ms",   &sail_y1);
-	MetaTree1 -> SetBranchAddress("SailVelocity_z_mm_per_ms",   &sail_z1);
-	MetaTree2 -> SetBranchAddress("SailVelocity_x_mm_per_ms",   &sail_x2);
-	MetaTree2 -> SetBranchAddress("SailVelocity_y_mm_per_ms",   &sail_y2);
-	MetaTree2 -> SetBranchAddress("SailVelocity_z_mm_per_ms",   &sail_z2);
-	*/
-	
 	double expansiontime1, expansiontime2;
 	MetaTree1 -> SetBranchAddress("ExpandBeforePolarized_ms",   &expansiontime1);
 	MetaTree2 -> SetBranchAddress("ExpandBeforePolarized_ms",   &expansiontime2);
@@ -555,8 +468,6 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	MetaTree1 -> SetBranchAddress("matches_runset",     &this_matchedrunset1);
 	MetaTree2 -> SetBranchAddress("matches_runset",     &this_matchedrunset2);
 
-//	/C:has_been_summed/I/D:/D:Efield_Uniformity/O:/C:is_a_sum/I:/D:/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:
-
 	// Now check to see whether *all* of the things are the same..
 	MetaTree1 -> GetEntry(i_run1);
 	MetaTree2 -> GetEntry(i_run2);
@@ -567,13 +478,9 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	//
 	if(isbad1 || isbad2)       {match = false;}
 		if(verbose>1 && !match) { cout << "One or more of the runs is 'bad'." << endl;  return -1;}
-//	if(issummed1 || issummed2) {match = false;}
-//		if(verbose>1 && !match) { cout << "One or more of the runs is already a sum." << endl; return -1;}
 	//
 	if( Efield1 != Efield2) {match = false;}
 		if(verbose>1 && !match) { cout << "Efields are inconsistent." << endl;       return -1;}
-//	if( rho1    != rho2)    {match = false;}
-//		if(verbose>1 && !match) { cout << "rho values are inconsistent." << endl;    return -1;}
 	if( pol1    != pol1)    {match = false;}
 		if(verbose>1 && !match) { cout << "polarizations are inconsistent." << endl; return -1;}
 	if( align1  != align2)  {match = false;}
@@ -604,13 +511,6 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	if( trap_sigmax1f   != trap_sigmax2f)   {match = false;}
 	if( trap_sigmay1f   != trap_sigmay2f)   {match = false;}
 	if( trap_sigmaz1f   != trap_sigmaz2f)   {match = false;}
-	
-//	if( temp1x         != temp2x)         {match = false;}
-//	if( temp1y         != temp2y)         {match = false;}
-//	if( temp1z         != temp2z)         {match = false;}
-	
-//	if ( (MonoEnergy1 == -10 || MonoEnergy2 == -10) && (MonoEnergy1 != MonoEnergy2) )    {match = false;} // if they don't match *and* one of them is "make the whole spectrum"
-//	// in the future, kludge here to make it not hadd multiple monoenergies?
 	
 	if( MonoEnergy1 != MonoEnergy2 )      {match = false;}
 	//
@@ -704,13 +604,11 @@ vector<int> get_delimiter_positions(string thisline)
 int get_position_of_string(string thingtolookin, string thingtolookfor)
 {
 	int positioncounter = 0;
-//	size_t last_position = 0;
 	int size_of_string = thingtolookin.size();
 	int position_of_thingimlookingfor = 0;
 	while (positioncounter<size_of_string)
 	{
 		positioncounter = thingtolookin.find(thingtolookfor.c_str(), 0);
-	//	last_position = positioncounter;
 		if(positioncounter<size_of_string)
 		{
 			position_of_thingimlookingfor = positioncounter;
@@ -757,8 +655,6 @@ lineinfo get_lineinfo_for_run(int runno, string metafilename)
 		{
 			this_iline = i;
 			linestring_tokeep = this_linestring;
-		//	if(verbose) cout << "i_line1=" << i_line1 << "\tfirstrunline:  " << endl;
-		//	if(verbose) cout << firstrunline << endl;
 		}
 	}
 	
@@ -768,65 +664,8 @@ lineinfo get_lineinfo_for_run(int runno, string metafilename)
 	return this_lineinfo;
 }
 
-/*
-int find_linenumber_for_run(int runno, string metafilename)
-{
-	bool verbose = false;
-	int this_iline = 0;
-	string this_line;
-	int this_runno;
-	//
-	std::ifstream this_ifilestream;
-	this_ifilestream.open(metafilename.c_str());
-	//
-	std::getline(this_ifilestream, this_line); // don't look at the first line...
-	int i=1;                                   // we've already gotten the first line.
-	while ( std::getline(this_ifilestream, this_line) )
-	{
-		i++;
-		std::istringstream iss(this_line);
-		iss >> this_runno;
-		if(this_runno == runno)
-		{
-			this_iline = i;
-		//	firstrunline = this_line;
-		//	if(verbose) cout << "i_line1=" << i_line1 << "\tfirstrunline:  " << endl;
-		//	if(verbose) cout << firstrunline << endl;
-		}
-	}
-	return this_iline;
-}
-string getlinestring_for_run(int runno, string metafilename)
-{
-	bool verbose = false;
-	int this_iline = 0;
-	string this_line;
-	int this_runno;
-	string linestring_tokeep = "";
-	//
-	std::ifstream this_ifilestream;
-	this_ifilestream.open(metafilename.c_str());
-	//
-	std::getline(this_ifilestream, this_line); // don't look at the first line...
-	int i=1;                                   // we've already gotten the first line.
-	while ( std::getline(this_ifilestream, this_line) )
-	{
-		i++;
-		std::istringstream iss(this_line);
-		iss >> this_runno;
-		if(this_runno == runno)
-		{
-			this_iline = i;
-			linestring_tokeep = this_line;
-		//	if(verbose) cout << "i_line1=" << i_line1 << "\tfirstrunline:  " << endl;
-		//	if(verbose) cout << firstrunline << endl;
-		}
-	}
-	return linestring_tokeep;
-}
-*/
 
-string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int total_ngenerated, int total_nsaved, double total_monoenergy, string firstrunline, int branchpos_runno, int branchpos_eventsgenerated, int branchpos_eventssaved, /*int branchpos_isbad,*/ int branchpos_issummed, int branchpos_filename /*, int branchpos_monoenergy*/ )
+string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int total_ngenerated, int total_nsaved, double total_monoenergy, string firstrunline, int branchpos_runno, int branchpos_eventsgenerated, int branchpos_eventssaved, int branchpos_issummed, int branchpos_filename )
 {
 	bool verbose=false;
 
@@ -835,10 +674,8 @@ string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int 
 		if(verbose) cout << "branchpos_runno           = " << branchpos_runno << endl;
 		if(verbose) cout << "branchpos_eventsgenerated = " << branchpos_eventsgenerated << endl;
 		if(verbose) cout << "branchpos_eventssaved     = " << branchpos_eventssaved << endl;
-	//	if(verbose) cout << "branchpos_isbad           = " << branchpos_isbad << endl;
 		if(verbose) cout << "branchpos_issummed        = " << branchpos_issummed << endl;
 		if(verbose) cout << "branchpos_filename        = " << branchpos_filename << endl;
-	//	if(verbose) cout << "branchpos_monoenergy      = " << branchpos_monoenergy << endl;
 	}
 	
 	std::stringstream ss_out;
@@ -859,7 +696,6 @@ string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int 
 		if( !ss_out.good() ) 
 		{ 
 			cout << "Entry is shorter than expected.  Bad!" << endl;
-		//	return false;
 			break; 
 		}
 		ss_out >> newstringterm;
@@ -888,10 +724,6 @@ string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int 
 			ss_tmp << newrunno;
 			ss_tmp >> newstringterm;
 		}
-//		if(i == branchpos_isbad)
-//		{
-//			
-//		}
 		if(i == branchpos_issummed)
 		{
 			newstringterm = "";
@@ -905,21 +737,9 @@ string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int 
 			newstringterm = "";
 			ss_tmp.str( std::string() );
 			ss_tmp.clear();
-		//	ss_tmp << "summedoutput_" << newrunno << ".root";
 			ss_tmp << make_outputnamestub(total_monoenergy) << newrunno << ".root";
 			ss_tmp >> newstringterm;
 		}
-		/*
-		if(i == branchpos_monoenergy)
-		{
-			newstringterm = "";
-			ss_tmp.str( std::string() );
-			ss_tmp.clear();
-			ss_tmp << std::fixed << std::setprecision(6) << total_monoenergy;
-			ss_tmp >> newstringterm;
-	//		cout << "total_monoenergy = " << total_monoenergy << ";\tnewstringterm = " << newstringterm << endl;
-		}
-		*/
 		if( i != 0 )
 		{
 			newstringline = newstringline+"\t";
@@ -927,7 +747,6 @@ string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int 
 		newstringline = newstringline+newstringterm;
 		if(verbose) cout << "i=" << i << ";\tnewstringline=" << newstringline << endl;
 	}
-//	newstringline = newstringline+"\t\n";
 	newstringline = newstringline+"\t";
 	
 	if(verbose) 
@@ -940,224 +759,6 @@ string make_thenewstringline(vector<int> delimiter_positions, int newrunno, int 
 }
 
 //
-/*
-bool do_the_hadding(int run1, int run2, int newrunno=1)
-{
-	bool verbose = true;
-	string current_metadatafilename = metadata_name;
-	
-// run1 and run2 are the run numbers, not the i_line for the metadata file.
-// this function breaks if run number isn't the first entry in every line.
-
-// Run/I:Filename/C:has_been_summed/I:Efield/D:Rho/D:EventsGenerated/I:EventsSaved/I:SaveEventTypes/C:Polarization/D:Alignment/D:MinCosTheta/D:Efield_Uniformity/O:StepperType/I:StepperName/C:StepMax_mm/D:PhysicsListName/C:is_a_sum/I:Trap_x_mm/D:Trap_y_mm/D:Trap_z_mm/D:Trap_sigma_x/D:Trap_sigma_y/D:Trap_sigma_z/D:Temperature/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:SailVelocity_x_mm_per_ms/D:SailVelocity_y_mm_per_ms/D:SailVelocity_z_mm_per_ms/D:ChargeState/I
-	string this_line;
-	std::ifstream this_ifilestream;
-	this_ifilestream.open(current_metadatafilename.c_str());
-	std::getline(this_ifilestream, this_line);
-	this_ifilestream.close();
-	// We're done with the file for now...
-	
-	vector<int> delimiter_positions;
-	delimiter_positions = get_delimiter_positions(this_line);
-	int length_of_line = this_line.size();
-	// ok, we know where the delimiters are.
-//	int positioncounter = 0;
-//	size_t last_position = 0;
-	
-	int position_of_eventsgenerated = get_position_of_string(this_line, "EventsGenerated");
-	int position_of_eventssaved     = get_position_of_string(this_line, "EventsSaved");
-	int position_of_runno           = get_position_of_string(this_line, "Run");
-	int position_of_isbad           = get_position_of_string(this_line, "has_been_summed");
-	int position_of_issummed        = get_position_of_string(this_line, "is_a_sum");
-	int position_of_filename        = get_position_of_string(this_line, "Filename");
-	int position_of_monoenergy      = get_position_of_string(this_line, "MonoEnergy_MeV");
-	if(verbose) cout << "position_of_eventsgenerated = " << position_of_eventsgenerated << endl;
-	if(verbose) cout << "position_of_eventssaved     = " << position_of_eventssaved << endl;
-	if(verbose) cout << "position_of_runno           = " << position_of_runno << endl;
-	if(verbose) cout << "position_of_isbad           = " << position_of_isbad << endl;
-	if(verbose) cout << "position_of_issummed        = " << position_of_issummed << endl;
-	if(verbose) cout << "position_of_filename        = " << position_of_filename << endl;
-	if(verbose) cout << "position_of_monoenergy      = " << position_of_monoenergy << endl;
-	if(verbose) cout << "--" << endl;
-	
-	// ok, we know where the EventsGenerated and EventsSaved entries are.  
-	//    ...also Run, has_been_summed, and is_a_sum.
-	// now figure out where they go wrt the delimiters.
-	int branchpos_eventsgenerated = find_branchpos(position_of_eventsgenerated, \
-		delimiter_positions, length_of_line);
-	int branchpos_eventssaved     = find_branchpos(position_of_eventssaved, \
-		delimiter_positions, length_of_line);
-	int branchpos_runno           = find_branchpos(position_of_runno, \
-		delimiter_positions, length_of_line);
-	int branchpos_isbad           = find_branchpos(position_of_isbad, \
-		delimiter_positions, length_of_line);
-	int branchpos_issummed        = find_branchpos(position_of_issummed, \
-		delimiter_positions, length_of_line);
-	int branchpos_filename        = find_branchpos(position_of_filename, \
-		delimiter_positions, length_of_line);
-	int branchpos_monoenergy        = find_branchpos(position_of_monoenergy, \
-		delimiter_positions, length_of_line);
-
-	if(verbose) cout << "branchpos_eventsgenerated = " << branchpos_eventsgenerated << endl;
-	if(verbose) cout << "branchpos_eventssaved     = " << branchpos_eventssaved << endl;
-	if(verbose) cout << "branchpos_runno           = " << branchpos_runno << endl;
-	if(verbose) cout << "branchpos_isbad           = " << branchpos_isbad << endl;
-	if(verbose) cout << "branchpos_issummed        = " << branchpos_issummed << endl;
-	if(verbose) cout << "branchpos_filename        = " << branchpos_filename << endl;
-	if(verbose) cout << "branchpos_monoenergy      = " << branchpos_monoenergy << endl;
-	if(verbose) cout << "--" << endl;
-	// numbering starts at "0".
-	// k, we're done fucking around with the first line.
-	
-	lineinfo first_lineinfo  = get_lineinfo_for_run(run1, current_metadatafilename);
-	lineinfo second_lineinfo = get_lineinfo_for_run(run2, current_metadatafilename);
-	
-	string firstrunline  = first_lineinfo.linestring;
-	string secondrunline = second_lineinfo.linestring;
-	int i_line1 = first_lineinfo.linenumber;
-	int i_line2 = second_lineinfo.linenumber;
-
-	if(verbose) cout << "i_line1=" << i_line1 << "\tfirstrunline:  " << endl;
-	if(verbose) cout << firstrunline << endl;
-	if(verbose) cout << "i_line2=" << i_line2 << "\tsecondrunline:  " << endl;
-	if(verbose) cout << secondrunline << endl;
-	// ok.  I've gotten the info that I need out of this file.  I'm done with it for now.  
-	// Later, I'll have to open that file back up to do things to it, but not now.
-	
-	// ok, now read out the info from those lines, and put them into a new line.
-	std::stringstream ss1;
-	ss1.str( std::string() );
-	ss1.clear();
-	ss1 << firstrunline;
-
-	std::stringstream ss2;
-	ss2.str( std::string() );
-	ss2.clear();
-	ss2 << secondrunline;
-	
-	string throwparam = "";
-	for(int i=0; i<branchpos_eventsgenerated; i++)
-	{
-		ss1 >> throwparam;
-		ss2 >> throwparam;
-	//	cout << "i = " << i << ",\tthrowparam=" << throwparam << endl;
-	}
-	int n_eventsgenerated1;
-	int n_eventsgenerated2;
-	ss1 >> n_eventsgenerated1;
-	if(verbose) cout << "n_eventsgenerated1 = " << n_eventsgenerated1 << endl;
-	ss2 >> n_eventsgenerated2;
-	if(verbose) cout << "n_eventsgenerated2 = " << n_eventsgenerated2 << endl;
-	
-	ss1.str( std::string() );
-	ss1.clear();
-	ss1 << firstrunline;
-	ss2.str( std::string() );
-	ss2.clear();
-	ss2 << secondrunline;
-	for(int i=0; i<branchpos_eventssaved; i++)
-	{
-		ss1 >> throwparam;
-		ss2 >> throwparam;
-	//	cout << "i = " << i << ",\tthrowparam=" << throwparam << endl;
-	}
-	int n_eventssaved1;
-	int n_eventssaved2;
-	ss1 >> n_eventssaved1;
-	if(verbose) cout << "n_eventssaved1 = " << n_eventssaved1 << endl;
-	ss2 >> n_eventssaved2;
-	if(verbose) cout << "n_eventssaved2 = " << n_eventssaved2 << endl;
-	
-	int total_ngenerated = n_eventsgenerated1 + n_eventsgenerated2;
-	int total_nsaved = n_eventssaved1 + n_eventssaved2;
-	if(verbose) cout << "--" << endl;
-	if(verbose) cout << "total_ngenerated = " << total_ngenerated << endl;
-	if(verbose) cout << "total_nsaved = " << total_nsaved << endl;
-	
-	
-	//
-	ss1.str( std::string() );
-	ss1.clear();
-	ss1 << firstrunline;
-	ss2.str( std::string() );
-	ss2.clear();
-	ss2 << secondrunline;
-	for(int i=0; i<branchpos_monoenergy; i++)
-	{
-		ss1 >> throwparam;
-		ss2 >> throwparam;
-	}
-	int this_monoenergy1;
-	int this_monoenergy2;
-	ss1 >> this_monoenergy1;
-	if(verbose) cout << "this_monoenergy1 = " << this_monoenergy1 << endl;
-	ss2 >> this_monoenergy2;
-	if(verbose) cout << "this_monoenergy2 = " << this_monoenergy2 << endl;
-	
-	double total_monoenergy = -10;
-	if(this_monoenergy1 != this_monoenergy2 && this_monoenergy1 != -10 && this_monoenergy2 != -10)
-	{
-		total_monoenergy = -5.0;
-	}
-	else if( this_monoenergy1 != this_monoenergy2 ) // this should never happen.
-	{
-		total_monoenergy = -3.0;
-	}
-	else
-	{
-		total_monoenergy = this_monoenergy1;
-	}
-	//
-	
-	// assign a new run number?  somehow?!
-//	if(verbose) cout << "newrunno = " << newrunno << endl;
-
-	std::stringstream ss_out;
-	ss_out.str( std::string() );
-	ss_out.clear();
-	ss_out << firstrunline;
-	
-	std::stringstream ss_tmp;
-	ss_tmp.str( std::string() );
-	ss_tmp.clear();
-	
-	
-	string newstringline = "";
-	newstringline = make_thenewstringline(delimiter_positions, newrunno, total_ngenerated, total_nsaved, total_monoenergy, firstrunline, branchpos_runno, branchpos_eventsgenerated, branchpos_eventssaved, branchpos_issummed, branchpos_filename, branchpos_monoenergy);
-	
-	first_lineinfo = update_runline(first_lineinfo, branchpos_isbad, delimiter_positions.size());
-	second_lineinfo = update_runline(second_lineinfo, branchpos_isbad, delimiter_positions.size());
-	firstrunline  = first_lineinfo.linestring;
-	secondrunline = second_lineinfo.linestring;
-	i_line1 = first_lineinfo.linenumber;
-	i_line2 = second_lineinfo.linenumber;
-	vector<lineinfo> lineinfo_forruns;
-	lineinfo_forruns.push_back(first_lineinfo);
-	lineinfo_forruns.push_back(second_lineinfo);
-	
-	// ok, the lines are updated.  but now I need to read the whole (updated) file into a buffer...
-//	string filecontents = "";
-	string filecontents = make_filebuffer(lineinfo_forruns, newstringline, current_metadatafilename);
-
-	std::ofstream this_ofilestream;
-	this_ofilestream.open(current_metadatafilename.c_str(), std::ios::trunc);
-	if( !this_ofilestream.is_open() )
-	{
-		cout << "Couldn't open the file for writing." << endl;
-		return false;
-	}
-	else
-	{
-		if(verbose) cout << "Yay, the file's open for writing!" << endl;
-	}
-	this_ofilestream << filecontents;
-//	this_ofilestream << newstringline;
-	this_ofilestream.close();
-	
-	return true;
-}
-*/
-
 bool do_the_hadding(int run1, int run2, int newrunno=1)
 {
 	vector<int> runlist;
@@ -1226,10 +827,6 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 	
 	// numbering starts at "0".
 	// k, we're done fucking around with the header line.
-//	vector<int> runlist
-//	lineinfo first_lineinfo  = get_lineinfo_for_run(run1, current_metadatafilename);
-//	lineinfo second_lineinfo = get_lineinfo_for_run(run2, current_metadatafilename);
-
 	int length_of_runlist = runlist.size();
 	vector<lineinfo> lineinfo_forruns;
 	lineinfo thisline_info;
@@ -1237,10 +834,8 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 	if(verbose>1) cout << "length_of_runlist = " << length_of_runlist << endl;
 	for(int i=0; i<length_of_runlist; i++)
 	{
-	//	cout << "i = " << i << endl;
 		thisline_info = get_lineinfo_for_run(runlist.at(i), current_metadatafilename);
 		lineinfo_forruns.push_back(thisline_info);
-	//	if(verbose>2) cout << " (i=" << i << ", linenumber=" << thisline_info.linenumber << "):  " << thisline_info.linestring << endl;
 	}
 	
 	
@@ -1317,21 +912,6 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 		total_eventssaved     = total_eventssaved+n_eventssaved.at(i);
 		total_monoenergy      = mono_energies.at(i);  // just take whatever the last mono-energy is.  We checked earlier that they're consistent.
 		// ...... did we though???
-	//	cout << "i = " << i << ":  total_monoenergy = " << total_monoenergy << endl;
-		/*
-		if(verbose>2) cout << "mono_energies.at(" << i << " << )=" << mono_energies.at(i) << endl;
-		if( mono_energies.at(i) != -10.0 ) // if not all energies
-		{
-			if( i>=1 && mono_energies.at(i) != mono_energies.at(i-1) ) // if the mono-energies aren't the same
-			{
-				total_monoenergy = -5.0;
-			}
-		}
-		else
-		{
-			total_monoenergy = -10.0;
-		}
-		*/
 	}
 	if(verbose)
 	{
@@ -1343,14 +923,8 @@ bool do_the_hadding(int newrunno, vector<int> runlist) // should probably add an
 	
 	
 	string newstringline;
-	newstringline = make_thenewstringline(delimiter_positions, newrunno, total_eventsgenerated, total_eventssaved, total_monoenergy, (lineinfo_forruns.at(0)).linestring, branchpos_runno, branchpos_eventsgenerated, branchpos_eventssaved,  branchpos_issummed, branchpos_filename/*, branchpos_monoenergy*/);
+	newstringline = make_thenewstringline(delimiter_positions, newrunno, total_eventsgenerated, total_eventssaved, total_monoenergy, (lineinfo_forruns.at(0)).linestring, branchpos_runno, branchpos_eventsgenerated, branchpos_eventssaved,  branchpos_issummed, branchpos_filename);
 	
-//	if(verbose)
-//	{
-//	//	cout << "newstringline: " << endl;
-//	//	cout << newstringline << endl;
-//	}
-
 	// ok, we have the new line for the run that will be hadded.  How will we update the old run lines?
 	vector<lineinfo> oldstringlines;
 	for(int i=0; i<length_of_runlist; i++)
@@ -1465,39 +1039,6 @@ lineinfo update_runline(lineinfo thisline_info, int branchpos_isbad, int n_delim
 	thisline_info.linestring = this_new_line;
 	return thisline_info;
 }
-
-// Not used?  Also, unreadable?
-/*
-int try_to_hadd(int run1, int run2)
-{
-	int can_behadded = -1;
-	bool is_hadded = false;
-	
-	can_behadded = can_hadd(run1, run2);
-	
-	int mynewfilenum = extrafilenum+can_behadded;
-	while(mynewfilenum > 2*extrafilenum && extrafilenum>=10)
-	{
-		mynewfilenum = mynewfilenum - extrafilenum;
-		cout << "New file number:  " << mynewfilenum << endl;
-	}
-	
-	if(can_behadded>=0) 
-	{ 
-		is_hadded = do_the_hadding(run1, run2, mynewfilenum); 
-		return mynewfilenum;
-	}
-	else
-	{
-		cout << "Can't hadd." << endl;
-		mynewfilenum = -1;
-		return mynewfilenum;
-	//	return -1;
-	}
-	return mynewfilenum;
-//	return is_hadded;
-}
-*/
 
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
