@@ -297,6 +297,7 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 {
 	int verbose = 0;
 //	Run/I:Filename/C:has_been_summed/I:Efield/D:Rho/D:EventsGenerated/I:EventsSaved/I:SaveEventTypes/C:Polarization/D:Alignment/D:MinCosTheta/D:Efield_Uniformity/O:StepperType/I:StepperName/C:StepMax_mm/D:PhysicsListName/C:is_a_sum/I:Trap_x_mm/D:Trap_y_mm/D:Trap_z_mm/D:Trap_sigma_x/D:Trap_sigma_y/D:Trap_sigma_z/D:Temperature/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:SailVelocity_x_mm_per_ms/D:SailVelocity_y_mm_per_ms/D:SailVelocity_z_mm_per_ms/D:ChargeState/I
+//	Run/I:Filename/C:has_been_summed/I:is_a_sum/I:SaveEventTypes/C:matches_runset/C:EventsGenerated/I:EventsSaved/I:MinCosTheta/D:Efield/D:Mz/D:Mz2/D:Mz3/D:StepperType/I:StepperName/C:StepMin_mm/D:PhysicsListName/C:Trap_x_i_mm/D:Trap_y_i_mm/D:Trap_z_i_mm/D:Trap_sigma_x_i_mm/D:Trap_sigma_y_i_mm/D:Trap_sigma_z_i_mm/D:Trap_x_f_mm/D:Trap_y_f_mm/D:Trap_z_f_mm/D:Trap_sigma_x_f_mm/D:Trap_sigma_y_f_mm/D:Trap_sigma_z_f_mm/D:ExpandBeforePolarized_ms/D:OP_CycleTime_ms/D:Polarization/D:Alignment/D:g_V/D:g_A/D:g_S/D:g_T/D:EventGenerator/C:MonoEnergy_MeV/D
 	if(verbose>1)
 	{
 		cout << "File 1:  " << filename1 << endl;
@@ -397,6 +398,17 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	MetaTree2 -> SetBranchAddress("Mz2",            &Mz2_2); //
 	MetaTree2 -> SetBranchAddress("Mz3",            &Mz3_2); //
 	
+	double g_V_1, g_A_1, g_S_1, g_T_1;
+	double g_V_2, g_A_2, g_S_2, g_T_2;
+	MetaTree1 -> SetBranchAddress("g_V",            &g_V_1);
+	MetaTree1 -> SetBranchAddress("g_A",            &g_A_1);
+	MetaTree1 -> SetBranchAddress("g_S",            &g_S_1);
+	MetaTree1 -> SetBranchAddress("g_T",            &g_T_1);
+	MetaTree2 -> SetBranchAddress("g_V",            &g_V_2);
+	MetaTree2 -> SetBranchAddress("g_A",            &g_A_2);
+	MetaTree2 -> SetBranchAddress("g_S",            &g_S_2);
+	MetaTree2 -> SetBranchAddress("g_T",            &g_T_2);
+	
 	
 	//
 	double stepmax1, stepmax2;
@@ -489,6 +501,12 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	if( Mz_1  != Mz_2)   {match = false;}
 	if( Mz2_1 != Mz2_2)  {match = false;}
 	if( Mz3_1 != Mz3_2)  {match = false;}
+	//
+	if( g_V_1  != g_V_2) {match = false;}
+	if( g_A_1  != g_A_2) {match = false;}
+	if( g_S_1  != g_S_2) {match = false;}
+	if( g_T_1  != g_T_2) {match = false;}
+	
 	//
 	if( stepmax1     != stepmax2)     {match = false;}
 	if( mincostheta1 != mincostheta2) {match = false;}

@@ -19,22 +19,16 @@ using std::string;
 #include "TNtuple.h"
 #include "TBranch.h"  // do I need this?
 
-//#include "treeql_replacement.cpp"
 #include "location.cpp"
 
 bool use_only_summed_forchain = true;
 
-/*
-//#define XSTR(x) #x
-//#define STR(x) XSTR(x)
-*/
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
-
 // ====================================== // ====================================== //
 // Newer TChains for Simulations:
 string get_simfilename(string path, int runno)  // don't use this.
-{ 
+{
 	string fname;
 	std::stringstream ss;
 	ss.str( std::string() );
@@ -49,7 +43,7 @@ string get_simfilename(string path, int runno)  // don't use this.
 }
 
 string get_simfilename(TTree * MetaTree, int runno)  // from the MetaTree.
-{ 
+{
 	string namestub = "";
 	string fname;
 	
@@ -107,9 +101,8 @@ string get_matched_runletter(TTree * MetaTree, int runno)  //
 	return this_set;
 }
 
-
 string get_simfriendname(string path, int runno)
-{ 
+{
 	string fname;
 	std::stringstream ss;
 	ss.str( std::string() );
@@ -126,14 +119,12 @@ string get_simfriendname(string path, int runno)
 TTree * load_metadata_tree(string metadatafilename)
 {
 	TTree *MetaTree = new TTree();
-//	int nentries = MetaTree -> ReadFile(metadatafilename.c_str());
 	MetaTree -> ReadFile(metadatafilename.c_str());
 	return MetaTree;
 }
 
 TChain * get_single_simtree(int runno)
 {
-//	string metadatafilename = metadata_name; //g4_path + metadata_namestub;
 	TTree *MetaTree = load_metadata_tree(metadata_name);
 	
 	string filename = get_simfilename(MetaTree, runno);
@@ -296,13 +287,11 @@ int check_runmatch(int the_run, vector<int> the_list) // returns the index of ma
 	{
 		if(the_run == the_list.at(i) )
 		{
-	//		cout << "It's a match!  run " << the_run << " is run " << the_list.at(i) << endl;
 			have_match = i;
 			return have_match;
 		}
 		else
 		{
-	//		cout << "run " << the_run << " isn't run " << the_list.at(i) << endl;
 		}
 	}
 	return -1;
@@ -497,7 +486,6 @@ vector<int> get_summed_monoenergetic_runlist(double the_energy, bool verbose=tru
 	}
 	return set_of_runs;
 }
-
 TChain * get_chain_from_monoenergy(double the_energy, bool verbose=true) // requires:  summed runs.  energy in MeV.
 {
 	if(verbose) { cout << "Fetching the monoenergetic chain:  " << the_energy << " MeV" << endl; }
@@ -508,6 +496,47 @@ TChain * get_chain_from_monoenergy(double the_energy, bool verbose=true) // requ
 }
 
 
+vector<int> get_runlist_from_gS_gT(double g_S, double g_T, bool verbose=false) // include all polarizations.
+{
+	vector<int> set_of_runs;
+
+	// Get the MetaTree.
+	TTree * MetaTree = load_metadata_tree(metadata_name);
+	
+	int run = 0;
+	MetaTree -> SetBranchAddress("Run", &run);
+	int has_been_summed = 0;
+	MetaTree -> SetBranchAddress("has_been_summed",  &has_been_summed);
+	int is_a_sum = 0;
+	MetaTree -> SetBranchAddress("is_a_sum", &is_a_sum);
+	double this_g_S = 0;
+	MetaTree -> SetBranchAddress("g_S", &this_g_S);
+	double this_g_T = 0;
+	MetaTree -> SetBranchAddress("g_T", &this_g_T);
+	
+	int nentries = MetaTree -> GetEntries();
+	for(int i=0; i<nentries; i++)
+	{
+		MetaTree -> GetEntry(i);
+		if(has_been_summed==0 && is_a_sum==1 )
+		{
+			if( (g_S==this_g_S) && (g_T==this_g_T) )
+			{
+				set_of_runs.push_back(run);
+				if(verbose) { cout << "adding " << run << " to the runlist vector." << endl; }
+			}
+		}
+	}
+	return set_of_runs;
+}
+TChain * get_chain_from_gS_gT(double g_S, double g_T, bool verbose=true)  // all polarizations, all mono-energies.
+{
+	if(verbose) { cout << "Fetching chain with g_S=" << g_S << " and g_T=" << g_T << ":  " << endl; }
+	//
+	vector<int> the_runset = get_runlist_from_gS_gT(g_S, g_T);
+	TChain * the_chain = get_chain_from_runlist(the_runset);
+	return the_chain;
+}
 
 TChain * get_summed_simtree()
 {
@@ -520,7 +549,6 @@ TChain * get_summed_simtree()
 
 // ====================================== //
 // TChains for Simulations (do I ever even use these?):
-
 string make_simfilename(string namestub, int runno)  // no, don't..
 {
 	string fname;
@@ -530,14 +558,11 @@ string make_simfilename(string namestub, int runno)  // no, don't..
 	
 	ss << g4_path << namestub << runno << ".root";
 	fname = ss.str();
-//	cout << "created simfilename:  " << fname << endl;
-//	cout << "see, because g4_path=" << g4_path << ", namestub=" << namestub << ", runno=" << runno << endl;
 	return fname;
 }
 
 // ====================================== //
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
-
 void printout_list(double rho, string runset_string)
 {
 	TTree * MetaTree = load_metadata_tree(metadata_name);
