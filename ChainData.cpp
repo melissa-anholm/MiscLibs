@@ -87,12 +87,13 @@ string get_datafriendname(string path, int runno, bool use_blinded=false)
 
 string get_dataasymname(string path, int runno, bool use_blinded=false)
 {	
+//	cout << "Called get_dataasymname(...)" << endl;
 	string fname;
 	std::stringstream ss;
 	ss.str( std::string() );
 	ss.clear();
 	
-	ss << path << "/AsymTree/asymtree00" << runno;
+	ss << path << "asymtree00" << runno;
 	if (use_blinded)
 	{
 		ss << "_blinded";
@@ -101,6 +102,7 @@ string get_dataasymname(string path, int runno, bool use_blinded=false)
 
 	fname = ss.str();
 	
+//	cout << "asym name:  " << fname << endl;
 	return fname;
 }
 
@@ -304,6 +306,7 @@ TChain * get_electron_chain_from_letter(string runset_letter, bool use_blinded=f
 
 TChain * get_electron_asym_chain_from_letter(string runset_letter, bool use_blinded=false) // case sensitive.
 {
+//	cout << "Called get_electron_asym_chain_from_letter(...)" << endl;
 	set_of_runs runs;
 	
 	string filename;
@@ -354,7 +357,7 @@ TChain * get_electron_asym_chain_from_letter(string runset_letter, bool use_blin
 				friendname = get_datafriendname(friendpath, i, use_blinded);
 				friend_chain -> Add(friendname.c_str());
 				
-				other_friendname = get_dataasymname(friendpath, i, use_blinded);
+				other_friendname = get_dataasymname(asymtree_path, i, use_blinded);  // kludge.  asymtree_path defintiion is a kludge in location.cpp
 				other_friend_chain -> Add(other_friendname.c_str());
 				asym_chain -> Add(other_friendname.c_str());
 			}
@@ -415,7 +418,7 @@ TChain * get_recoil_chain_from_letter(string runset_letter, bool use_blinded=fal
 				filename = get_datafilename(path, i, use_blinded);
 				tree_chain -> Add(filename.c_str());
 			
-				friendname = get_datafriendname(friendpath, i, use_blinded);
+				friendname = get_datafriendname(friendpath, i, use_blinded); 
 				friend_chain -> Add(friendname.c_str());
 			}
 		}
@@ -529,7 +532,8 @@ TChain * get_electron_asym_chain_from_runnos(vector<int> use_these_runs, bool us
 					friendname = get_datafriendname(friendpath, i, use_blinded);
 					friend_chain -> Add(friendname.c_str());
 					
-					other_friendname = get_dataasymname(friendpath, i, use_blinded);
+				//	other_friendname = get_dataasymname(friendpath, i, use_blinded);  
+					other_friendname = get_dataasymname(asymtree_path, i, use_blinded);  // kludge.  asymtree_path defintiion is a kludge in location.cpp
 					other_friend_chain -> Add(other_friendname.c_str());
 					asym_chain -> Add(other_friendname.c_str());
 					
@@ -635,7 +639,8 @@ TChain * get_electron_asym_chain_for_all(bool use_blinded=false)
 			friendname = get_datafriendname(friendpath, i, use_blinded);
 			friend_chain -> Add(friendname.c_str());
 				
-			other_friendname = get_dataasymname(friendpath, i, use_blinded);
+		//	other_friendname = get_dataasymname(friendpath, i, use_blinded);
+			other_friendname = get_dataasymname(asymtree_path, i, use_blinded);  // kludge.  asymtree_path defintiion is a kludge in location.cpp
 			other_friend_chain -> Add(other_friendname.c_str());
 			asym_chain -> Add(other_friendname.c_str());
 		}

@@ -129,6 +129,8 @@ string bb1_prefix = bb1_prefix_fifteen;
 
 //
 
+// A horrible kludge!
+string asymtree_path = "/Users/anholm/Desktop/Anal-Ysis/Unblinded_Friends_2014/AsymTree/";
 
 const char* env_location = std::getenv("LOCATION");
 string char_to_string(const char* input)

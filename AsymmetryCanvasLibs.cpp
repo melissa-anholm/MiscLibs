@@ -74,11 +74,6 @@ double get_Abeta_fromrho(double rho)
 	return Abeta;
 }
 
-//double get_rho_fromAbeta(double Abeta)
-//{
-//	
-//}
-
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 TH1D * manual_normalize(TH1D* input_hist)
 {
@@ -187,20 +182,11 @@ double get_superratio_err(double r1p, double r1m, double r2p, double r2m)  // ma
 double get_supersum(double r1p, double r1m, double r2p, double r2m)
 {
 	double A;
-//	if(r1p==0 || r1m==0 || r2p==0 || r2m==0) // any zero.
-//	{
-//		A = 0.0;
-//	}
-//	else
-//	{
 	A = 0.5*sqrt(r1p*r2m) + 0.5*sqrt(r1m*r2p);
-	//	A = ( sqrt(r1p*r2m) - sqrt(r1m*r2p) ) / ( sqrt(r1p*r2m) + sqrt(r1m*r2p) );
-//	}
 	return A;
 }
 double get_supersum_err(double r1p, double r1m, double r2p, double r2m)  // double-check result..
 {
-//	double ds = 0.25*( sqrt(r1p) + sqrt(r1m) + sqrt(r2p) + sqrt(r2m) );  Nope.
 	double ds2 = (1.0/16.0)*( r1p + r1m + r2p + r2m );
 	return sqrt(ds2);
 }
@@ -288,7 +274,7 @@ TH1D * make_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_his
 //	super_asym -> SetMarkerStyle(20);  // 20:  big circles.
 //	super_asym -> SetMarkerStyle(22);  // 22:  solid up-triangles.
 	
-	super_asym -> SetOption("E1L");  // which option even is this??
+//	super_asym -> SetOption("E1L");  // which option even is this??
 	
 	return super_asym;
 }
@@ -338,13 +324,12 @@ TH1D * make_superratio_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hi
 	superratio -> SetMarkerStyle(plotmarkerstyle);
 //	superratio -> SetMarkerStyle(20);  // 20:  big circles.
 //	superratio -> SetMarkerStyle(22);  // 22:  solid up-triangles.
-	
-	superratio -> SetOption("E1L");  // which option even is this??
+//	superratio -> SetOption("E1L");  // which option even is this??
 	
 	return superratio;
 }
 
-TH1D * make_supersum_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, string hist_title = string("Supersum"), int color=int(kBlack), int plotmarkerstyle=20)  // the superratio, NOT the asymmetry
+TH1D * make_supersum_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, string hist_title = string("Supersum"), int color=int(kBlack), int plotmarkerstyle=20)  // the supersum
 {
 	int N_bins = 0;
 	N_bins = r1p_hist->GetNbinsX();
@@ -391,17 +376,13 @@ TH1D * make_supersum_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist
 //	supersum -> SetMarkerStyle(20);  // 20:  big circles.
 //	supersum -> SetMarkerStyle(22);  // 22:  solid up-triangles.
 	
-	supersum -> SetOption("E1L");  // which option even is this??
+//	supersum -> SetOption("E1L");  // which option even is this??
 	
 	return supersum;
 }
 
-
-
 TH1D * make_rebinned_asymmetry_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hist, TH1D * r2m_hist, int N_rebin=1, string hist_title = string("Superratio Asymmetry"), int color=int(kBlack), int plotmarkerstyle=20 ) 
 {
-//	cout << "Called make_rebinned_asymmetry_histogram(...);  N_rebin = " << N_rebin << endl;
-	
 	TH1D * r1p_hist_rebinned = (TH1D*)r1p_hist -> Clone();
 	TH1D * r1m_hist_rebinned = (TH1D*)r1m_hist -> Clone();
 	TH1D * r2p_hist_rebinned = (TH1D*)r2p_hist -> Clone();
@@ -442,7 +423,6 @@ TH1D * make_asymcounts_histogram(TH1D * r1p_hist, TH1D * r1m_hist, TH1D * r2p_hi
 			r2m = r2m_hist -> GetBinContent(i);
 			
 			counts_hist -> SetBinContent(i, r1p+r1m+r2p+r2m );
-		//	superratio -> SetBinError(i, get_asymmetry_err(r1p, r1m, r2p, r2m) );
 		}
 	}
 	else

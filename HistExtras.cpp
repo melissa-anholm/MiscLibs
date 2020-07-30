@@ -369,12 +369,23 @@ int hist_type::set_other_parameters()
 	else if (type==std::string("Mapping_Ebeta"))
 	{
 		nbins = 6000;
-		xmin =  0.0-0.5;
-		xmax = 6000.0-0.5;
+	//	xmin =  0.0-0.5;
+	//	xmax = 6000.0-0.5;
+		xmin =  0.0;
+		xmax = 6000.0;
 		units = std::string("Scintillator Energy (keV)");
 		user_xmin = xmin;
 		user_xmax = xmax;
 	}
+//	else if (type==std::string("Mapping_Ebeta2"))
+//	{
+//		nbins = 6000;
+//		xmin =  0.0;
+//		xmax = 6000.0;
+//		units = std::string("Scintillator Energy (keV)");
+//		user_xmin = xmin;
+//		user_xmax = xmax;
+//	}
 	else if (type==std::string("AmplitudeBinning_Ebeta"))
 	{
 	//	nbins = 6000;
