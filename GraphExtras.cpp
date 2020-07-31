@@ -1,54 +1,51 @@
 #ifndef INCLUDE_GRAPHEXTRAS
 #define INCLUDE_GRAPHEXTRAS 1
 
+//#include <cmath> // sqrt
+//#include <vector>
+//using std::vector;
+
+//#include <TGraph.h>
+//#include <TGraphErrors.h>
+//#include <TH1.h>
+
+//#include <HistExtras.cpp>
+//#include "Pythonic.cpp"
+//double v1192_to_ns = 100.0/1024.0;
+//using std::string;
+//using std::cout;
+//using std::endl;
+//using std::min;
+
+#include <iostream>
+#include <string>
 #include <cmath> // sqrt
 #include <vector>
+
 using std::vector;
-
-#include <TGraph.h>
-#include <TGraphErrors.h>
-
-#include <TH1.h>
-//#include <HistExtras.cpp>
-#include "Pythonic.cpp"
-
-//double v1192_to_ns = 100.0/1024.0;
 using std::string;
 using std::cout;
 using std::endl;
 using std::min;
 
 
-/*
-TGraphErrors * make_TGraphErrors_like(TH1D * hist)
-{
-	TGraphErrors * graph = new TGraphErrors(hist);  
-	// above: copies all the parameters and data points, but not the name.  or title.
-	graph -> SetNameTitle(hist->GetName(), hist->GetTitle());
-	graph -> SetMarkerColor(hist->GetLineColor());
-	
-	return graph;
-}
-*/
+#include <TGraph.h>
+#include <TGraphErrors.h>
+#include <TH1.h>
+
+
+#include "GraphExtras.h"
+#include "Pythonic.cpp"
+
 
 /*
-TGraphErrors * set_graph_values(TGraphErrors * thisgraph, int n_points, double*x, double*x_err, double*y, double* y_err)
-{
-	// Set new shizzle.
-	for(int i=0; i<n_points; i++)
-	{
-		thisgraph -> SetPoint(i, x[i], y[i]);
-		thisgraph -> SetPointError(i, x_err[i], y_err[i]);
-	}
-	return thisgraph;
-}
-*/
-
 struct set_of_points
 {
 	vector<double> x_vec;
 	vector<double> y_vec;
 };
+*/
+
 set_of_points sort_these_vectors(vector<double> x_in, vector<double> y_in)
 {
 	set_of_points outgoing_sop;
@@ -100,6 +97,7 @@ set_of_points sort_these_vectors(vector<double> x_in, vector<double> y_in)
 	return outgoing_sop;
 }
 
+/*
 struct set_of_errpoints
 {
 	vector<double> x_vec;
@@ -107,6 +105,7 @@ struct set_of_errpoints
 	vector<double> dx_vec;
 	vector<double> dy_vec;
 };
+*/
 
 set_of_errpoints sort_these_vectors(vector<double> x_in, vector<double> y_in, vector<double> dx_in, vector<double> dy_in)
 {
@@ -199,7 +198,7 @@ TGraphErrors * make_TGraphErrors(int N_points, double * x_avg, double * y_avg, d
 }
 
 
-TGraphErrors * make_TGraphErrors(vector<double> x_avg, vector<double> y_avg, vector<double> delta_x, vector<double> delta_y, int color=kBlack, string name="")
+TGraphErrors * make_TGraphErrors(vector<double> x_avg, vector<double> y_avg, vector<double> delta_x, vector<double> delta_y, int color, string name)
 {
 	int N_points = std::min( std::min(x_avg.size(), y_avg.size()), std::min(delta_x.size(), delta_y.size()) );
 	
@@ -258,7 +257,7 @@ TGraphErrors * make_sorted_TGraphErrors(vector<double> x_avg, vector<double> y_a
 	return my_TGraphErrors;
 }
 
-TGraph * make_TGraph(vector<double> x_avg, vector<double> y_avg, int color=int(kBlack))
+TGraph * make_TGraph(vector<double> x_avg, vector<double> y_avg, int color)
 {
 	int N_points = std::min(x_avg.size(), y_avg.size());
 	if( N_points <= 0 ) 
@@ -290,7 +289,7 @@ TGraph * make_TGraph(vector<double> x_avg, vector<double> y_avg, int color=int(k
 }
 
 
-TGraph * make_sorted_TGraph(vector<double> x_avg, vector<double> y_avg, int color=int(kBlack))
+TGraph * make_sorted_TGraph(vector<double> x_avg, vector<double> y_avg, int color)
 {
 	int N_points = std::min(x_avg.size(), y_avg.size());
 	if( x_avg.size() != y_avg.size() )
@@ -324,8 +323,6 @@ TGraph * make_sorted_TGraph(vector<double> x_avg, vector<double> y_avg, int colo
 
 	return my_TGraph;
 }
-
-
 
 TGraphErrors * make_TGraphErrors(vector<double> x_avg, vector<double> y_avg)
 {

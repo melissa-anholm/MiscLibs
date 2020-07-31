@@ -538,6 +538,54 @@ TChain * get_chain_from_gS_gT(double g_S, double g_T, bool verbose=true)  // all
 	return the_chain;
 }
 
+vector<int> get_fullspectrum_runlist_from_gS_gT(double g_S, double g_T, bool verbose=false) // include all polarizations.
+{
+	vector<int> set_of_runs;
+
+	// Get the MetaTree.
+	TTree * MetaTree = load_metadata_tree(metadata_name);
+	
+	int run = 0;
+	MetaTree -> SetBranchAddress("Run", &run);
+	int has_been_summed = 0;
+	MetaTree -> SetBranchAddress("has_been_summed",  &has_been_summed);
+	int is_a_sum = 0;
+	MetaTree -> SetBranchAddress("is_a_sum", &is_a_sum);
+	double this_g_S = 0;
+	MetaTree -> SetBranchAddress("g_S", &this_g_S);
+	double this_g_T = 0;
+	MetaTree -> SetBranchAddress("g_T", &this_g_T);
+	double the_monoenergy = 0;
+	double the_energy = -10.0;
+	MetaTree -> SetBranchAddress("MonoEnergy_MeV", &the_monoenergy);
+	
+	int nentries = MetaTree -> GetEntries();
+	for(int i=0; i<nentries; i++)
+	{
+		MetaTree -> GetEntry(i);
+		if(has_been_summed==0 && is_a_sum==1 )
+		{
+			if( the_monoenergy==the_energy )
+			{
+				if( (g_S==this_g_S) && (g_T==this_g_T) )
+				{
+					set_of_runs.push_back(run);
+					if(verbose) { cout << "adding " << run << " to the runlist vector." << endl; }
+				}
+			}
+		}
+	}
+	return set_of_runs;
+}
+TChain * get_fullspectrum_chain_from_from_gS_gT(double g_S, double g_T, bool verbose=true) // requires:  summed runs.  energy in MeV.
+{
+	if(verbose) { cout << "Fetching fullspectrum chain with g_S=" << g_S << " and g_T=" << g_T << ":  " << endl; }
+	vector<int> the_runset = get_fullspectrum_runlist_from_gS_gT(g_S, g_T, false);  // not *that* verbose!
+	TChain * the_chain = get_chain_from_runlist(the_runset);
+	return the_chain;
+}
+
+
 TChain * get_summed_simtree()
 {
 	vector<int> the_runlist = get_summed_simlist(false);

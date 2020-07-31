@@ -1,3 +1,7 @@
+#ifndef INCLUDE_COLOREXTRAS_H
+#define INCLUDE_COLOREXTRAS_H 1
+
+
 extern int mBlack;      // = int(kBlack);
 
 extern int mBabyPink;   // = int(kPink+1);
@@ -27,3 +31,6 @@ extern int mPeriwinkle;//  = int(kBlue-7);
 extern int mLavender;  //  = int(kViolet+6);
 extern int mPurple;    //  = int(kViolet+2);
 extern int mDarkPurple;//  = int(kViolet+3);
+
+
+#endif
