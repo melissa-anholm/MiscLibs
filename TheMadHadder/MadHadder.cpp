@@ -26,7 +26,8 @@ using std::stringstream;
 int extrafilenum = 10000;
 
 //int N_maxgenerated = 500000000;  // to prevent my files from getting stupidly big.
-int N_maxgenerated = 400000000;  // to prevent my files from getting stupidly big.
+int N_maxgenerated = 480000000;  // to prevent my files from getting stupidly big.
+//int N_maxgenerated = 1000000000;
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 struct hadder_runlist

@@ -59,6 +59,7 @@ TF1* make_Abeta_func()  // is this formula even correct?!?
 	return Abeta_func_keV;
 }
 
+/*
 TF1* make_Abeta_func_withabsorption(double E_absorbed_keV)  // comes out as a function of kinetic energy.
 {
 	string E_absorbed_string = double_to_string_again(E_absorbed_keV, 6);
@@ -73,24 +74,59 @@ TF1* make_Abeta_func_withabsorption(double E_absorbed_keV)  // comes out as a fu
 //	Abeta_func_keV -> SetParameter("Abeta", -0.5707);  // PRL
 	Abeta_func_keV -> SetParLimits(0, -0.59, -0.52);
 	
-	/*
-	double x;
-	x = 302.0;
-	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
-	x = 500.0;
-	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
-	x = 1000.0;
-	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
-	x = 3000.0;
-	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
-	x = 5000.0;
-	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
-	x = 10.0;
-	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
-	*/
+//	double x;
+//	x = 302.0;
+//	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
+//	x = 500.0;
+//	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
+//	x = 1000.0;
+//	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
+//	x = 3000.0;
+//	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
+//	x = 5000.0;
+//	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
+///	x = 10.0;
+//	cout << "A(" << x << ") = " << Abeta_func_keV->Eval(x) << endl;
 	
 	return Abeta_func_keV;
 }
+*/
+/*
+TF1* make_Abeta_b_func_withabsorption(double E_absorbed_keV)  // comes out as a function of kinetic energy.
+{
+	string E_absorbed_string = double_to_string_again(E_absorbed_keV, 6);
+	string func_string = "[0]*sqrt( (x+"+E_absorbed_string+"+510.9989461)^2 - (510.9989461)^2 ) / ((x+"+E_absorbed_string+")+510.9989461) / (1.0 + [1]*(510.9989461/(x+" + E_absorbed_string + "+510.9989461)) )";
+	
+	TF1* Abeta_b_func_keV = new TF1("Abeta_b_func_keV", func_string.c_str(), 0, 5100.0);
+	//double m_e = 510.9989461;
+	Abeta_b_func_keV -> SetParNames("Abeta", "bFierz");
+	Abeta_b_func_keV -> SetParameter("Abeta", -0.5680);  // K37 default txt inputs
+//	Abeta_b_func_keV -> SetParameter("Abeta", -0.5707);  // PRL
+	Abeta_b_func_keV -> SetParameter("bFierz", 0.0);
+	Abeta_b_func_keV -> SetParLimits(0, -0.59, -0.52);
+	
+	return Abeta_b_func_keV;
+}
+*/
+
+TF1* make_Abeta_b_func_withabsorption()  // comes out as a function of kinetic energy.
+{
+//	string E_absorbed_string = double_to_string_again(E_absorbed_keV, 6);
+	string func_string = "[A_beta] * sqrt( (x+[E_abs]+510.9989461)^2 - (510.9989461)^2 ) / (x+[E_abs]+510.9989461) / (1.0 + [b_Fierz]*(510.9989461/(x+[E_abs]+510.9989461)) )";
+//	string func_string = "[0]*sqrt( (x+"+E_absorbed_string+"+510.9989461)^2 - (510.9989461)^2 ) / ((x+"+E_absorbed_string+")+510.9989461)";
+	
+	TF1* Abeta_b_func_keV = new TF1("Abeta_b_func_keV", func_string.c_str(), 0, 5100.0);
+	//double m_e = 510.9989461;
+//	Abeta_b_func_keV -> SetParameter("A_beta", -0.5680);  // K37 default txt inputs
+	Abeta_b_func_keV -> SetParameter("A_beta", -0.5707);   // PRL
+	Abeta_b_func_keV -> SetParameter("b_Fierz", 0.0);
+	Abeta_b_func_keV -> SetParameter("E_abs", 350.0);
+	Abeta_b_func_keV -> SetParLimits(0, -0.59, -0.52);
+	
+	return Abeta_b_func_keV;
+}
+
+
 TF1* make_Abeta_b_func()
 {
 //	TF1* Abeta_b_func_keV = new TF1("Abeta_b_func_keV", "[0]*sqrt(1.0 - 510.9989461^2/(x+510.9989461)^2) * ( 1.0 + [1]*(510.9989461/x) )", 0.0, 5100.0);

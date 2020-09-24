@@ -177,20 +177,20 @@ int hist_type::set_other_parameters()
 		user_xmin = -4.0;
 		user_xmax = 4.0;
 	}
-	else if (type == std::string("cal_scint_tof"))  // for eg: scint_t - scint_b.
+	else if (type == std::string("cal_scint_tof"))  // for eg: scint_t - scint_b.  also soe toa.
 	{
 		nbins = 2000;
 		xmin = (-1000.5+1.0)*v1192_to_ns;
 		xmax = (1000.5)*v1192_to_ns;
 		units = std::string("ns");
-		user_xmin = -40;
+		user_xmin = -20;
 		user_xmax = 40;
 	}
 	else if (type == std::string("cal_toa"))  // ok for: 
 	{
-		nbins = 12000;
-		xmin = ( 20000.5+1.0)*v1192_to_ns;
-		xmax = (100000.5)*v1192_to_ns;
+		nbins = 3000;
+		xmin = ( 40000.5+1.0)*v1192_to_ns;
+		xmax = ( 60000.5)*v1192_to_ns;
 		units = std::string("ns");
 		user_xmin = xmin;
 		user_xmax = xmax;
@@ -415,6 +415,72 @@ int hist_type::set_other_parameters()
 		user_xmin = xmin;
 		user_xmax = xmax;
 	}
+	//
+	else if (type==std::string("hex_u_sumdiff_le") )
+	{
+		nbins = 5000;
+		xmin = 0.0;
+		xmax = 5000.0*v1192_to_ns;
+		units = std::string("u1+u2 - 2*tdc_emcp (LE) [ns]");
+		user_xmin = 0;
+		user_xmax = 200;
+	}
+	else if (type==std::string("hex_v_sumdiff_le") )
+	{
+		nbins = 5000;
+		xmin = 0.0;
+		xmax = 5000.0*v1192_to_ns;
+		units = std::string("v1+v2 - 2*tdc_emcp (LE) [ns]");
+		user_xmin = 0;
+		user_xmax = 200;
+	}
+	else if (type==std::string("hex_w_sumdiff_le") )
+	{
+		nbins = 5000;
+		xmin = 0.0;
+		xmax = 5000.0*v1192_to_ns;
+		units = std::string("w1+w2 - 2*tdc_emcp (LE) [ns]");
+		user_xmin = 0;
+		user_xmax = 200;
+	}
+	else if (type==std::string("hex_u_sumdiff_te") )
+	{
+		nbins = 5000;
+		xmin = 0.0;
+		xmax = 5000.0*v1192_to_ns;
+		units = std::string("u1+u2 - 2*tdc_emcp (TE) [ns]");
+		user_xmin = 100;
+		user_xmax = 300;
+	}
+	else if (type==std::string("hex_v_sumdiff_te") )
+	{
+		nbins = 5000;
+		xmin = 0.0;
+		xmax = 5000.0*v1192_to_ns;
+		units = std::string("v1+v2 - 2*tdc_emcp (TE) [ns]");
+		user_xmin = 100;
+		user_xmax = 300;
+	}
+	else if (type==std::string("hex_w_sumdiff_te") )
+	{
+		nbins = 5000;
+		xmin = 0.0;
+		xmax = 5000.0*v1192_to_ns;
+		units = std::string("w1+w2 - 2*tdc_emcp (TE) [ns]");
+		user_xmin = 100;
+		user_xmax = 300;
+	}
+	//
+	else if (type==std::string("hex_poscode") )
+	{
+		nbins = 5;
+		xmin = -2.5;
+		xmax = 2.5;
+		units = std::string("hex poscode");
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	//
 	else if (type==std::string("x_sumdiff") )
 	{
 		nbins = 1000;
@@ -588,6 +654,25 @@ int hist_type::set_other_parameters()
 		xmin = -44.5;
 		xmax = xmin + 90.0;
 		nbins = 600;
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+
+	else if(type==std::string("big_emcp_x")) 
+	{
+		units = std::string("eMCP x (mm)");
+		xmin = -6000;
+		xmax =  6000;
+		nbins = 2400*2;
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	else if(type==std::string("big_emcp_z")) 
+	{
+		units = std::string("eMCP z (mm)");
+		xmin = -6000;
+		xmax =  6000;
+		nbins = 2400*2;
 		user_xmin = xmin;
 		user_xmax = xmax;
 	}

@@ -1,5 +1,6 @@
 printf '%s%s\n' "Starting on the Electrons: "; 
 #./retuple 314; 
+# shitty electrons...
 ./retuple 362; 
 ./retuple 363; 
 ./retuple 383; 
@@ -8,7 +9,7 @@ printf '%s%s\n' "Starting on the Electrons: ";
 ./retuple 386; 
 ./retuple 393; 
 ./retuple 420; 
-./retuple 428; 
+./retuple 428; # Start Set B
 ./retuple 429; 
 ./retuple 430; 
 ./retuple 431; 
@@ -24,9 +25,9 @@ printf '%s%s\n' "Starting on the Electrons: ";
 ./retuple 443; 
 ./retuple 444; 
 ./retuple 445; 
-./retuple 476; 
+./retuple 476; # Start Set C
 ./retuple 477; 
-./retuple 478; 
+./retuple 478; # Start Set D
 ./retuple 479; 
 ./retuple 480; 
 ./retuple 481; 
