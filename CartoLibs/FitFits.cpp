@@ -513,6 +513,8 @@ class set_of_distributions
 public:
 	set_of_distributions( int N )
 	{
+		kludge_dE = 350.0;
+		//
 		N_rebin = N;
 		//
 		h_tmp = CreateHist( string("tmp hist"), string("Mapping_Ebeta"), int(kBlack), N_rebin);
@@ -524,6 +526,80 @@ public:
 		ih_cdf_out_color = int(mGreen);
 		reE_hcdf_out_color = kOrange;
 	};
+	/*
+	~set_of_distributions()
+	{
+		delete h_reconstructed_pdf_tp;
+		delete h_reconstructed_h_cdf_tp;
+		delete h_reconstructed_ih_cdf_tp;
+	
+		delete h_reconstructed_pdf_bp;
+		delete h_reconstructed_h_cdf_bp;
+		delete h_reconstructed_ih_cdf_bp;
+	
+		delete h_reconstructed_pdf_tm;
+		delete h_reconstructed_h_cdf_tm;
+		delete h_reconstructed_ih_cdf_tm;
+
+		delete h_reconstructed_pdf_bm;
+		delete h_reconstructed_h_cdf_bm;
+		delete h_reconstructed_ih_cdf_bm;
+	
+		delete h_rewithE_hcdf_tp;
+		delete h_rewithE_hcdf_bp;
+		delete h_rewithE_hcdf_tm;
+		delete h_rewithE_hcdf_bm;
+		
+		delete h_tmp;
+		
+		for(int i=0; i<f_pdf_tp.size(); i++)
+		{
+			delete f_pdf_tp.at(i);
+			delete f_pdf_bp.at(i);
+			delete f_pdf_tm.at(i);
+			delete f_pdf_bm.at(i);
+
+			delete h_pdf_tp.at(i);
+			delete h_pdf_bp.at(i);
+			delete h_pdf_tm.at(i);
+			delete h_pdf_bm.at(i);
+			
+			delete ih_cdf_tp.at(i);
+			delete ih_cdf_bp.at(i);
+			delete ih_cdf_tm.at(i);
+			delete ih_cdf_bm.at(i);
+			
+			delete h_cdf_tp.at(i);
+			delete h_cdf_bp.at(i);
+			delete h_cdf_tm.at(i);
+			delete h_cdf_bm.at(i);
+		}
+		
+		f_pdf_tp.clear();
+		f_pdf_bp.clear();
+		f_pdf_tm.clear();
+		f_pdf_bm.clear();
+	
+		h_pdf_tp.clear();
+		h_pdf_bp.clear();
+		h_pdf_tm.clear();
+		h_pdf_bm.clear();
+	
+		ih_cdf_tp.clear();
+		ih_cdf_bp.clear();
+		ih_cdf_tm.clear();
+		ih_cdf_bm.clear();
+	
+		h_cdf_tp.clear();
+		h_cdf_bp.clear();
+		h_cdf_tm.clear();
+		h_cdf_bm.clear();
+		
+		file_we_loaded_from->Close();
+		delete file_we_loaded_from;
+	};
+	*/
+	
 	void create()
 	{
 		// delete the histograms and tf1s if they're already in existence?
@@ -590,6 +666,11 @@ public:
 		h_reconstructed_pdf_bm    = new TH1D();
 		h_reconstructed_h_cdf_bm  = new TH1D();
 		h_reconstructed_ih_cdf_bm = new TH1D();
+		
+		TH1D* h_rewithE_hcdf_tp = CreateHist( string("CDF Reconstructed Re-Added Upper Energy(+)"), string("Mapping_Ebeta"), int(reE_hcdf_out_color), N_rebin);
+		TH1D* h_rewithE_hcdf_bp = CreateHist( string("CDF Reconstructed Re-Added Lower Energy(+)"), string("Mapping_Ebeta"), int(reE_hcdf_out_color), N_rebin);
+		TH1D* h_rewithE_hcdf_tm = CreateHist( string("CDF Reconstructed Re-Added Upper Energy(-)"), string("Mapping_Ebeta"), int(reE_hcdf_out_color), N_rebin);
+		TH1D* h_rewithE_hcdf_bm = CreateHist( string("CDF Reconstructed Re-Added Lower Energy(-)"), string("Mapping_Ebeta"), int(reE_hcdf_out_color), N_rebin);
 	};
 	void initialize_distributions()
 	{
@@ -748,25 +829,25 @@ public:
 		h_reconstructed_pdf_tp    = reconstruct_tp_from_pdf(h_naive);
 		reconstruct_tp_from_cdf(h_naive);
 	//	cout << "adding back TP energy:" << endl;
-	//	addback_E_tp_from_hcdf(0);  // h_reconstructed_h_cdf_tp must already be filled.
+	//	addback_E_tp_from_hcdf();  // currently it's a kludge.
 	};
 	void do_reconstructions_bp(TH1D * h_naive)
 	{
 		h_reconstructed_pdf_bp    = reconstruct_bp_from_pdf(h_naive);
 		reconstruct_bp_from_cdf(h_naive);
-	//	addback_E_bp_from_hcdf(0);  // h_reconstructed_h_cdf_bp must already be filled.
+	//	addback_E_bp_from_hcdf();  // currently it's a kludge.
 	};
 	void do_reconstructions_tm(TH1D * h_naive)
 	{
 		h_reconstructed_pdf_tm    = reconstruct_tm_from_pdf(h_naive);
 		reconstruct_tm_from_cdf(h_naive);
-	//	addback_E_tm_from_hcdf(0);  // h_reconstructed_h_cdf_tm must already be filled.
+	//	addback_E_tm_from_hcdf();  // currently it's a kludge.
 	};
 	void do_reconstructions_bm(TH1D * h_naive)
 	{
 		h_reconstructed_pdf_bm    = reconstruct_bm_from_pdf(h_naive);
 		reconstruct_bm_from_cdf(h_naive);
-	//	addback_E_bm_from_hcdf(0);  // h_reconstructed_h_cdf_bm must already be filled.
+	//	addback_E_bm_from_hcdf();  // currently it's a kludge.
 	};
 	
 	void save_to_file(string filename) 
@@ -813,8 +894,8 @@ public:
 		// int N_bins;
 
 		
-		TFile * f = new TFile(filename.c_str());
-		if(f->IsZombie())
+		file_we_loaded_from = new TFile(filename.c_str());
+		if(file_we_loaded_from->IsZombie())
 		{
 			cout << "No TFile " << filename << " could be found." << endl;
 			cout << "Hard kill." << endl;
@@ -834,10 +915,10 @@ public:
 			name_tm = string("hist PDF (T-), E=")+E_string;
 			name_bm = string("hist PDF (B-), E=")+E_string;
 			
-			h_pdf_tp.at(i) = (TH1D*)f->Get( name_tp.c_str() );
-			h_pdf_bp.at(i) = (TH1D*)f->Get( name_bp.c_str() );
-			h_pdf_tm.at(i) = (TH1D*)f->Get( name_tm.c_str() );
-			h_pdf_bm.at(i) = (TH1D*)f->Get( name_bm.c_str() );
+			h_pdf_tp.at(i) = (TH1D*)file_we_loaded_from->Get( name_tp.c_str() );
+			h_pdf_bp.at(i) = (TH1D*)file_we_loaded_from->Get( name_bp.c_str() );
+			h_pdf_tm.at(i) = (TH1D*)file_we_loaded_from->Get( name_tm.c_str() );
+			h_pdf_bm.at(i) = (TH1D*)file_we_loaded_from->Get( name_bm.c_str() );
 		}
 		// hist cdfs:
 		for (int i=0; i<N_bins+1; i++)
@@ -850,10 +931,10 @@ public:
 			name_tm = string("hist CDF (T-), E=")+E_string;
 			name_bm = string("hist CDF (B-), E=")+E_string;
 			
-			h_cdf_tp.at(i) = (TH1D*)f->Get( name_tp.c_str() );
-			h_cdf_bp.at(i) = (TH1D*)f->Get( name_bp.c_str() );
-			h_cdf_tm.at(i) = (TH1D*)f->Get( name_tm.c_str() );
-			h_cdf_bm.at(i) = (TH1D*)f->Get( name_bm.c_str() );
+			h_cdf_tp.at(i) = (TH1D*)file_we_loaded_from->Get( name_tp.c_str() );
+			h_cdf_bp.at(i) = (TH1D*)file_we_loaded_from->Get( name_bp.c_str() );
+			h_cdf_tm.at(i) = (TH1D*)file_we_loaded_from->Get( name_tm.c_str() );
+			h_cdf_bm.at(i) = (TH1D*)file_we_loaded_from->Get( name_bm.c_str() );
 		}
 		// analytic pdfs:
 		for (int i=0; i<N_bins+1; i++)
@@ -866,10 +947,10 @@ public:
 			name_tm = string("PDF (T-), E=")+E_string;
 			name_bm = string("PDF (B-), E=")+E_string;
 			
-			f_pdf_tp.at(i) = (TF1*)f->Get( name_tp.c_str() );
-			f_pdf_bp.at(i) = (TF1*)f->Get( name_bp.c_str() );
-			f_pdf_tm.at(i) = (TF1*)f->Get( name_tm.c_str() );
-			f_pdf_bm.at(i) = (TF1*)f->Get( name_bm.c_str() );
+			f_pdf_tp.at(i) = (TF1*)file_we_loaded_from->Get( name_tp.c_str() );
+			f_pdf_bp.at(i) = (TF1*)file_we_loaded_from->Get( name_bp.c_str() );
+			f_pdf_tm.at(i) = (TF1*)file_we_loaded_from->Get( name_tm.c_str() );
+			f_pdf_bm.at(i) = (TF1*)file_we_loaded_from->Get( name_bm.c_str() );
 		}
 		
 		// direct-integrated cdfs:
@@ -883,10 +964,10 @@ public:
 			name_tm = string("Direct CDF (T-), E=")+E_string;
 			name_bm = string("Direct CDF (B-), E=")+E_string;
 			
-			ih_cdf_tp.at(i) = (TH1D*)f->Get( name_tp.c_str() );
-			ih_cdf_bp.at(i) = (TH1D*)f->Get( name_bp.c_str() );
-			ih_cdf_tm.at(i) = (TH1D*)f->Get( name_tm.c_str() );
-			ih_cdf_bm.at(i) = (TH1D*)f->Get( name_bm.c_str() );
+			ih_cdf_tp.at(i) = (TH1D*)file_we_loaded_from->Get( name_tp.c_str() );
+			ih_cdf_bp.at(i) = (TH1D*)file_we_loaded_from->Get( name_bp.c_str() );
+			ih_cdf_tm.at(i) = (TH1D*)file_we_loaded_from->Get( name_tm.c_str() );
+			ih_cdf_bm.at(i) = (TH1D*)file_we_loaded_from->Get( name_bm.c_str() );
 		}
 		
 		// can I close f again, or should I just not?  ... don't, I think.
@@ -1214,6 +1295,128 @@ public:
 	/*
 	void addback_E_tp_from_hcdf(int use_seed=0)  // h_reconstructed_h_cdf_tp must already be filled.
 	{
+		TH1D* h_in = h_reconstructed_h_cdf_tp;
+		TH1D* h_out = h_rewithE_hcdf_tp;
+		TH1D* h_line;
+		
+		double E_in;
+		double the_dE;
+		int countin;
+		double the_random;
+		bool is_found=false;
+		double cdf_bincontent;
+		
+		//
+		for (int i=1; i<N_bins+1; i++)
+		{
+			// which lineshape histogram are we looking at for this E_scint bin?
+			h_line = h_cdf_tp.at(i);
+			// how many events in this E_scint bin?
+			countin = h_in->GetBinContent(i);
+			// what's the central energy for the E_scint bin we're looking at?
+			E_in = h_in->GetBinCenter(i);
+			
+			//
+			for(int k=0; k<countin; k++)
+			{
+				is_found = false;
+				while( !is_found )  // pick random numbers until we find one that works.
+				{
+					the_random = my_rng->Uniform(); 
+					for (int j=1; j<N_bins+1; j++)   // for each bin in the CDF, check if the cum. prob. is higher than the random number.
+					{
+						cdf_bincontent = h_line->GetBinContent(j);  // h_line is the i-th hist.
+						if( cdf_bincontent >= the_random )
+						{
+							is_found = true;
+							the_dE = h_in->GetBinCenter(j);
+						}
+					}
+				}
+				h_out->Fill(E_in+the_dE);
+			}
+		}
+		h_rewithE_hcdf_tp = h_out;
+		return;
+	}
+	*/
+	void addback_E_tp_from_hcdf(int use_seed=0)  // kludge
+	{
+		TH1D* h_in = h_reconstructed_h_cdf_tp;
+	//	TH1D* h_out = h_rewithE_hcdf_tp;
+		
+		int countin;
+		double E_center;
+		int the_new_bin;
+		for (int i=1; i<N_bins; i++)
+		{
+			cout << "i = " << i << endl;
+			countin = h_in->GetBinContent(i);
+			cout << "countin=" << countin << endl;
+			E_center = h_in->GetBinCenter(i);
+			cout << "E_center=" << E_center << endl;
+			cout << "kludge_dE= " << kludge_dE << endl;
+			the_new_bin = h_in->FindBin(E_center+kludge_dE);
+			cout << "the_new_bin = " << the_new_bin << endl;
+			//
+		//	h_out->Fill(E_center+kludge_dE, countin);
+			h_rewithE_hcdf_tp->SetBinContent(the_new_bin, countin);
+		}
+	//	h_rewithE_hcdf_tp = h_out;
+		return;
+	}
+	void addback_E_bp_from_hcdf(int use_seed=0)  // kludge
+	{
+		TH1D* h_in = h_reconstructed_h_cdf_bp;
+		TH1D* h_out = h_rewithE_hcdf_bp;
+		
+		int countin;
+		double E_center;
+		for (int i=1; i<N_bins; i++)
+		{
+			countin = h_in->GetBinContent(i);
+			E_center = h_in->GetBinCenter(i);
+			h_out->Fill(E_center+kludge_dE, countin);
+		}
+		h_rewithE_hcdf_bp = h_out;
+		return;
+	}
+	void addback_E_tm_from_hcdf(int use_seed=0)  // kludge
+	{
+		TH1D* h_in = h_reconstructed_h_cdf_tm;
+		TH1D* h_out = h_rewithE_hcdf_tm;
+		
+		int countin;
+		double E_center;
+		for (int i=1; i<N_bins; i++)
+		{
+			countin = h_in->GetBinContent(i);
+			E_center = h_in->GetBinCenter(i);
+			h_out->Fill(E_center+kludge_dE, countin);
+		}
+		h_rewithE_hcdf_tm = h_out;
+		return;
+	}
+	void addback_E_bm_from_hcdf(int use_seed=0)  // kludge
+	{
+		TH1D* h_in = h_reconstructed_h_cdf_bm;
+		TH1D* h_out = h_rewithE_hcdf_bm;
+		
+		int countin;
+		double E_center;
+		for (int i=1; i<N_bins; i++)
+		{
+			countin = h_in->GetBinContent(i);
+			E_center = h_in->GetBinCenter(i);
+			h_out->Fill(E_center+kludge_dE, countin);
+		}
+		h_rewithE_hcdf_bm = h_out;
+		return;
+	}
+	
+	/*
+	void addback_E_tp_from_hcdf(int use_seed=0)  // h_reconstructed_h_cdf_tp must already be filled.
+	{
 		TH1D * oldhist = (TH1D*)h_reconstructed_h_cdf_tp->Clone();
 		TH1D * newhist = CreateHist( string("CDF Reconstructed Upper Energy(+), with Re-Added Energy"), string("Mapping_Ebeta"), int(reE_hcdf_out_color), N_rebin);
 		TRandom3 * my_rng = new TRandom3(use_seed);
@@ -1249,8 +1452,6 @@ public:
 		}
 		h_rewithE_hcdf_tp = newhist;
 	}
-	*/
-	/*
 	void addback_E_bp_from_hcdf(int use_seed=0)  //
 	{
 		TH1D * oldhist = (TH1D*)h_reconstructed_h_cdf_bp->Clone();
@@ -1670,7 +1871,9 @@ public:
 	int h_cdf_out_color;
 	int ih_cdf_out_color;
 	int reE_hcdf_out_color;
-
+	
+	double kludge_dE;
+	
 	vector<TF1*> f_pdf_tp;
 	vector<TF1*> f_pdf_bp;
 	vector<TF1*> f_pdf_tm;
@@ -1715,6 +1918,7 @@ public:
 	
 private:
 	TH1D* h_tmp;
+	TFile * file_we_loaded_from;
 };
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 

@@ -51,9 +51,13 @@ string make_mapname_from_monoenergy(string namestub, double monoenergy)  // ener
 	int monoenergy_int = int(monoenergy*1000.0);
 	std::stringstream ss;
 	
-	if(monoenergy != -10)
+	if(monoenergy != -10 && monoenergy != -20)
 	{
 		ss << namestub << "_" << monoenergy_int << ".root";
+	}
+	else if(monoenergy == -20 )
+	{
+		ss << namestub << "_simple.root";
 	}
 	else
 	{
@@ -423,6 +427,286 @@ void MapSetup::AdjustTheColors()
 	measured_EnergyB_p_bb1_r155_samedet_one -> SetLineColor(kViolet-3);
 	measured_EnergyT_m_bb1_r155_samedet_one -> SetLineColor(kViolet-3);
 	measured_EnergyB_m_bb1_r155_samedet_one -> SetLineColor(kViolet-3);
+}
+
+void MapSetup::LoadSimpleFromTree(TChain * the_tree, int N_rebin_hists)
+{
+	cout << "Called MapSetup::LoadSimpleFromTree(...) with N_rebin_hists=" << N_rebin_hists << endl;
+	gStyle->SetOptStat(0);
+	
+	int parallel_color;
+	int antiparallel_color;
+	
+	naive_EnergyT_p_hist = CreateHist( string("Naive Upper Energy(+)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	naive_EnergyB_p_hist = CreateHist( string("Naive Lower Energy(+)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	naive_EnergyT_m_hist = CreateHist( string("Naive Upper Energy(-)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	naive_EnergyB_m_hist = CreateHist( string("Naive Lower Energy(-)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	naive_EnergyT_p_hist_rcut155 = CreateHist( string("Naive Upper Energy(+) (R<=15.5mm)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	naive_EnergyB_p_hist_rcut155 = CreateHist( string("Naive Lower Energy(+) (R<=15.5mm)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	naive_EnergyT_m_hist_rcut155 = CreateHist( string("Naive Upper Energy(-) (R<=15.5mm)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	naive_EnergyB_m_hist_rcut155 = CreateHist( string("Naive Lower Energy(-) (R<=15.5mm)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	// just leave the rest of the histograms blank.  but create them anyway.
+	measured_EnergyT_p_hist = CreateHist( string("Measured ScintT Energy(+)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_hist = CreateHist( string("Measured ScintB Energy(+)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_hist = CreateHist( string("Measured ScintT Energy(-)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_hist = CreateHist( string("Measured ScintB Energy(-)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	measured_EnergyT_p_hist_samedet = CreateHist( string("Measured ScintT Energy(+) (same det)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_hist_samedet = CreateHist( string("Measured ScintB Energy(+) (same det)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_hist_samedet = CreateHist( string("Measured ScintT Energy(-) (same det)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_hist_samedet = CreateHist( string("Measured ScintB Energy(-) (same det)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	measured_EnergyT_p_hist_oppdet = CreateHist( string("Measured ScintT Energy(+) (opp det)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_hist_oppdet = CreateHist( string("Measured ScintB Energy(+) (opp det)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_hist_oppdet = CreateHist( string("Measured ScintT Energy(-) (opp det)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_hist_oppdet = CreateHist( string("Measured ScintB Energy(-) (opp det)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	//
+	measured_EnergyT_p_bb1agree = CreateHist( string("Measured ScintT Energy(+) - BB1 Agreement"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1agree = CreateHist( string("Measured ScintB Energy(+) - BB1 Agreement"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1agree = CreateHist( string("Measured ScintT Energy(-) - BB1 Agreement"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1agree = CreateHist( string("Measured ScintB Energy(-) - BB1 Agreement"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+
+	measured_EnergyT_p_bb1agree_one = CreateHist( string("Measured ScintT Energy(+) - BB1 Agreement (1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1agree_one = CreateHist( string("Measured ScintB Energy(+) - BB1 Agreement (1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1agree_one = CreateHist( string("Measured ScintT Energy(-) - BB1 Agreement (1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1agree_one = CreateHist( string("Measured ScintB Energy(-) - BB1 Agreement (1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+
+	measured_EnergyT_p_bb1agree_two = CreateHist( string("Measured ScintT Energy(+) - BB1 Agreement (2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1agree_two = CreateHist( string("Measured ScintB Energy(+) - BB1 Agreement (2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1agree_two = CreateHist( string("Measured ScintT Energy(-) - BB1 Agreement (2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1agree_two = CreateHist( string("Measured ScintB Energy(-) - BB1 Agreement (2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	measured_EnergyT_p_bb1agree_samedet_one = CreateHist( string("Measured ScintT Energy(+) - BB1 Agreement (same det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1agree_samedet_one = CreateHist( string("Measured ScintB Energy(+) - BB1 Agreement (same det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1agree_samedet_one = CreateHist( string("Measured ScintT Energy(-) - BB1 Agreement (same det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1agree_samedet_one = CreateHist( string("Measured ScintB Energy(-) - BB1 Agreement (same det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	measured_EnergyT_p_bb1agree_samedet_two = CreateHist( string("Measured ScintT Energy(+) - BB1 Agreement (same det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1agree_samedet_two = CreateHist( string("Measured ScintB Energy(+) - BB1 Agreement (same det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1agree_samedet_two = CreateHist( string("Measured ScintT Energy(-) - BB1 Agreement (same det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1agree_samedet_two = CreateHist( string("Measured ScintB Energy(-) - BB1 Agreement (same det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	measured_EnergyT_p_bb1agree_oppdet_one = CreateHist( string("Measured ScintT Energy(+) - BB1 Agreement (opp det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1agree_oppdet_one = CreateHist( string("Measured ScintB Energy(+) - BB1 Agreement (opp det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1agree_oppdet_one = CreateHist( string("Measured ScintT Energy(-) - BB1 Agreement (opp det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1agree_oppdet_one = CreateHist( string("Measured ScintB Energy(-) - BB1 Agreement (opp det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+
+	measured_EnergyT_p_bb1agree_oppdet_two = CreateHist( string("Measured ScintT Energy(+) - BB1 Agreement (opp det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1agree_oppdet_two = CreateHist( string("Measured ScintB Energy(+) - BB1 Agreement (opp det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1agree_oppdet_two = CreateHist( string("Measured ScintT Energy(-) - BB1 Agreement (opp det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1agree_oppdet_two = CreateHist( string("Measured ScintB Energy(-) - BB1 Agreement (opp det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	//
+	measured_EnergyT_p_bb1_r155 = CreateHist( string("Measured ScintT Energy(+) - rBB1<=15.5"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1_r155 = CreateHist( string("Measured ScintB Energy(+) - rBB1<=15.5"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1_r155 = CreateHist( string("Measured ScintT Energy(-) - rBB1<=15.5"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1_r155 = CreateHist( string("Measured ScintB Energy(-) - rBB1<=15.5"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+
+	measured_EnergyT_p_bb1_r155_one = CreateHist( string("Measured ScintT Energy(+) - rBB1<=15.5 (1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1_r155_one = CreateHist( string("Measured ScintB Energy(+) - rBB1<=15.5 (1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1_r155_one = CreateHist( string("Measured ScintT Energy(-) - rBB1<=15.5 (1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1_r155_one = CreateHist( string("Measured ScintB Energy(-) - rBB1<=15.5 (1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+
+	measured_EnergyT_p_bb1_r155_two = CreateHist( string("Measured ScintT Energy(+) - rBB1<=15.5 (2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1_r155_two = CreateHist( string("Measured ScintB Energy(+) - rBB1<=15.5 (2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1_r155_two = CreateHist( string("Measured ScintT Energy(-) - rBB1<=15.5 (2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1_r155_two = CreateHist( string("Measured ScintB Energy(-) - rBB1<=15.5 (2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	measured_EnergyT_p_bb1_r155_samedet_one = CreateHist( string("Measured ScintT Energy(+) - rBB1<=15.5 (same det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1_r155_samedet_one = CreateHist( string("Measured ScintB Energy(+) - rBB1<=15.5 (same det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1_r155_samedet_one = CreateHist( string("Measured ScintT Energy(-) - rBB1<=15.5 (same det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1_r155_samedet_one = CreateHist( string("Measured ScintB Energy(-) - rBB1<=15.5 (same det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	measured_EnergyT_p_bb1_r155_samedet_two = CreateHist( string("Measured ScintT Energy(+) - rBB1<=15.5 (same det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1_r155_samedet_two = CreateHist( string("Measured ScintB Energy(+) - rBB1<=15.5 (same det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1_r155_samedet_two = CreateHist( string("Measured ScintT Energy(-) - rBB1<=15.5 (same det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1_r155_samedet_two = CreateHist( string("Measured ScintB Energy(-) - rBB1<=15.5 (same det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	measured_EnergyT_p_bb1_r155_oppdet_one = CreateHist( string("Measured ScintT Energy(+) - rBB1<=15.5 (opp det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1_r155_oppdet_one = CreateHist( string("Measured ScintB Energy(+) - rBB1<=15.5 (opp det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1_r155_oppdet_one = CreateHist( string("Measured ScintT Energy(-) - rBB1<=15.5 (opp det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1_r155_oppdet_one = CreateHist( string("Measured ScintB Energy(-) - rBB1<=15.5 (opp det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+
+	measured_EnergyT_p_bb1_r155_oppdet_two = CreateHist( string("Measured ScintT Energy(+) - rBB1<=15.5 (opp det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1_r155_oppdet_two = CreateHist( string("Measured ScintB Energy(+) - rBB1<=15.5 (opp det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1_r155_oppdet_two = CreateHist( string("Measured ScintT Energy(-) - rBB1<=15.5 (opp det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1_r155_oppdet_two = CreateHist( string("Measured ScintB Energy(-) - rBB1<=15.5 (opp det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	//
+	measured_EnergyT_p_bb1_r105 = CreateHist( string("Measured ScintT Energy(+) - rBB1<=10.5"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1_r105 = CreateHist( string("Measured ScintB Energy(+) - rBB1<=10.5"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1_r105 = CreateHist( string("Measured ScintT Energy(-) - rBB1<=10.5"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1_r105 = CreateHist( string("Measured ScintB Energy(-) - rBB1<=10.5"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	measured_EnergyT_p_bb1_r105_one = CreateHist( string("Measured ScintT Energy(+) - rBB1<=10.5 (1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1_r105_one = CreateHist( string("Measured ScintB Energy(+) - rBB1<=10.5 (1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1_r105_one = CreateHist( string("Measured ScintT Energy(-) - rBB1<=10.5 (1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1_r105_one = CreateHist( string("Measured ScintB Energy(-) - rBB1<=10.5 (1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	measured_EnergyT_p_bb1_r105_two = CreateHist( string("Measured ScintT Energy(+) - rBB1<=10.5 (2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1_r105_two = CreateHist( string("Measured ScintB Energy(+) - rBB1<=10.5 (2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1_r105_two = CreateHist( string("Measured ScintT Energy(-) - rBB1<=10.5 (2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1_r105_two = CreateHist( string("Measured ScintB Energy(-) - rBB1<=10.5 (2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	measured_EnergyT_p_bb1_r105_samedet_one = CreateHist( string("Measured ScintT Energy(+) - rBB1<=10.5 (same det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1_r105_samedet_one = CreateHist( string("Measured ScintB Energy(+) - rBB1<=10.5 (same det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1_r105_samedet_one = CreateHist( string("Measured ScintT Energy(-) - rBB1<=10.5 (same det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1_r105_samedet_one = CreateHist( string("Measured ScintB Energy(-) - rBB1<=10.5 (same det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	measured_EnergyT_p_bb1_r105_samedet_two = CreateHist( string("Measured ScintT Energy(+) - rBB1<=10.5 (same det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1_r105_samedet_two = CreateHist( string("Measured ScintB Energy(+) - rBB1<=10.5 (same det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1_r105_samedet_two = CreateHist( string("Measured ScintT Energy(-) - rBB1<=10.5 (same det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1_r105_samedet_two = CreateHist( string("Measured ScintB Energy(-) - rBB1<=10.5 (same det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	measured_EnergyT_p_bb1_r105_oppdet_one = CreateHist( string("Measured ScintT Energy(+) - rBB1<=10.5 (opp det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1_r105_oppdet_one = CreateHist( string("Measured ScintB Energy(+) - rBB1<=10.5 (opp det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1_r105_oppdet_one = CreateHist( string("Measured ScintT Energy(-) - rBB1<=10.5 (opp det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1_r105_oppdet_one = CreateHist( string("Measured ScintB Energy(-) - rBB1<=10.5 (opp det, 1hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	measured_EnergyT_p_bb1_r105_oppdet_two = CreateHist( string("Measured ScintT Energy(+) - rBB1<=10.5 (opp det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_p_bb1_r105_oppdet_two = CreateHist( string("Measured ScintB Energy(+) - rBB1<=10.5 (opp det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyT_m_bb1_r105_oppdet_two = CreateHist( string("Measured ScintT Energy(-) - rBB1<=10.5 (opp det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	measured_EnergyB_m_bb1_r105_oppdet_two = CreateHist( string("Measured ScintB Energy(-) - rBB1<=10.5 (opp det, 2hit)"), string("Mapping_Ebeta"), int(kBlack), N_rebin_hists);
+	
+	costheta_v_costheta_p = CreateHist2d( string("costheta v costheta (+) - BB1 Agreement"), string("costheta"), string("costheta") );
+		costheta_v_costheta_p -> GetXaxis() -> SetTitle("Generated Cos(theta)");
+		costheta_v_costheta_p -> GetYaxis() -> SetTitle("Observed Cos(theta)");
+	costheta_v_costheta_m = CreateHist2d( string("costheta v costheta (-) - BB1 Agreement"), string("costheta"), string("costheta") );
+		costheta_v_costheta_m -> GetXaxis() -> SetTitle("Generated Cos(theta)");
+		costheta_v_costheta_m -> GetYaxis() -> SetTitle("Observed Cos(theta)");
+	
+		
+	
+	double naive_hit_t;
+	double naive_hit_b;
+	the_tree -> SetBranchAddress("naive_hit_t", &naive_hit_t);
+	the_tree -> SetBranchAddress("naive_hit_b", &naive_hit_b);
+//	double gen_Tbeta;
+//	the_tree -> SetBranchAddress("gen_Tbeta", &gen_Tbeta);
+	
+//	double gen_xhit_t;
+//	double gen_yhit_t;
+//	double gen_xhit_b;
+//	double gen_yhit_b;
+//	the_tree -> SetBranchAddress("bb1_top_x", &gen_xhit_t);
+//	the_tree -> SetBranchAddress("bb1_top_y", &gen_yhit_t);
+//	the_tree -> SetBranchAddress("bb1_bottom_x", &gen_xhit_b);
+//	the_tree -> SetBranchAddress("bb1_bottom_y", &gen_yhit_b);
+	
+	// in the future, this will come pre-pixellated.  but for now, we'll pixellate it here.  ...or not.  we should pixellate it sometime.
+	double gen_rhit_t;
+	double gen_rhit_b;
+//	the_tree -> SetBranchAddress("gen_rhit_t", &gen_rhit_t);
+//	the_tree -> SetBranchAddress("gen_rhit_b", &gen_rhit_b);
+	
+	int TTLBit_SigmaPlus;
+	the_tree -> SetBranchAddress("TTLBit_SigmaPlus", &TTLBit_SigmaPlus);
+	
+	Double_t ScintT;
+	Double_t ScintB;
+	the_tree -> SetBranchAddress("upper_scint_E", &ScintT);
+	the_tree -> SetBranchAddress("lower_scint_E", &ScintB);
+	
+	// BB1s:  
+	vector<double> * bb1_t_x = 0;
+	vector<double> * bb1_t_y = 0;
+//	vector<double> * bb1_t_E = 0;
+//	vector<double> * bb1_t_r = 0;
+	vector<double> * bb1_b_x = 0;
+	vector<double> * bb1_b_y = 0;
+//	vector<double> * bb1_b_E = 0;
+//	vector<double> * bb1_b_r = 0;
+	
+	
+	// set branch addresses whether we're using a cut or not.
+	the_tree -> SetBranchAddress("bb1_top_x", &bb1_t_x);
+	the_tree -> SetBranchAddress("bb1_top_y", &bb1_t_y);
+//	the_tree -> SetBranchAddress("bb1_top_E", &bb1_t_E);
+//	the_tree -> SetBranchAddress("bb1_top_r", &bb1_t_r);
+	the_tree -> SetBranchAddress("bb1_bottom_x", &bb1_b_x);
+	the_tree -> SetBranchAddress("bb1_bottom_y", &bb1_b_y);
+//	the_tree -> SetBranchAddress("bb1_bottom_E", &bb1_b_E);
+//	the_tree -> SetBranchAddress("bb1_bottom_r", &bb1_b_r);
+	
+	double gen_t_r;
+	double gen_b_r;
+//	the_tree -> SetBranchAddress("gen_rhit_t", &gen_t_r);
+//	the_tree -> SetBranchAddress("gen_rhit_b", &gen_b_r);
+	double gen_costheta;
+	the_tree -> SetBranchAddress("gen_costheta", &gen_costheta);
+	double zhit=103.627357;
+	
+	int n_hits_t = 0;
+	int n_hits_b = 0;
+	
+	int nentries = the_tree->GetEntries();
+	cout << "nentries = " << nentries << endl;
+	for(int i=0; i<nentries; i++)
+	{
+		the_tree -> GetEntry(i);
+		if( (i % 100000) == 0) { cout << "Reached entry "<< i << endl; }
+		
+	//	n_hits_t = bb1_t_x->size();
+	//	n_hits_b = bb1_b_x->size();
+		
+		// * // // // * // // // * // // // * // 
+		if(TTLBit_SigmaPlus==1)
+		{
+			// naive hits:  
+			if(naive_hit_t==1)  // pol:  p
+			{
+				naive_EnergyT_p_hist -> Fill(ScintT/1000.0);
+				gen_rhit_b = sqrt(pow(bb1_t_x->at(0), 2) + pow(bb1_t_y->at(0), 2) );
+				if(gen_rhit_t<=15.5) { naive_EnergyT_p_hist_rcut155 -> Fill(ScintT); }
+				//   --- * ---   //
+			}
+			if(naive_hit_b==1) // pol:  p
+			{
+				naive_EnergyB_p_hist -> Fill(ScintB);
+				gen_rhit_b = sqrt(pow(bb1_b_x->at(0), 2) + pow(bb1_b_y->at(0), 2) );
+				if(gen_rhit_b<=15.5) { naive_EnergyB_p_hist_rcut155 -> Fill(ScintB); }
+				//   --- * ---   //
+			}
+			
+			//   --- * ---   //   --- * ---   //
+			// full spectra, for events going in all the directions:
+			//
+		}
+		
+		// * // // // * // // // * // // // * // 
+		else if(TTLBit_SigmaPlus==0)
+		{
+			// naive hits:
+			if(naive_hit_t==1) // pol:  m
+			{
+				naive_EnergyT_m_hist -> Fill(ScintT);
+				if(gen_rhit_t<=15.5) { naive_EnergyT_m_hist_rcut155 -> Fill(ScintT); }
+				
+				//   --- * ---   //
+			}
+			if(naive_hit_b==1) // pol:  m
+			{
+				naive_EnergyB_m_hist -> Fill(ScintB);
+				if(gen_rhit_b<=15.5) { naive_EnergyB_m_hist_rcut155 -> Fill(ScintB); }
+				//   --- * ---   //
+			}
+			
+			//   --- * ---   //   --- * ---   //
+			// full spectra, for events going in all the directions:
+			//
+		}
+		else
+		{
+			cout << "It's broken." << endl;
+			assert(0);
+			return;
+		}
+	}
+	//
+	return;
 }
 
 void MapSetup::LoadFromTree(TChain * the_tree, int N_rebin_hists)

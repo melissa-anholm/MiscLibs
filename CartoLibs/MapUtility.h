@@ -24,11 +24,8 @@ using std::stringstream;
 #include "TStyle.h"
 //#include "FitUtility.cpp"
 
-//#include "/Users/anholm/Packages/MiscLibs/HistExtras.h" 
-//#include "/Users/anholm/Packages/MiscLibs/ColorExtras.h"
-
-#include "HistExtras.h" 
-#include "ColorExtras.h"
+#include "/Users/anholm/Packages/MiscLibs/HistExtras.h" 
+#include "/Users/anholm/Packages/MiscLibs/ColorExtras.h"
 
 
 #undef NDEBUG
@@ -54,6 +51,8 @@ public:
 	~MapSetup();
 	
 	void LoadFromTree(TChain * the_tree, int N_rebin_hists=1);
+	void LoadSimpleFromTree(TChain * the_tree, int N_rebin_hists=1);
+	
 	void LoadFromFile(string filename_);
 	void AdjustTheColors();
 	void save_to_file(string filename_);
