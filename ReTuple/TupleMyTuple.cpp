@@ -40,6 +40,12 @@
 // 
 // still needs to just add all the "orig_LE" branch names back as "orig".
 // 
+// 14.8.2020:  version 12:  re-did the hex position stuff into a new set 
+// of branches, now using the LE data to calculate position.  
+// Updated the scintillator walk adjustments to implement a second walkfit 
+// adjustment based on the runset.  We also return to using Melissa's 
+// polarization check convention after having used Ben's for a while.
+// Melissa's probably salvages slightly more data.
 // ==================================================================== //
 
 #include <stdlib.h>
@@ -75,7 +81,7 @@ bool doEmpirical           = true;  // empirical noise on BB1s.  for G4 data.
 bool do_rubidium           = false;  // Rb
 bool is_old                = false;  // before trailing edge/leading edge madness.
 
-int version = 11;
+int version = 12;
 
 //#define XSTR(x) #x
 //#define STR(x) XSTR(x)
@@ -87,6 +93,7 @@ int version = 11;
 #include "mini_cal_maker.cpp"
 #include "HistExtras.cpp" // v1192_to_ns.
 
+#include "ReHexPos.cpp"
 //string bb1_prefix = "/home/trinat/anholm/MiscLibs/BB1/";
 
 string make_rootfilename(string name, int parameter, string name2=string(""))
@@ -460,7 +467,7 @@ int my_prev_event::ts_prev()
 	return timestamp_prev;
 }
 // AC/Pol classification:
-/*
+
 bool check_pol_orig(int acmottime, double op_delay)  // what MJA expected.  but actually, use the thing Ben did below instead.
 {
 	int ac_cycle_mus = 97260*50/1000; // in microseconds.  4863 mus.
@@ -477,9 +484,9 @@ bool check_pol_orig(int acmottime, double op_delay)  // what MJA expected.  but 
 	}
 	return polarized;
 }
-*/
-bool check_pol(int acmottime, double op_delay)
-{  // this version of check_pol tries to follow Ben's timing cuts convention...
+
+bool check_pol_benversion(int acmottime, double op_delay)  // this version of check_pol tries to follow Ben's timing cuts convention...
+{
 	int ac_cycle_mus = 97260*50/1000; // in microseconds.  4863 mus.
 	int actime = 2956;  // 4863 - 2956 = 1907
 //	double time_to_polarize = 100.0;
@@ -495,6 +502,7 @@ bool check_pol(int acmottime, double op_delay)
 	}
 	return polarized;
 }
+
 bool check_unpol(int acmottime, double op_delay)
 {
 	int actime = 2956;
@@ -546,13 +554,14 @@ double get_r(double x, double y)
 	double r2 = pow(x, 2) + pow(y, 2);
 	return sqrt(r2);
 }
+
 //
 //double etof_offset_le[] = {84.41+122.6, 86.61+120.4};  // not good values atm.  also, this was set up using the other detector numbering convention...
 //double etof_offset_le_t = 86.61+120.4;
 //double etof_offset_le_b = 84.41+122.6;
 
 
-
+/*
 double adjust_tof_t(double raw_tof_in, double Ebeta, TF1* fitfunc, int run)  
 // what units for Ebeta? ...whatever gets saved to the new friendtuple.
 // raw_tof_in is just electron_time - scint_time, in TDC units.
@@ -618,6 +627,184 @@ double adjust_tof_b(double raw_tof_in, double Ebeta, TF1* fitfunc, int run)
 	double tof_out = raw_tof_in - adjustment;
 	return tof_out;
 }
+*/
+
+TF1* makefunc_top_adjall()
+{
+	double xmin = 0.0;
+	double xmax = 5300.;
+	
+	TF1* f_quartic = new TF1("f_quartic_t", "[0]*(1-exp([1]*x*1.0e-3)) + [2] + [3]*x*1.0e-3 + [4]*x*x*1.0e-6 + [5]*x*x*x*1.0e-9 + [6]*x*x*x*x*1.0e-12", 0, 6000.0);
+	f_quartic -> SetName("Top LE Quartic");
+	f_quartic -> SetLineColor(kBlue);
+	f_quartic -> SetRange(xmin, xmax);
+	f_quartic -> SetParName(0, "A");
+	f_quartic -> SetParName(1, "B");
+	f_quartic -> SetParName(2, "C");
+	f_quartic -> SetParName(3, "D");
+	f_quartic -> SetParName(4, "E");
+	f_quartic -> SetParName(5, "F");
+	f_quartic -> SetParName(6, "G");
+	
+	f_quartic -> SetParameters(3.35317, -6.60308, 5.48190, 9.26080e-01, -3.71163e-01, 7.00819e-02, -5.03369e-03);  // fitparams for "all".
+	f_quartic -> FixParameter(f_quartic->GetParNumber("A"), f_quartic->GetParameter("A") );
+	f_quartic -> FixParameter(f_quartic->GetParNumber("B"), f_quartic->GetParameter("B") );
+	f_quartic -> FixParameter(f_quartic->GetParNumber("C"), f_quartic->GetParameter("C") );
+	f_quartic -> FixParameter(f_quartic->GetParNumber("D"), f_quartic->GetParameter("D") );
+	f_quartic -> FixParameter(f_quartic->GetParNumber("E"), f_quartic->GetParameter("E") );
+	f_quartic -> FixParameter(f_quartic->GetParNumber("F"), f_quartic->GetParameter("F") );
+	f_quartic -> FixParameter(f_quartic->GetParNumber("G"), f_quartic->GetParameter("G") );
+	
+	return f_quartic;
+}
+TF1* makefunc_bottom_adjall()
+{
+	double xmin = 0.0;
+	double xmax = 5300.;
+	
+	TF1* f_quartic = new TF1("f_quartic_b", "[0]*(1-exp([1]*x*1.0e-3)) + [2] + [3]*x*1.0e-3 + [4]*x*x*1.0e-6 + [5]*x*x*x*1.0e-9 + [6]*x*x*x*x*1.0e-12", 0, 6000.0);
+	f_quartic -> SetName("Bottom LE Quartic");
+	f_quartic -> SetLineColor(kBlue);
+	f_quartic -> SetRange(xmin, xmax);
+	f_quartic -> SetParName(0, "A");
+	f_quartic -> SetParName(1, "B");
+	f_quartic -> SetParName(2, "C");
+	f_quartic -> SetParName(3, "D");
+	f_quartic -> SetParName(4, "E");
+	f_quartic -> SetParName(5, "F");
+	f_quartic -> SetParName(6, "G");
+	
+	f_quartic -> SetParameters(3.79812, -6.19521, 5.15725, 1.12594,  -4.57808e-01, 8.88178e-02, -6.46651e-03);  // fitparams for "all".
+	f_quartic -> FixParameter(f_quartic->GetParNumber("A"), f_quartic->GetParameter("A") );
+	f_quartic -> FixParameter(f_quartic->GetParNumber("B"), f_quartic->GetParameter("B") );
+	f_quartic -> FixParameter(f_quartic->GetParNumber("C"), f_quartic->GetParameter("C") );
+	f_quartic -> FixParameter(f_quartic->GetParNumber("D"), f_quartic->GetParameter("D") );
+	f_quartic -> FixParameter(f_quartic->GetParNumber("E"), f_quartic->GetParameter("E") );
+	f_quartic -> FixParameter(f_quartic->GetParNumber("F"), f_quartic->GetParameter("F") );
+	f_quartic -> FixParameter(f_quartic->GetParNumber("G"), f_quartic->GetParameter("G") );
+	
+	return f_quartic;
+}
+//
+TF1 * makefunc_top_adj_B()
+{
+	double xmin = 0.0;
+	double xmax = 5300.;
+	
+	TF1* f_pol2 = new TF1("f_pol2B_t", "[b] + [m]*x", 0, 6000.0);
+	f_pol2 -> SetName("SetB - Top LinearAdjust");
+	f_pol2 -> SetLineColor(kRed);
+	f_pol2 -> SetRange(xmin, xmax);
+	f_pol2 -> FixParameter(f_pol2->GetParNumber("b"), 0.0113079 );
+	f_pol2 -> FixParameter(f_pol2->GetParNumber("m"), 7.53775e-06 );
+	
+	return f_pol2;
+}
+TF1 * makefunc_bottom_adj_B()
+{
+	double xmin = 0.0;
+	double xmax = 5300.;
+	
+	TF1* f_pol2 = new TF1("f_pol2B_b", "[b] + [m]*x", 0, 6000.0);
+	f_pol2 -> SetName("SetB - Bottom LinearAdjust");
+	f_pol2 -> SetLineColor(kRed);
+	f_pol2 -> SetRange(xmin, xmax);
+	f_pol2 -> FixParameter(f_pol2->GetParNumber("b"),  0.0104313 );
+	f_pol2 -> FixParameter(f_pol2->GetParNumber("m"), -2.91273e-06 );
+	
+	return f_pol2;
+}
+TF1 * makefunc_top_adj_C()
+{
+	double xmin = 0.0;
+	double xmax = 5300.;
+	
+	TF1* f_pol2 = new TF1("f_pol2C_t", "[b] + [m]*x", 0, 6000.0);
+	f_pol2 -> SetName("SetC - Top LinearAdjust");
+	f_pol2 -> SetLineColor(kRed);
+	f_pol2 -> SetRange(xmin, xmax);
+	f_pol2 -> FixParameter(f_pol2->GetParNumber("b"), -0.076612 );
+	f_pol2 -> FixParameter(f_pol2->GetParNumber("m"),  6.99425e-06 );
+	
+	return f_pol2;
+}
+TF1 * makefunc_bottom_adj_C()
+{
+	double xmin = 0.0;
+	double xmax = 5300.;
+	
+	TF1* f_pol2 = new TF1("f_pol2C_b", "[b] + [m]*x", 0, 6000.0);
+	f_pol2 -> SetName("SetC - Bottom LinearAdjust");
+	f_pol2 -> SetLineColor(kRed);
+	f_pol2 -> SetRange(xmin, xmax);
+	f_pol2 -> FixParameter(f_pol2->GetParNumber("b"), -0.0226554 );
+	f_pol2 -> FixParameter(f_pol2->GetParNumber("m"), -5.59529e-06 );
+	
+	return f_pol2;
+}
+TF1 * makefunc_top_adj_D()
+{
+	double xmin = 0.0;
+	double xmax = 5300.;
+	
+	TF1* f_pol2 = new TF1("f_pol2D_t", "[b] + [m]*x", 0, 6000.0);
+	f_pol2 -> SetName("SetD - Top LinearAdjust");
+	f_pol2 -> SetLineColor(kRed);
+	f_pol2 -> SetRange(xmin, xmax);
+	f_pol2 -> FixParameter(f_pol2->GetParNumber("b"), -0.0756345 );
+	f_pol2 -> FixParameter(f_pol2->GetParNumber("m"),  3.3005e-06 );
+	
+	return f_pol2;
+}
+TF1 * makefunc_bottom_adj_D()
+{
+	double xmin = 0.0;
+	double xmax = 5300.;
+	
+	TF1* f_pol2 = new TF1("f_pol2D_b", "[b] + [m]*x", 0, 6000.0);
+	f_pol2 -> SetName("SetD - Bottom LinearAdjust");
+	f_pol2 -> SetLineColor(kRed);
+	f_pol2 -> SetRange(xmin, xmax);
+	f_pol2 -> FixParameter(f_pol2->GetParNumber("b"), -0.0511189 );
+	f_pol2 -> FixParameter(f_pol2->GetParNumber("m"),  4.76431e-06 );
+	
+	return f_pol2;
+}
+//
+double adjust_tof_t(double tof_in_ns, double Ebeta, TF1 * f_quartic_t)  
+{
+//	TF1* f_quartic_t = makefunc_top_adjall();
+	double etof_offset_le_t = 86.61+120.4;
+	tof_in_ns+=etof_offset_le_t;
+	
+	double adjustment = f_quartic_t -> Eval(Ebeta);
+	double tof_out = tof_in_ns - adjustment;
+	return tof_out;
+}
+double adjust_tof_b(double tof_in_ns, double Ebeta, TF1* f_quartic_b)
+{
+//	TF1 * f_quartic_b = makefunc_bottom_adjall();
+	double etof_offset_le_b = 84.41+122.6;
+	tof_in_ns+=etof_offset_le_b;
+
+	double adjustment = f_quartic_b -> Eval(Ebeta);
+	double tof_out = tof_in_ns - adjustment;
+	return tof_out;
+}
+double second_adjust_t(double tof_in_ns, double Ebeta, TF1 * f)
+{
+	double adjustment = f -> Eval(Ebeta);
+	double tof_out = tof_in_ns - adjustment;
+	//
+	return tof_out;
+}
+double second_adjust_b(double tof_in_ns, double Ebeta, TF1 * f)
+{
+	double adjustment = f -> Eval(Ebeta);
+	double tof_out = tof_in_ns - adjustment;
+	//
+	return tof_out;
+}
 
 //
 int main(int argc, char *argv[]) 
@@ -657,7 +844,11 @@ int main(int argc, char *argv[])
 	double lambda_g4_res_b = 0.0;
 	TTree * MetaTree;
 	gRandom = new TRandom3();
-	// = load_metadata_tree(metadata_name);
+	
+	TF1 * f_quartic_t = makefunc_top_adjall();
+	TF1 * f_quartic_b = makefunc_bottom_adjall();
+	TF1 * f_adjset_t = new TF1();
+	TF1 * f_adjset_b = new TF1();
 	if(!is_g4)
 	{	
 		if(do_rubidium)
@@ -676,6 +867,36 @@ int main(int argc, char *argv[])
 			// polarization classification overhead:
 			set_of_runs runs;  // Do NOT use a '*'.  It breaks.  Dunno why.
 			this_opdelay = runs.OP_Delay[runno];
+			
+			if( (runs.runset_letter[runno]).compare(string("B"))==0  )
+			{
+				f_adjset_t = makefunc_top_adj_B();
+				f_adjset_b = makefunc_bottom_adj_B();
+			}
+			else if( (runs.runset_letter[runno]).compare(string("C"))==0  )
+			{
+				f_adjset_t = makefunc_top_adj_C();
+				f_adjset_b = makefunc_bottom_adj_C();
+			}
+			else if( (runs.runset_letter[runno]).compare(string("D"))==0  )
+			{
+				f_adjset_t = makefunc_top_adj_D();
+				f_adjset_b = makefunc_bottom_adj_D();
+			}
+			if( (runs.runset_letter[runno]).compare(string("A"))==0  )
+			{
+				cout << "***" << endl;
+				cout << "WARNING!  You are attempting to retuple a run from Set A, using the scintillator walk correction from Set B!!" << endl;
+				cout << "          This will inevitably turn out poorly, but it won't segfault." << endl;
+				cout << "***" << endl;
+				f_adjset_t = makefunc_top_adj_B();
+				f_adjset_b = makefunc_bottom_adj_B();
+			}
+			else 
+			{
+				cout << "That's bad." << endl;
+			}
+			//
 			if(is_blinded)
 			{
 				cout << "Running retuple on blinded datasets." << endl;
@@ -721,7 +942,7 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
-	else // 
+	else // it's g4
 	{
 		cout << "Original Rand. Seed:  " << endl;
 		cout << gRandom->GetSeed() << endl;
@@ -731,7 +952,7 @@ int main(int argc, char *argv[])
 		
 		
 		is_blinded = false; 
-		this_opdelay = 0.0;
+		this_opdelay = 0.0;  // bc it's g4.
 		// FIX THESE.
 		if(use_g4_metadata)
 		{
@@ -874,8 +1095,6 @@ int main(int argc, char *argv[])
 	{
 		if(!is_old)
 		{
-		//	tree -> SetBranchAddress("TDC_PULSER_LED_Count",  &led_count);
-		//	tree -> SetBranchAddress("TDC_PHOTO_DIODE_Count", &photodiode_count);
 			tree -> SetBranchAddress("TDC_PULSER_LED_LE_Count",  &led_count);
 			tree -> SetBranchAddress("TDC_PHOTO_DIODE_LE_Count", &photodiode_count);
 		}
@@ -893,11 +1112,6 @@ int main(int argc, char *argv[])
 		
 		TBranch *photodiode_vec_branch   = friend_tree -> Branch("TDC_PHOTO_DIODE_LE",       &tdc_photodiode);
 		TBranch *led_vec_branch          = friend_tree -> Branch("TDC_PULSER_LED_LE",        &tdc_pulser_led);
-		
-	//	TBranch *led_count_branch        = friend_tree -> Branch("TDC_PULSER_LED_Count",  &led_count);
-	//	TBranch *photodiode_count_branch = friend_tree -> Branch("TDC_PHOTO_DIODE_Count", &photodiode_count);
-	//	TBranch *photodiode_vec_branch   = friend_tree -> Branch("TDC_PHOTO_DIODE",       &tdc_photodiode);
-	//	TBranch *led_vec_branch          = friend_tree -> Branch("TDC_PULSER_LED",        &tdc_pulser_led);
 	}
 	
 	//
@@ -932,14 +1146,14 @@ int main(int argc, char *argv[])
 	}
 	int ion_count = 0;
 	int electron_count = 0;
-
+	
 	vector<double> *dl_x_pos = 0;
 	vector<double> *dl_z_pos = 0;
 	TBranch *x_branch = friend_tree -> Branch("dl_x_pos", &dl_x_pos);
 	TBranch *z_branch = friend_tree -> Branch("dl_z_pos", &dl_z_pos);
 	dl_x_pos -> clear();
 	dl_z_pos -> clear();
-
+	
 	vector<double> *x1_dla = 0;
 	vector<double> *x2_dla = 0;
 	vector<double> *z1_dla = 0;
@@ -985,23 +1199,11 @@ int main(int argc, char *argv[])
 	scint_t_walk -> clear();
 	scint_b_walk -> clear();
 	
-	string fitresults_fname = "walkfit_all2.root";
-	TFile * fitresults_file = new TFile(fitresults_fname.c_str());
-	if(fitresults_file) { cout << "Using " << fitresults_fname << " for fit results." << endl; }
-	else { cout << "Couldn't find " << fitresults_fname << ".  Aborting." << endl;  return 0; }
-	
-	TF1 *f_t_le, *f_b_le;
-	f_t_le = (TF1*)fitresults_file->Get("Top LE Quartic");    // f1
-	f_b_le = (TF1*)fitresults_file->Get("Bottom LE Quartic"); // f2
-	
-	
 	
 	// ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // 
 	// BB1s:  
 	BB1Detector stripdetector[2][2];
 	string tdiff_file[2] = {bb1_prefix+"bb1_u_tdiff.dat", bb1_prefix+"bb1_l_tdiff.dat"};  // WHAT DOES THIS SHIT EVEN DO FOR G4 DATA?  ... I think it's fine, because I'll just set everything to be the same.
-//	tdiff_file[0] = bb1_prefix+"bb1_u_tdiff.dat";  
-//	tdiff_file[1] = bb1_prefix+"bb1_l_tdiff.dat";  
 
 	if(!is_g4)
 	{
@@ -1063,7 +1265,56 @@ int main(int argc, char *argv[])
 		TBranch * bb1_lx_time = friend_tree -> Branch("BB1_LX_PEAKTIME", &strip_T[b][x]);
 		TBranch * bb1_ly_time = friend_tree -> Branch("BB1_LY_PEAKTIME", &strip_T[b][y]);
 	}
-
+	
+	// HEX 75:
+	Hex75 * the_hex = new Hex75();
+	
+//	string xName = "HEX75_XPos_LE";
+//	string zName = "HEX75_ZPos_LE";
+//	string cName = "HEX75_PosCode_LE";
+//	vector<double> xPos;
+//	vector<double> zPos;
+//	vector<int> rcode;
+//	rcode = the_hex -> GetXZ(xPos, zPos, *u1, *u2, *v1, *v2, *w1, *w2, *electron_events, false);
+	
+	vector<double> xPos;// = 0;
+	vector<double> zPos;// = 0;
+	vector<int>    rcode;//= 0;
+	TBranch *xb = friend_tree -> Branch("HEX75_XPos_LE",    &xPos);
+	TBranch *zb = friend_tree -> Branch("HEX75_ZPos_LE",    &zPos);
+	TBranch *cb = friend_tree -> Branch("HEX75_PosCode_LE", &rcode);
+	xPos.clear();
+	zPos.clear();
+	rcode.clear();
+	
+//	vector<double> * scint_t_walk = 0;
+//	vector<double> * scint_b_walk = 0;
+//	TBranch *scint_t_walk_branch = friend_tree -> Branch("tdc_scint_t_corrected", &scint_t_walk);
+//	TBranch *scint_b_walk_branch = friend_tree -> Branch("tdc_scint_b_corrected", &scint_b_walk);
+//	scint_t_walk -> clear();
+//	scint_b_walk -> clear();
+	
+	vector<double> *u1 = 0;
+	vector<double> *u2 = 0;
+	vector<double> *v1 = 0;
+	vector<double> *v2 = 0;
+	vector<double> *w1 = 0;
+	vector<double> *w2 = 0;
+//	vector<double> *mcp = 0;
+	if(!is_g4)
+	{
+		tree -> SetBranchAddress("TDC_HEX75_U1_LE", &u1);
+		tree -> SetBranchAddress("TDC_HEX75_U2_LE", &u2);
+		tree -> SetBranchAddress("TDC_HEX75_V1_LE", &v1);
+		tree -> SetBranchAddress("TDC_HEX75_V2_LE", &v2);
+		tree -> SetBranchAddress("TDC_HEX75_W1_LE", &w1);
+		tree -> SetBranchAddress("TDC_HEX75_W2_LE", &w2);
+	}
+//	tree -> SetBranchAddress("TDC_ELECTRON_MCP_LE", &mcp);
+//	tree -> SetBranchAddress("TDC_ELECTRON_MCP_LE", &electron_events);
+	//
+	
+	
 	// BB1s:  
 	vector<double> * bb1_t_x = 0;
 	vector<double> * bb1_t_y = 0;
@@ -1267,11 +1518,6 @@ int main(int argc, char *argv[])
 		}
 		
 		polarization = final_pol;
-		
-	//	// below:  it was like this for some previous versions, but it's wrong. I'll just swap it.
-	//	if(final_pol >= 0.0) { sigma_plus = 0; }
-	//	else                 { sigma_plus = 1; }
-		
 		if(final_pol >= 0.0) { sigma_plus = 1; }
 		else                 { sigma_plus = 0; }
 	
@@ -1315,9 +1561,6 @@ int main(int argc, char *argv[])
 				//
 				upper_DeltaE = get_upper_DeltaE(upper_qdc_int, runno, is_g4);
 				lower_DeltaE = get_lower_DeltaE(lower_qdc_int, runno, is_g4);
-			//	upper_DeltaE = 0.0;
-			//	lower_DeltaE = 0.0;
-				
 				//
 				all_okay = get_all_okay_for_event(unix_time, badtimesforrun, &badint, &skipped);
 			
@@ -1394,8 +1637,6 @@ int main(int argc, char *argv[])
 		if(electron_count>0)
 		{
 			double electron_time = (*electron_events)[0];
-		//	double scint_time = 0;
-		//	scint_time = (*scint_time_b)[j];
 			double e_tof_in = 0;
 			double the_tof = 0;
 			// Top:
@@ -1404,12 +1645,11 @@ int main(int argc, char *argv[])
 				nhits = N_hits_scint_t;
 				for(int j=0; j<nhits; j++) 
 				{
-				//	double adjust_tof_b(double tof_in, double Ebeta, TF1* fitfunc, int run)
-					
-				//	e_tof_in = ( electron_time - scint_time_t->at(j) )*v1192_to_ns + etof_offset_le_t;
-				//	the_tof  = adjust_tof(tmp_e_tof, upper_E, f_t_le);
-					
-					the_tof = adjust_tof_t(electron_time - scint_time_t->at(j), upper_E, f_t_le, runno);
+					if(!is_g4)
+					{
+						the_tof = adjust_tof_t( (electron_time - scint_time_t->at(j))*v1192_to_ns, upper_E, f_quartic_t);
+						the_tof = second_adjust_t(the_tof, upper_E, f_adjset_t);
+					}
 					scint_t_walk -> push_back(the_tof);
 				}
 			}
@@ -1419,16 +1659,24 @@ int main(int argc, char *argv[])
 				nhits = N_hits_scint_b;
 				for(int j=0; j<nhits; j++) 
 				{
-				//	e_tof_in = ( electron_time - scint_time_b->at(j) )*v1192_to_ns + etof_offset_le_b;
-				//	the_tof  = adjust_tof(tmp_e_tof, lower_E, f_b_le);
-					
-					the_tof = adjust_tof_b(electron_time - scint_time_b->at(j), lower_E, f_b_le, runno);
+					if(!is_g4)
+					{
+						the_tof = adjust_tof_b( (electron_time - scint_time_b->at(j))*v1192_to_ns, lower_E, f_quartic_b);
+						the_tof = second_adjust_b(the_tof, lower_E, f_adjset_b);
+					}
 					scint_b_walk -> push_back(the_tof);
 				}
 			}
 		}
 		
-		
+		// HEX 75 calibrations:
+		if(!is_g4)
+		{
+			xPos.clear();
+			zPos.clear();
+			rcode.clear();
+			rcode = the_hex -> GetXZ(xPos, zPos, *u1, *u2, *v1, *v2, *w1, *w2, *electron_events, false);
+		}
 		
 		// Set up event types:
 		is_type1_t = kFALSE;
@@ -1445,9 +1693,6 @@ int main(int argc, char *argv[])
 		is_normal_b = kFALSE;
 		
 		is_other = kFALSE;
-		
-	//	has_bb1_twohits_t = false;
-	//	has_bb1_twohits_b = false;
 		
 		// BB1 shizzle:
 		N_hits_bb1_t = 0;
@@ -1524,8 +1769,6 @@ int main(int argc, char *argv[])
 					{
 						if(detector == t)
 						{
-					//		cout << "Got here ... ever." << endl;
-					//		bb1_t_pass = kTRUE;
 							bb1_t_x -> push_back( bb1_hit[detector].xpos );
 							bb1_t_y -> push_back( bb1_hit[detector].ypos );
 							bb1_t_E -> push_back( bb1_hit[detector].energy );
@@ -1534,7 +1777,6 @@ int main(int argc, char *argv[])
 						}
 						else if(detector == b)
 						{
-					//		bb1_b_pass = kTRUE;
 							bb1_b_x -> push_back( bb1_hit[detector].xpos );
 							bb1_b_y -> push_back( bb1_hit[detector].ypos );
 							bb1_b_E -> push_back( bb1_hit[detector].energy );
@@ -1548,16 +1790,13 @@ int main(int argc, char *argv[])
 				{
 					if(detector == t)
 					{
-					//	has_bb1_twohits_t = true;
 						had_Nhits_bb1_t=2;
 					}
 					if(detector == b)
 					{
-					//	has_bb1_twohits_b = true;
 						had_Nhits_bb1_b=2;
 					}
 					//
-		//			if(bb1_sechit[detector].pass == true /* && bb1_hit[detector].energy >= bb1_energy_threshold */)
 					if(bb1_sechit[detector].pass == true && bb1_hit[detector].energy >= bb1_energy_threshold )
 					{
 						if(detector == t)
@@ -1665,7 +1904,7 @@ int main(int argc, char *argv[])
 		}
 		else // 37K run, and not from G4.  Must figure out if the event is polarized, and what op/ac cycle it's on.
 		{
-			is_polarized = check_pol(acmot_last, this_opdelay);
+			is_polarized = check_pol_orig(acmot_last, this_opdelay);
 			is_unpolarized = check_unpol(acmot_last, this_opdelay);
 			is_ac = check_ac(acmot_last, this_opdelay);
 		
@@ -1746,7 +1985,6 @@ int main(int argc, char *argv[])
 		
 		scint_t_walk -> clear();
 		scint_b_walk -> clear();
-		
 	}
 	if(!is_g4)
 	{
