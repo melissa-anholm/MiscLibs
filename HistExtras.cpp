@@ -177,11 +177,95 @@ int hist_type::set_other_parameters()
 		user_xmin = -4.0;
 		user_xmax = 4.0;
 	}
+	else if (type == std::string("sim_toa")) //
+	{
+		nbins = 500;
+		xmin = (-100.0)*v1192_to_ns;
+		xmax = (400.0)*v1192_to_ns;
+		units = std::string("[ns]");
+		user_xmin = 0.0;
+		user_xmax = 15.0;
+	}
+	else if (type == std::string("fine_sim_toa")) //
+	{
+		nbins = 6000;
+		xmin = (-200.0)*v1192_to_ns;
+		xmax = (400.0)*v1192_to_ns;
+		units = std::string("[ns]");
+		user_xmin = 0.0;
+		user_xmax = 15.0;
+	}
+	else if (type == std::string("evenbinned_fine_sim_toa")) //
+	{
+		nbins = 50000;
+		xmin = -10.0;
+		xmax = 40.0;
+		units = std::string("[ns]");
+		user_xmin = 0.0;
+		user_xmax = 15.0;
+	}
+	else if (type == std::string("hoop_x_coarse")) //
+	{
+		nbins = 55;
+		xmin = -90.0;
+		xmax = 90.0;
+		units = std::string("mm");
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	else if (type == std::string("hoop_z_coarse")) //
+	{
+		nbins = 23;
+		xmin = -45.0;
+		xmax = 45.0;
+		units = std::string("mm");
+		user_xmin = xmin;
+		user_xmax = xmax;
+	}
+	else if (type == std::string("hoop_x")) //
+	{
+		nbins = 200;
+		xmin = -100.0;
+		xmax =  100.0;
+		units = std::string("mm");
+		user_xmin = -90;
+		user_xmax =  90;
+	}
+	else if (type == std::string("hoop_z")) //
+	{
+		nbins = 1000;
+		xmin = -50.0;
+		xmax =  50.0;
+		units = std::string("mm");
+		user_xmin = -45;
+		user_xmax =  45;
+	}
 	else if (type == std::string("cal_scint_tof"))  // for eg: scint_t - scint_b.  also soe toa.
 	{
 		nbins = 2000;
 		xmin = (-1000.5+1.0)*v1192_to_ns;
 		xmax = (1000.5)*v1192_to_ns;
+		units = std::string("ns");
+		user_xmin = -20;
+		user_xmax = 40;
+	}
+	else if (type == std::string("tof_cut"))  // 
+	{
+		nbins = 500;
+		xmin = 0.0;
+		xmax = (1000.0)*v1192_to_ns;
+		double binwidth = (xmax-xmin)/double(nbins);
+		xmin = xmin-0.5*binwidth;
+		xmax = xmax-0.5*binwidth;
+		units = std::string("Width of TOF Cut (ns)");
+		user_xmin = 0;
+		user_xmax = 10;
+	}
+	else if (type == std::string("big_cal_scint_tof"))  // a little bit too big, you ask?  nobody knows!
+	{
+		nbins = 1400;
+		xmin = (-70000.5+1.0)*v1192_to_ns;
+		xmax = ( 70000.5)*v1192_to_ns;
 		units = std::string("ns");
 		user_xmin = -20;
 		user_xmax = 40;

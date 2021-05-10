@@ -115,7 +115,20 @@ string get_simfriendname(string path, int runno)
 	
 	return fname;
 }
+string get_soefriendname(string path, int runno)
+{
+	string fname;
+	std::stringstream ss;
+	ss.str( std::string() );
+	ss.clear();
+	
+	ss << path << "soefriend_" << runno;
+	ss << ".root";
 
+	fname = ss.str();
+	
+	return fname;
+}
 TTree * load_metadata_tree(string metadatafilename)
 {
 	TTree *MetaTree = new TTree();
@@ -139,6 +152,58 @@ TChain * get_single_simtree(int runno)
 	delete MetaTree;
 	return tree_chain;
 }
+
+TChain * get_single_soetree(int runno)
+{
+	TTree *MetaTree = load_metadata_tree(metadata_name);
+	
+	string filename      = get_simfilename(MetaTree, runno);
+	string friendname    = get_simfriendname(g4f_path, runno);
+	string soefriendname = get_soefriendname(g4f_path, runno);
+	
+	TChain * tree_chain   = new TChain("ntuple");
+	TChain * friend_chain = new TChain("friendtuple");
+	TChain * otherfriend_chain = new TChain("soetuple");
+	tree_chain -> Add(filename.c_str());
+	friend_chain -> Add(friendname.c_str());
+	otherfriend_chain -> Add(soefriendname.c_str());
+	
+	tree_chain -> AddFriend(friend_chain);
+	tree_chain -> AddFriend(otherfriend_chain);
+	delete MetaTree;
+	return tree_chain;
+}
+
+TChain * get_multi_soetree(vector<int> runnos)
+{
+	TTree *MetaTree = load_metadata_tree(metadata_name);
+	
+	string filename;
+	string friendname;
+	string soefriendname;
+	
+	TChain * tree_chain   = new TChain("ntuple");
+	TChain * friend_chain = new TChain("friendtuple");
+	TChain * otherfriend_chain = new TChain("soetuple");
+	
+	int N = runnos.size();
+	for(int i=0; i<N; i++)
+	{
+		filename      = get_simfilename(MetaTree, runnos.at(i) );
+		friendname    = get_simfriendname(g4f_path, runnos.at(i) );
+		soefriendname = get_soefriendname(g4f_path, runnos.at(i) );
+		
+		tree_chain        -> Add(filename.c_str());
+		friend_chain      -> Add(friendname.c_str());
+		otherfriend_chain -> Add(soefriendname.c_str());
+	}
+	
+	tree_chain -> AddFriend(friend_chain);
+	tree_chain -> AddFriend(otherfriend_chain);
+	delete MetaTree;
+	return tree_chain;
+}
+
 
 vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, string runset_string, int maxrun=0)
 {
@@ -187,7 +252,6 @@ vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, string runset_str
 	}
 	return set_of_runs;
 }
-
 TChain * get_chain_from_rho(TTree * MetaTree, double rho, string runset_string, int maxrun=0)
 {
 	cout << "rho = " << rho << endl;
@@ -265,7 +329,6 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, string runset_string, 
 	tree_chain -> AddFriend(friend_chain);
 	return tree_chain;
 }
-
 vector<int> make_runlist_from_args( int argc, char* argv[] )
 {
 	vector<int> the_runlist;
@@ -486,11 +549,52 @@ vector<int> get_summed_monoenergetic_runlist(double the_energy, bool verbose=tru
 	}
 	return set_of_runs;
 }
+vector<int> get_summed_gS_runlist(double the_gS) // include all polarizations.  full spectrum only.
+{
+	double the_energy = -10.;  // full spectrum.
+	vector<int> set_of_runs;
+
+	// Get the MetaTree.
+	TTree * MetaTree = load_metadata_tree(metadata_name);
+	
+	int run = 0;
+	MetaTree -> SetBranchAddress("Run", &run);
+	int has_been_summed = 0;
+	MetaTree -> SetBranchAddress("has_been_summed",  &has_been_summed);
+	int is_a_sum = 0;
+	MetaTree -> SetBranchAddress("is_a_sum", &is_a_sum);
+	double the_monoenergy = 0;
+	MetaTree -> SetBranchAddress("MonoEnergy_MeV", &the_monoenergy);
+	double g_S = -2;
+	MetaTree -> SetBranchAddress("g_S", &g_S);
+	
+	int nentries = MetaTree -> GetEntries();
+	for(int i=0; i<nentries; i++)
+	{
+		MetaTree -> GetEntry(i);
+		if(has_been_summed==0 && is_a_sum==1 )
+		{
+			if( the_monoenergy==the_energy && g_S == the_gS )
+			{
+				set_of_runs.push_back(run);
+			//	if(verbose) { cout << "adding " << run << " to the runlist vector." << endl; }
+			}
+		}
+	}
+	return set_of_runs;
+}
 TChain * get_chain_from_monoenergy(double the_energy, bool verbose=true) // requires:  summed runs.  energy in MeV.
 {
 	if(verbose) { cout << "Fetching the monoenergetic chain:  " << the_energy << " MeV" << endl; }
 	//
 	vector<int> the_runset = get_summed_monoenergetic_runlist(the_energy, false);  // not *that* verbose!
+	TChain * the_chain = get_chain_from_runlist(the_runset);
+	return the_chain;
+}
+
+TChain * get_chain_from_gS(double g_S) // requires:  summed runs.  energy in MeV.  only full spectrum.  all polarizations.
+{
+	vector<int>  the_runset = get_summed_gS_runlist(g_S);
 	TChain * the_chain = get_chain_from_runlist(the_runset);
 	return the_chain;
 }

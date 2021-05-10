@@ -80,6 +80,7 @@ bool apply_scint_res_on_g4 = true;
 bool doEmpirical           = true;  // empirical noise on BB1s.  for G4 data.
 bool do_rubidium           = false;  // Rb
 bool is_old                = false;  // before trailing edge/leading edge madness.
+bool loosecut_for_soe      = false;
 
 int version = 12;
 
@@ -545,9 +546,16 @@ enum bb1_axis
 	x = 0,
 	y = 1
 };
-double sigma_cut = 3.0;
-int threshold_index = 0;
-double bb1_energy_threshold = 60.0;  // Ben uses 60 keV
+
+int threshold_index = 0;             // Usually use 0, to get a SNR of 0.25.
+
+// regular cuts:
+double sigma_cut = 3.0;              // Usually use 3.
+double bb1_energy_threshold = 60.0;  // Ben uses 60 keV.  I usually use 60 keV too.
+
+//if(loosecut_for_soe)
+//double sigma_cut = 1.5;
+//double bb1_energy_threshold = 40.0;
 
 double get_r(double x, double y)
 {
@@ -823,8 +831,8 @@ int main(int argc, char *argv[])
 	}
 	TObjString * version_string = make_tstring(string("ReTuple version "), version);
 	cout << "ReTuple version " << version << endl;
-	cout << "For BB1s, we use a " << sigma_cut << " sigma energy agreement cut." << endl;
-	cout << "For BB1s, we use SNR threshold \'index\' " << threshold_index << "." << endl;
+	cout << "For BB1s, we use a " << sigma_cut << " sigma energy agreement cut." << endl;   // 
+	cout << "For BB1s, we use SNR threshold \'index\' " << threshold_index << "." << endl;  // indices:  SNR=0.25@i=0, SNR=0.50@i=1, SNR=0.75@i=2, SNR=1.0@i=3, SNR=2.0@i=4.  Supposedly.
 	cout << "For BB1s, we use an energy threshold of " << bb1_energy_threshold << " keV." << endl;
 	
 	if(is_g4)
@@ -1054,7 +1062,6 @@ int main(int argc, char *argv[])
 	}
 	int acmot_count;
 	int dcmot_count;
-		
 	// Some Friend Tree Stuff:
 	Bool_t all_okay       = kTRUE;
 	Bool_t is_polarized   = kFALSE;
@@ -1085,7 +1092,6 @@ int main(int argc, char *argv[])
 	TBranch *upper_deltaE_branch= friend_tree -> Branch("upper_scint_DeltaE", &upper_DeltaE); // how much do we change the energy if we change calibration by "one sigma"?
 	TBranch *lower_deltaE_branch= friend_tree -> Branch("lower_scint_DeltaE", &lower_DeltaE); // 
 	
-	
 	//
 	UInt_t led_count = 0;
 	UInt_t photodiode_count = 0;
@@ -1113,7 +1119,6 @@ int main(int argc, char *argv[])
 		TBranch *photodiode_vec_branch   = friend_tree -> Branch("TDC_PHOTO_DIODE_LE",       &tdc_photodiode);
 		TBranch *led_vec_branch          = friend_tree -> Branch("TDC_PULSER_LED_LE",        &tdc_pulser_led);
 	}
-	
 	//
 	vector<double> * scint_time_t = 0;  
 	vector<double> * scint_time_b = 0;  
@@ -1198,7 +1203,6 @@ int main(int argc, char *argv[])
 	TBranch *scint_b_walk_branch = friend_tree -> Branch("tdc_scint_b_corrected", &scint_b_walk);
 	scint_t_walk -> clear();
 	scint_b_walk -> clear();
-	
 	
 	// ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // 
 	// BB1s:  

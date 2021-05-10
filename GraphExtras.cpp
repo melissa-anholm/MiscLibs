@@ -31,6 +31,7 @@ using std::min;
 
 #include <TGraph.h>
 #include <TGraphErrors.h>
+#include <TGraphAsymmErrors.h>
 #include <TH1.h>
 
 
@@ -225,6 +226,68 @@ TGraphErrors * make_TGraphErrors(vector<double> x_avg, vector<double> y_avg, vec
 	
 	return my_TGraphErrors;
 }
+
+
+TGraphAsymmErrors * make_TGraphAsymErrors_Symmetrical(vector<double> x_avg, vector<double> y_avg, vector<double> delta_x, vector<double> delta_y, int color, string name)
+{
+	int N_points = std::min( std::min(x_avg.size(), y_avg.size()), std::min(delta_x.size(), delta_y.size()) );
+	
+	if( x_avg.size() != y_avg.size() || delta_x.size() != delta_y.size() || x_avg.size() != delta_x.size() )
+		{ std::cout << "* WARNING:  TGraphAsymmErrors input vectors have non-constant sizes.  Creating graph anyway." << std::endl; }
+
+	double * x = &x_avg[0];
+	double * y = &y_avg[0];
+	double * x_err = &delta_x[0];
+	double * y_err = &delta_y[0];
+	
+	TGraphAsymmErrors * my_TGraphAsymmErrors;
+	my_TGraphAsymmErrors = new TGraphAsymmErrors(N_points, x, y, x_err, x_err, y_err, y_err);
+	
+	my_TGraphAsymmErrors->SetFillStyle(0);  // 0 =  not filled.
+	my_TGraphAsymmErrors->SetFillColor(kWhite);  // the box around the thing is white.
+	my_TGraphAsymmErrors->SetMarkerColor(color);
+	my_TGraphAsymmErrors->SetLineColor(color);
+	if(name.size()>0) // by default, we don't set the name here, so it'll have the default name "Graph".
+	{
+		my_TGraphAsymmErrors->SetName(name.c_str());
+		my_TGraphAsymmErrors->SetTitle(name.c_str());
+	}
+	return my_TGraphAsymmErrors;
+}
+
+TGraphAsymmErrors * make_TGraphAsymErrors(vector<double> x_avg, vector<double> y_avg, vector<double> delta_x_low, vector<double> delta_x_high, vector<double> delta_y_low, vector<double> delta_y_high, int color, string name)
+{
+	int N_points = std::min( std::min(x_avg.size(), y_avg.size()), 
+		std::min( std::min(delta_x_low.size(), delta_x_high.size()), std::min(delta_y_low.size(), delta_y_high.size()) ) );
+	
+	if( x_avg.size() != y_avg.size() || delta_x_low.size() != delta_x_high.size() || delta_y_low.size() != delta_y_high.size() || 
+	delta_x_low.size() != delta_y_low.size() || x_avg.size() != delta_x_low.size() )
+		{ std::cout << "* WARNING:  TGraphAsymmErrors input vectors have non-constant sizes.  Creating graph anyway." << std::endl; }
+
+	double * x = &x_avg[0];
+	double * y = &y_avg[0];
+	double * x_err_l = &delta_x_low[0];
+	double * x_err_h = &delta_x_high[0];
+	double * y_err_l = &delta_y_low[0];
+	double * y_err_h = &delta_y_high[0];
+	
+	TGraphAsymmErrors * my_TGraphAsymmErrors;
+	my_TGraphAsymmErrors = new TGraphAsymmErrors(N_points, x, y, x_err_l, x_err_h, y_err_l, y_err_h);
+	
+	my_TGraphAsymmErrors->SetFillStyle(0);  // 0 =  not filled.
+	my_TGraphAsymmErrors->SetFillColor(kWhite);  // the box around the thing is white.
+	my_TGraphAsymmErrors->SetMarkerColor(color);
+	my_TGraphAsymmErrors->SetLineColor(color);
+	if(name.size()>0) // by default, we don't set the name here, so it'll have the default name "Graph".
+	{
+		my_TGraphAsymmErrors->SetName(name.c_str());
+		my_TGraphAsymmErrors->SetTitle(name.c_str());
+	}
+	
+//	my_TGraphAsymmErrors->SetMarkerStyle(7);
+	return my_TGraphAsymmErrors;
+}
+
 
 TGraphErrors * make_sorted_TGraphErrors(vector<double> x_avg, vector<double> y_avg, vector<double> delta_x, vector<double> delta_y, int color)
 {

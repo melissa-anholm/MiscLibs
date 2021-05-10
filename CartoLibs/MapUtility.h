@@ -47,7 +47,7 @@ class MapSetup
 {
 public:
 	MapSetup() 
-		{ filename = "map_out.root"; };
+		{ map_filename = string("map_out.root"); };
 	~MapSetup();
 	
 	void LoadFromTree(TChain * the_tree, int N_rebin_hists=1);
@@ -195,12 +195,24 @@ public:
 	TH1D* measured_EnergyT_m_bb1_r105_oppdet_two;
 	TH1D* measured_EnergyB_m_bb1_r105_oppdet_two;
 
-	
 	TH2D* costheta_v_costheta_p;
 	TH2D* costheta_v_costheta_m;
 	
+	TH2D * th2_num_Eout_v_Ein_tp;
+	TH2D * th2_num_Eout_v_Ein_tm;
+	TH2D * th2_num_Eout_v_Ein_bp;
+	TH2D * th2_num_Eout_v_Ein_bm;
+	
+	/*
+	TH2D * th2_ana_Eout_v_Ein_tp;
+	TH2D * th2_ana_Eout_v_Ein_tm;
+	TH2D * th2_ana_Eout_v_Ein_bp;
+	TH2D * th2_ana_Eout_v_Ein_bm;
+	*/
+	
 private:
-	string filename;
+	string tree_filename;
+	string map_filename;
 };
 
 
