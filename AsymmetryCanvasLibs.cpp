@@ -195,7 +195,7 @@ double get_supersum_err(double r1p, double r1m, double r2p, double r2m)  // doub
 double get_asymmetry(double r1p, double r1m, double r2p, double r2m)
 {
 	double A;
-	if(r1p==0 || r1m==0 || r2p==0 || r2m==0) // any zero.
+	if(r1p<=0 || r1m<=0 || r2p<=0 || r2m<=0) // any zero.  or any negative.
 	{
 		A = 0.0;
 	}
@@ -203,6 +203,7 @@ double get_asymmetry(double r1p, double r1m, double r2p, double r2m)
 	{
 		A = ( sqrt(r1p*r2m) - sqrt(r1m*r2p) ) / ( sqrt(r1p*r2m) + sqrt(r1m*r2p) );
 	}
+//	cout << "A=" << A << ";\tr1p=" << r1p << ", r1m=" << r1m << ", r2=" << r2p << ", r2m=" << r2m << endl;
 	return A;
 }
 double get_asymmetry_err(double r1p, double r1m, double r2p, double r2m)

@@ -77,7 +77,7 @@ bool is_blinded            = false;
 bool is_g4                 = true;
 bool use_g4_metadata       = true;
 bool apply_scint_res_on_g4 = true;
-bool doEmpirical           = true;  // empirical noise on BB1s.  for G4 data.
+bool doEmpirical           = true;   // empirical noise on BB1s.  for G4 data.
 bool do_rubidium           = false;  // Rb
 bool is_old                = false;  // before trailing edge/leading edge madness.
 bool loosecut_for_soe      = false;
@@ -196,17 +196,6 @@ Double_t get_upper_E(double qdc, int run, bool g4data=false)
 	else
 	{
 		E = qdc;
-		/*
-		if(!apply_scint_res_on_g4)
-		{
-			E = qdc;
-		}
-		else
-		{
-		// do something else here.
-			E = qdc;
-		}
-		*/
 	}
 	return E;
 }
@@ -232,17 +221,6 @@ Double_t get_lower_E(double qdc, int run, bool g4data=false)
 	else
 	{
 		E = qdc;
-		/*
-		if(!apply_scint_res_on_g4)
-		{
-			E = qdc;
-		}
-		else
-		{
-		//	do something else here.
-			E = qdc;
-		}
-		*/
 	}
 	return E;
 }
@@ -359,17 +337,6 @@ Double_t get_upper_E_res(double upper_E, int run, bool g4data=false)
 	else
 	{
 		E_res = 0.0;
-		/*
-		if(!apply_scint_res_on_g4)
-		{
-			E_res = 0.0;
-		}
-		else
-		{
-		//	Do something else here.
-			E_res = 0.0;
-		}
-		*/
 	}
 	return E_res;
 }
@@ -392,17 +359,6 @@ Double_t get_lower_E_res(double lower_E, int run, bool g4data=false)
 	else
 	{
 		E_res = 0.0;
-		/*
-		if(!apply_scint_res_on_g4)
-		{
-			E_res = 0.0;
-		}
-		else
-		{
-		//	Do something else here.
-			E_res = 0.0;
-		}
-		*/
 	}
 	return E_res;
 }
@@ -1558,8 +1514,8 @@ int main(int argc, char *argv[])
 			//
 			if(!do_rubidium)  // 37K real data
 			{
-				upper_E = get_upper_E(upper_qdc_int, runno, is_g4);
-				lower_E = get_lower_E(lower_qdc_int, runno, is_g4);
+				upper_E     = get_upper_E(upper_qdc_int, runno, is_g4);
+				lower_E     = get_lower_E(lower_qdc_int, runno, is_g4);
 				upper_E_res = get_upper_E_res(upper_E, runno, is_g4);
 				lower_E_res = get_lower_E_res(lower_E, runno, is_g4);
 				//

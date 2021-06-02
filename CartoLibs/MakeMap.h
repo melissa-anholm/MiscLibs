@@ -70,8 +70,9 @@ TH1D * make_superratioasymmetry_direct(TH1D* h_tp, TH1D* h_tm, TH1D* h_bp, TH1D*
 {
 	int plotmarkerstyle=7;
 	TH1D * h_asym = make_asymmetry_histogram(h_tp, h_tm, h_bp, h_bm, string("Superratio Asymmetry"), int(kBlack), plotmarkerstyle);
-	h_asym -> SetOption("E3");
+//	h_asym -> SetOption("E3");
 //	h_asym -> SetFillColor(kGray);
+	h_asym -> GetYaxis()->SetRangeUser(-0.62, -0.455);
 	
 	return h_asym;
 }
