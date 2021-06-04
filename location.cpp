@@ -105,8 +105,8 @@ string be_path_trinat01 = "/pool/anholm/Data_2014/Blinded_Electrons_2014/";  // 
 string bf_path_trinat01 = "/pool/anholm/Data_2014/Blinded_Friends_2014/";  // bad.
 
 string ur_path_trinat01 = "/pool/anholm/Data_2014/Unblinded_Recoils_2014/";  // bad
-string ue_path_trinat01 = "/pool/anholm/Data_2014/Unblinded_Electrons_2014/";  
-string uf_path_trinat01 = "/pool/anholm/Data_2014/Unblinded_Friends_2014/";  
+string ue_path_trinat01 = "/pool/trinat/ReAnalyzedFriends_2014/";  
+string uf_path_trinat01 = "/pool/trinat/ReAnalyzed_2014/";  
 
 //string g4_path_trinat01   = "/pool/anholm/Output/";
 string g4_path_trinat01     = "/home/trinat/anholm/K37/build/Output/";
