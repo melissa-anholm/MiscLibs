@@ -195,7 +195,7 @@ bool setup_location()
 		metadata_name = g4_path+"MetaData.txt";
 		
 		mf_datapath = mf_datapath_wisely;
-		mf_g4path   = mf_datapath_wisely;
+		mf_g4path   = mf_g4path_wisely;
 		
 		bb1_prefix = bb1_prefix_wisely;
 		return true;
