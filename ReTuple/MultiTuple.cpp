@@ -758,7 +758,8 @@ int main(int argc, char *argv[])
 			return 0;
 		}
 	//	cout << "uh....... what??  " << endl << endl << endl;
-		friend_fname = make_rootfilename(uf_path+"friend00",runno);
+	//	friend_fname = make_rootfilename(uf_path+"friend00",runno);
+		friend_fname = make_rootfilename(mf_datapath+"multifriend_", runno, additional_filename_info);
 	}
 	else // it's g4
 	{
@@ -812,7 +813,7 @@ int main(int argc, char *argv[])
 		*/
 		cout << "additional_filename_info:  " << additional_filename_info << endl;
 	//	friend_fname = make_rootfilename(g4f_path+"friend_", runno);
-		friend_fname = make_rootfilename(g4f_path+"multifriend_", runno, additional_filename_info);
+		friend_fname = make_rootfilename(mf_g4path+"multifriend_", runno, additional_filename_info);
 	}
 	cout << "fname = " << fname << endl;
 	cout << "friend_fname = " << friend_fname << endl;

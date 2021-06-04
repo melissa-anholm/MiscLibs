@@ -58,6 +58,9 @@ string uf_path_wisely = "/Users/anholm/Desktop/Anal-Ysis/ReAnalyzedFriends_2014/
 string g4_path_wisely  = "/Users/anholm/Desktop/Trinat_Geant/build/Output/";
 //string g4_path_wisely  = "/Users/anholm/Desktop/Anal-Ysis/G4_Data/";
 string bb1_prefix_wisely = "/Users/anholm/Packages/MiscLibs/BB1/";
+string mf_datapath_wisely = "/Users/anholm/Desktop/Anal-Ysis/MultiFriends_2014/";
+string mf_g4path_wisely   = "/Users/anholm/Desktop/Trinat_Geant/build/Output/Friends/";
+
 //
 string br_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
 string be_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
@@ -105,11 +108,16 @@ string ur_path_trinat01 = "/pool/anholm/Data_2014/Unblinded_Recoils_2014/";  // 
 string ue_path_trinat01 = "/pool/anholm/Data_2014/Unblinded_Electrons_2014/";  
 string uf_path_trinat01 = "/pool/anholm/Data_2014/Unblinded_Friends_2014/";  
 
-//string g4_path_trinat01  = "/pool/anholm/Output/";
-string g4_path_trinat01    = "/home/trinat/anholm/K37/build/Output/";
-string bb1_prefix_trinat01 = "/home/trinat/anholm/Packages/MiscLibs/BB1/";
+//string g4_path_trinat01   = "/pool/anholm/Output/";
+string g4_path_trinat01     = "/home/trinat/anholm/K37/build/Output/";
+string bb1_prefix_trinat01  = "/home/trinat/anholm/Packages/MiscLibs/BB1/";
+string mf_datapath_trinat01 = "/pool/trinat/MultiFriends_Data/";
+string mf_g4path_trinat01   = "/pool/trinat/MultiFriends_G4/";
 
 //
+string mf_datapath = mf_datapath_trinat01;
+string mf_g4path   = mf_datapath_trinat01;
+
 string br_path = br_path_fifteen;
 string be_path = be_path_fifteen;
 string bf_path = bf_path_fifteen;
@@ -185,7 +193,10 @@ bool setup_location()
 		g4_path  = g4_path_wisely;
 		g4f_path = g4_path+"Friends/";
 		metadata_name = g4_path+"MetaData.txt";
-
+		
+		mf_datapath = mf_datapath_wisely;
+		mf_g4path   = mf_datapath_wisely;
+		
 		bb1_prefix = bb1_prefix_wisely;
 		return true;
 	}
@@ -204,6 +215,9 @@ bool setup_location()
 		g4_path  = g4_path_trinat01;
 		g4f_path = g4_path+"Friends/";
 		metadata_name = g4_path+"MetaData.txt";
+
+		mf_datapath = mf_datapath_trinat01;
+		mf_g4path   = mf_datapath_trinat01;
 
 		bb1_prefix = bb1_prefix_trinat01;
 		return true;
