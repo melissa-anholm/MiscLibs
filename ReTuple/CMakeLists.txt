@@ -59,7 +59,9 @@ ENDIF()
 #Linking the Executable ================
 #create exectuable
 #add_executable (retuple TupleMyTuple.cpp)
-add_executable (soetuple SOEtuple.cpp)
+#add_executable (slimtuple SlimTuple.cpp)
+add_executable (multituple MultiTuple.cpp)
+#add_executable (soetuple SOEtuple.cpp)
 
 #add_executable (retuple TupleMyTuple_kludge.cpp)  # no G4 scint res or G4 BB1 res.
 #add_executable (testtuple TestTuple.cpp)
@@ -67,8 +69,10 @@ add_executable (soetuple SOEtuple.cpp)
 
 #link this library with everything that is needed
 #to pop up a windows with the plots at the end
-target_link_libraries (#retuple
-                       soetuple
+target_link_libraries (#slimtuple
+                       multituple
+                       #retuple
+                       #soetuple
                        bb1_strip
                        Gui
                        Core
