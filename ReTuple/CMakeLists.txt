@@ -33,11 +33,15 @@ LINK_DIRECTORIES(${ROOT_LIBRARY_DIR})
 LINK_DIRECTORIES (/usr/local/lib)  # for trinatdaq
 
 
+
+ADD_DEFINITIONS(-g -O3 -std=c++11 -W -Wall -Wpointer-arith)  # Needed for trinat01 !
+
+
 #Compiler Flags=========================
 #SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O2 -Wall -pthread -m64 -stdlib=libc++ -std=c++11")
 #SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O2 -Wall -pthread -m64 -std=c++11")
 #SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O2 -Wall -pthread -m64")
-SET(CMAKE_BUILD_TYPE ReLWithDebInfo)
+SET(CMAKE_BUILD_TYPE ReLWithDebInfo)  # possibly needed for trinat01?  Not sure.
 
 #Adding the Libraries ==================
 IF( $ENV{USER} STREQUAL "trinat")  #
