@@ -74,7 +74,7 @@ using std::min;
 
 //
 bool is_blinded            = false;
-bool is_g4                 = true;
+bool is_g4                 = false;
 bool use_g4_metadata       = true;
 bool apply_scint_res_on_g4 = true;
 bool doEmpirical           = true;   // empirical noise on BB1s.  for G4 data.
@@ -836,18 +836,21 @@ int main(int argc, char *argv[])
 			{
 				f_adjset_t = makefunc_top_adj_B();
 				f_adjset_b = makefunc_bottom_adj_B();
+				cout << "Using a run from Data Set B." << endl;
 			}
 			else if( (runs.runset_letter[runno]).compare(string("C"))==0  )
 			{
 				f_adjset_t = makefunc_top_adj_C();
 				f_adjset_b = makefunc_bottom_adj_C();
+				cout << "Using a run from Data Set C." << endl;
 			}
-			else if( (runs.runset_letter[runno]).compare(string("D"))==0  )
+			else if( (runs.runset_letter[runno]).compare(string("D"))==0 )
 			{
 				f_adjset_t = makefunc_top_adj_D();
 				f_adjset_b = makefunc_bottom_adj_D();
+				cout << "Using a run from Data Set D." << endl;
 			}
-			if( (runs.runset_letter[runno]).compare(string("A"))==0  )
+			else if( (runs.runset_letter[runno]).compare(string("A"))==0  )
 			{
 				cout << "***" << endl;
 				cout << "WARNING!  You are attempting to retuple a run from Set A, using the scintillator walk correction from Set B!!" << endl;
@@ -859,6 +862,7 @@ int main(int argc, char *argv[])
 			else 
 			{
 				cout << "That's bad." << endl;
+				return 0;
 			}
 			//
 			if(is_blinded)
@@ -1957,6 +1961,7 @@ int main(int argc, char *argv[])
 	version_string -> Write();
 	friend_tree -> GetCurrentFile() -> Close();
 	
+	cout << "Output saved to file:  " << friend_fname << endl;
 	cout << "Done." << endl;
 	return 0;
 }

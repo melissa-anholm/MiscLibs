@@ -22,6 +22,7 @@ int AddHex75PositionToTree_LE(TTree *t, std::string calibration_directory);
 double rotation_angle = 60.0;	// degrees
 double to_ns = 0.1;             // ns/tick
 
+extern string hexpath;  // location.cpp
 
 class Hex75 
 {
@@ -96,7 +97,8 @@ Hex75::Hex75()
 //		calibration_directory = temp;
 //	}
 	
-	std::string calibration_directory = "/Users/anholm/Packages/MiscLibs/ReTuple/HexCal";
+//	std::string calibration_directory = "/Users/anholm/Packages/MiscLibs/ReTuple/HexCal";
+	std::string calibration_directory = hexpath;
 	Init(calibration_directory);
 }
 Hex75::Hex75(std::string calibration_directory) 

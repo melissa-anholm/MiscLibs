@@ -667,6 +667,11 @@ int main(int argc, char *argv[])
 	{
 		is_g4  = bool( atoi(argv[2]) );
 		cout << "is_g4 = " << is_g4 << endl;
+		
+		if(is_g4)
+		{
+			additional_filename_info = "_BCD";
+		}
 	}
 	
 	if(argc>=5)
@@ -684,7 +689,8 @@ int main(int argc, char *argv[])
 			sig_str.replace(1, 1, "p");
 		}
 	//	additional_filename_info = "_BCD_ind"+int_to_string(threshold_index)+"_sig"+sig_str/*+"_thr"+int_to_string(bb1_energy_threshold)+"keV"*/;
-		additional_filename_info = "_BCD_ind"+int_to_string(threshold_index)+"_sig"+sig_str;
+		
+		additional_filename_info = additional_filename_info+"_ind"+int_to_string(threshold_index)+"_sig"+sig_str;
 		//
 	}
 	
@@ -720,18 +726,21 @@ int main(int argc, char *argv[])
 		{
 			f_adjset_t = makefunc_top_adj_B();
 			f_adjset_b = makefunc_bottom_adj_B();
+			cout << "Using a run from Data Set B." << endl;
 		}
 		else if( (runs.runset_letter[runno]).compare(string("C"))==0  )
 		{
 			f_adjset_t = makefunc_top_adj_C();
 			f_adjset_b = makefunc_bottom_adj_C();
+			cout << "Using a run from Data Set C." << endl;
 		}
 		else if( (runs.runset_letter[runno]).compare(string("D"))==0 )
 		{
 			f_adjset_t = makefunc_top_adj_D();
 			f_adjset_b = makefunc_bottom_adj_D();
+			cout << "Using a run from Data Set D." << endl;
 		}
-		if( (runs.runset_letter[runno]).compare(string("A"))==0  )
+		else if( (runs.runset_letter[runno]).compare(string("A"))==0  )
 		{
 			cout << "***" << endl;
 			cout << "WARNING!  You are attempting to retuple a run from Set A, using the scintillator walk correction from Set B!!" << endl;
@@ -744,25 +753,28 @@ int main(int argc, char *argv[])
 		{
 			cout << "That's bad." << endl;
 			cout << "(runs.runset_letter[runno]) = " << (runs.runset_letter[runno]) << endl;
+			return 0;
 		}
 		//
 		if(runs.good_electron[runno]==true)
 		{
 			cout << "Run " << runno << " is an electron run." << endl;
-			fname  = make_rootfilename(ue_path+"output00", runno);
-			cout << "Using file:  " << fname << endl;
 		}
 		else
 		{
 			cout << "BAD.  Check run number.  Note:  SlimTuple doesn't do recoils." << endl;
 			return 0;
 		}
-	//	cout << "uh....... what??  " << endl << endl << endl;
-	//	friend_fname = make_rootfilename(uf_path+"friend00",runno);
+		//
+		fname  = make_rootfilename(ue_path+"output00", runno);
 		friend_fname = make_rootfilename(mf_datapath+"multifriend_", runno, additional_filename_info);
+		cout << "Using file:  " << fname << endl;
+		cout << "(re)Creating friend file:  " << friend_fname << endl;
 	}
 	else // it's g4
 	{
+	//	fname  = make_rootfilename(ue_path+"output00", runno);
+		
 		cout << "Original Rand. Seed:  " << endl;
 		cout << gRandom->GetSeed() << endl;
 		gRandom->SetSeed(0);  // sets seed to something something machine time.
@@ -774,44 +786,15 @@ int main(int argc, char *argv[])
 		// FIX THESE.
 		cout << "Looking at the metadata..." << endl;
 		MetaTree = load_metadata_tree(metadata_name);
-		fname = get_simfilename(MetaTree, runno);
+		fname = get_simfilename(MetaTree, runno);      //
+		
 		if(fname==string(""))
 		{
 			cout << "Exiting..." << endl;
 			return 0;
 		}
-		/*
-		// also, check what runset it's supposed to match.
-		if(argc==2)  // did not enter the intended runset as a parameter.
-		{
-			matched_runset = get_matched_runletter(MetaTree, runno);  //
-			if( matched_runset==string("EA") || matched_runset==string("EB") || matched_runset==string("RA") || matched_runset==string("RB") )
-			{
-				lambda_g4_res_t = lambda_g4_res_t_B;  // 1.55;  // +/- 0.09
-				lambda_g4_res_b = lambda_g4_res_b_B;  // 1.28;  // +/- 0.08
-			}
-			else if( matched_runset==string("EC") || matched_runset==string("ED") || matched_runset==string("RC") || matched_runset==string("RD") || matched_runset==string("RE") )
-			{
-				lambda_g4_res_t = lambda_g4_res_t_CD;  // 1.42;  // +/- 0.08
-				lambda_g4_res_b = lambda_g4_res_b_CD;  // 1.32;  // +/- 0.08
-			}
-			else
-			{
-				cout << "************************************************************************" << endl;
-				cout << "WARNING!!  Could not find matched runset:  " << matched_runset << endl;
-				cout << "Applying the late runsets' resolution for the scintillators anyway, " << endl;
-				cout << "but it's not *really* the correct thing to do..." << endl;
-				cout << "************************************************************************" << endl;
-				cout << endl;
-			//	cout << "Scintillator resolution will not be applied." << endl;  // yes it will.
-			//	lambda_g4_res_t = 1.42;  // +/- 0.08
-			//	lambda_g4_res_b = 1.32;  // +/- 0.08
-				lambda_g4_res_t = lambda_g4_res_t_B;  // 1.55;  // +/- 0.09
-				lambda_g4_res_b = lambda_g4_res_b_B;  // 1.28;  // +/- 0.08
-			}
-		}
-		*/
 		cout << "additional_filename_info:  " << additional_filename_info << endl;
+	//	cout << "mf_g4path:  " << mf_g4path << endl;
 	//	friend_fname = make_rootfilename(g4f_path+"friend_", runno);
 		friend_fname = make_rootfilename(mf_g4path+"multifriend_", runno, additional_filename_info);
 	}
@@ -823,6 +806,7 @@ int main(int argc, char *argv[])
 	if(!(f->IsOpen()))
 	{
 		cout << "File can't be opened." << endl;
+		cout << "\tfname=" << fname << endl;
 		return 0;
 	}
 	TTree *tree = new TTree;  // Fix this.  This needs to be a TChain now?  ... No, no it doesn't.
@@ -1694,6 +1678,7 @@ int main(int argc, char *argv[])
 	params_string -> Write();
 	friend_tree -> GetCurrentFile() -> Close();
 	
+	cout << "Output saved to file:  " << friend_fname << endl;
 	cout << "Done." << endl;
 	return 0;
 }

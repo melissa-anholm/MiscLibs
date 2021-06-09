@@ -61,6 +61,8 @@ string bb1_prefix_wisely = "/Users/anholm/Packages/MiscLibs/BB1/";
 string mf_datapath_wisely = "/Users/anholm/Desktop/Anal-Ysis/MultiFriends_2014/";
 string mf_g4path_wisely   = "/Users/anholm/Desktop/Trinat_Geant/build/Output/Friends/";
 
+string hexpath_wisely = "/Users/anholm/Packages/MiscLibs/ReTuple/HexCal";  // HexCal ONLY has no final /
+
 //
 string br_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
 string be_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
@@ -105,8 +107,10 @@ string be_path_trinat01 = "/pool/anholm/Data_2014/Blinded_Electrons_2014/";  // 
 string bf_path_trinat01 = "/pool/anholm/Data_2014/Blinded_Friends_2014/";  // bad.
 
 string ur_path_trinat01 = "/pool/anholm/Data_2014/Unblinded_Recoils_2014/";  // bad
-string ue_path_trinat01 = "/pool/trinat/ReAnalyzedFriends_2014/";  
-string uf_path_trinat01 = "/pool/trinat/ReAnalyzed_2014/";  
+string ue_path_trinat01 = "/pool/trinat/ReAnalyzed_2014/";  
+string uf_path_trinat01 = "/pool/trinat/ReAnalyzedFriends_2014/";  
+
+string hexpath_trinat01 = "/home/trinat/anholm/Packages/MiscLibs/ReTuple/HexCal";  // HexCal ONLY has no final /
 
 //string g4_path_trinat01   = "/pool/anholm/Output/";
 string g4_path_trinat01     = "/home/trinat/anholm/K37/build/Output/";
@@ -116,7 +120,7 @@ string mf_g4path_trinat01   = "/pool/trinat/MultiFriends_G4/";
 
 //
 string mf_datapath = mf_datapath_trinat01;
-string mf_g4path   = mf_datapath_trinat01;
+string mf_g4path   = mf_g4path_trinat01;
 
 string br_path = br_path_fifteen;
 string be_path = be_path_fifteen;
@@ -134,6 +138,8 @@ string g4f_path = g4_path+"Friends/";
 string metadata_name = g4_path+"MetaData.txt";
 
 string bb1_prefix = bb1_prefix_fifteen;
+
+string hexpath = hexpath_wisely;
 
 //
 
@@ -198,6 +204,8 @@ bool setup_location()
 		mf_g4path   = mf_g4path_wisely;
 		
 		bb1_prefix = bb1_prefix_wisely;
+		hexpath = hexpath_wisely;
+
 		return true;
 	}
 	else if(strcmp(this_location, "trinat01")==0)
@@ -217,9 +225,11 @@ bool setup_location()
 		metadata_name = g4_path+"MetaData.txt";
 
 		mf_datapath = mf_datapath_trinat01;
-		mf_g4path   = mf_datapath_trinat01;
+		mf_g4path   = mf_g4path_trinat01;
 
 		bb1_prefix = bb1_prefix_trinat01;
+		
+		hexpath = hexpath_trinat01;
 		return true;
 	}
 	else
