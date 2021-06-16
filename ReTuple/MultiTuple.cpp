@@ -896,10 +896,10 @@ int main(int argc, char *argv[])
 		TBranch *upper_e_res_branch_B = friend_tree -> Branch("upper_scint_E_res_B", &upper_E_res_B);  // detector resolution
 		TBranch *lower_e_res_branch_B = friend_tree -> Branch("lower_scint_E_res_B", &lower_E_res_B);  // 
 		//
-		TBranch *upper_e_b_CD          = friend_tree -> Branch("upper_scint_E_B",     &upper_E_CD);
-		TBranch *lower_e_b_CD          = friend_tree -> Branch("lower_scint_E_B",     &lower_E_CD);
-		TBranch *upper_e_res_branch_CD = friend_tree -> Branch("upper_scint_E_res_B", &upper_E_res_CD);  // detector resolution
-		TBranch *lower_e_res_branch_CD = friend_tree -> Branch("lower_scint_E_res_B", &lower_E_res_CD);  // 
+		TBranch *upper_e_b_CD          = friend_tree -> Branch("upper_scint_E_CD",     &upper_E_CD);
+		TBranch *lower_e_b_CD          = friend_tree -> Branch("lower_scint_E_CD",     &lower_E_CD);
+		TBranch *upper_e_res_branch_CD = friend_tree -> Branch("upper_scint_E_res_CD", &upper_E_res_CD);  // detector resolution
+		TBranch *lower_e_res_branch_CD = friend_tree -> Branch("lower_scint_E_res_CD", &lower_E_res_CD);  // 
 	}
 	//
 	
