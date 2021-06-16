@@ -112,6 +112,7 @@ string make_rootfilename(string name, int parameter, string name2=string(""))
 	rootfname = ss.str();
 	return rootfname;
 }
+/*
 string int_to_string(int thisint)
 {
 	string outstring;
@@ -129,6 +130,7 @@ string convertDouble(double value)
     return "";
   return o.str();
 }
+*/
 TObjString * make_tstring(string descriptor, int value)
 {
 	string tmp_string = descriptor+int_to_string(value);
