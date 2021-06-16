@@ -62,6 +62,8 @@ string mf_datapath_wisely = "/Users/anholm/Desktop/Anal-Ysis/MultiFriends_2014/"
 string mf_g4path_wisely   = "/Users/anholm/Desktop/Trinat_Geant/build/Output/Friends/";
 
 string hexpath_wisely = "/Users/anholm/Packages/MiscLibs/ReTuple/HexCal";  // HexCal ONLY has no final /
+//string asymtree_path_wisely = "/Users/anholm/Desktop/Anal-Ysis/Unblinded_Friends_2014/AsymTree/";
+//string asymtree_path_wisely = "/Users/anholm/Desktop/Anal-Ysis/ReAnalyzedFriends_2014/AsymTree/";
 
 //
 string br_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
@@ -111,6 +113,7 @@ string ue_path_trinat01 = "/pool/trinat/ReAnalyzed_2014/";
 string uf_path_trinat01 = "/pool/trinat/ReAnalyzedFriends_2014/";  
 
 string hexpath_trinat01 = "/home/trinat/anholm/Packages/MiscLibs/ReTuple/HexCal";  // HexCal ONLY has no final /
+//string asymtree_path_trinat01 = "/pool/trinat/ReAnalyzedFriends_2014/AsymTree/";
 
 //string g4_path_trinat01   = "/pool/anholm/Output/";
 string g4_path_trinat01     = "/home/trinat/anholm/K37/build/Output/";
@@ -138,13 +141,12 @@ string g4f_path = g4_path+"Friends/";
 string metadata_name = g4_path+"MetaData.txt";
 
 string bb1_prefix = bb1_prefix_fifteen;
-
 string hexpath = hexpath_wisely;
+string asymtree_path;
 
 //
 
 // A horrible kludge!
-string asymtree_path = "/Users/anholm/Desktop/Anal-Ysis/Unblinded_Friends_2014/AsymTree/";
 
 const char* env_location = std::getenv("LOCATION");
 string char_to_string(const char* input)
@@ -205,6 +207,7 @@ bool setup_location()
 		
 		bb1_prefix = bb1_prefix_wisely;
 		hexpath = hexpath_wisely;
+		asymtree_path = uf_path+"AsymTree/";
 
 		return true;
 	}
@@ -228,8 +231,9 @@ bool setup_location()
 		mf_g4path   = mf_g4path_trinat01;
 
 		bb1_prefix = bb1_prefix_trinat01;
-		
 		hexpath = hexpath_trinat01;
+		asymtree_path = uf_path+"AsymTree/";
+		
 		return true;
 	}
 	else

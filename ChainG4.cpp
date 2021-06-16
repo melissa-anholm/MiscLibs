@@ -25,6 +25,12 @@ bool use_only_summed_forchain = true;
 
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+
+extern string int_to_string(int);
+extern string convertDouble(double);
+
+// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 // ====================================== // ====================================== //
 // Newer TChains for Simulations:
 string get_simfilename(string path, int runno)  // don't use this.
@@ -41,7 +47,6 @@ string get_simfilename(string path, int runno)  // don't use this.
 	
 	return fname;
 }
-
 string get_simfilename(TTree * MetaTree, int runno)  // from the MetaTree.
 {
 	string namestub = "";
@@ -173,7 +178,6 @@ TChain * get_single_soetree(int runno)
 	delete MetaTree;
 	return tree_chain;
 }
-
 TChain * get_multi_soetree(vector<int> runnos)
 {
 	TTree *MetaTree = load_metadata_tree(metadata_name);
@@ -204,7 +208,7 @@ TChain * get_multi_soetree(vector<int> runnos)
 	return tree_chain;
 }
 
-
+/*
 vector<int> get_runlist_from_rho(TTree * MetaTree, double rho, string runset_string, int maxrun=0)
 {
 	vector<int> set_of_runs;
@@ -293,7 +297,7 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, string runset_string, 
 	for(int i=0; i<nentries; i++)
 	{
 		MetaTree -> GetEntry(i);
-		if(this_rho == rho /* && has_been_summed==0 */ && !strcmp(this_runset, runset) )
+		if(this_rho == rho */ /* && has_been_summed==0 */ /*&& !strcmp(this_runset, runset) )
 		{
 			if(has_been_summed==0)
 			{
@@ -329,6 +333,8 @@ TChain * get_chain_from_rho(TTree * MetaTree, double rho, string runset_string, 
 	tree_chain -> AddFriend(friend_chain);
 	return tree_chain;
 }
+*/
+
 vector<int> make_runlist_from_args( int argc, char* argv[] )
 {
 	vector<int> the_runlist;
@@ -715,6 +721,7 @@ string make_simfilename(string namestub, int runno)  // no, don't..
 
 // ====================================== //
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+/*
 void printout_list(double rho, string runset_string)
 {
 	TTree * MetaTree = load_metadata_tree(metadata_name);
@@ -727,6 +734,7 @@ void printout_list(double rho, string runset_string)
 	}
 	return;
 }
+*/
 
 void printout(vector<int> list)
 {

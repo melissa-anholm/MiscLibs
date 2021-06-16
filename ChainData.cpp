@@ -25,6 +25,8 @@ using std::string;
 
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
+extern string int_to_string(int);
+extern string convertDouble(double);
 
 
 // ====================================== // ====================================== //
@@ -82,6 +84,30 @@ string get_datafriendname(string path, int runno, bool use_blinded=false)
 
 	fname = ss.str();
 	
+	return fname;
+}
+
+string get_data_multifriend_name(int runno, int threshold_index, double sigma_cut)
+{	
+	string fname;
+	std::stringstream ss;
+	ss.str( std::string() );
+	ss.clear();
+	
+	//
+	string sig_str = convertDouble(sigma_cut);
+	if( (sigma_cut-double(int(sigma_cut)))==0.0 )
+	{
+		sig_str.replace(1, 1, "p0");
+	}
+	else
+	{
+		sig_str.replace(1, 1, "p");
+	}
+	string additional_filename_info = "_ind"+int_to_string(threshold_index)+"_sig"+sig_str;
+	ss << mf_datapath << "multifriend_" << runno << additional_filename_info << ".root";
+	
+	fname = ss.str();
 	return fname;
 }
 
@@ -365,6 +391,67 @@ TChain * get_electron_asym_chain_from_letter(string runset_letter, bool use_blin
 	}
 	
 	tree_chain -> AddFriend(friend_chain);
+	tree_chain -> AddFriend(other_friend_chain);
+	tree_chain -> AddFriend(asym_chain);
+	return tree_chain;
+}
+
+TChain * get_electron_asym_multituple_chain_from_letter(string runset_letter, int threshold_index, double sigma_cut) // case sensitive.
+{
+//	cout << "Called get_electron_asym_chain_from_letter(...)" << endl;
+	set_of_runs runs;
+	
+	string filename;
+	string multifriendname;
+	TChain * tree_chain = new TChain("ntuple");
+	TChain * multi_friend_chain = new TChain("friendtuple");  // now this is going to be a multi-friend.
+	string other_friendname;
+	TChain * other_friend_chain = new TChain("cycle_counters");
+	TChain * asym_chain = new TChain("use_eq_time");
+	
+	string path;
+	string friendpath;
+	
+	bool use_blinded=false;
+	path = ue_path;
+//	friendpath = uf_path;
+	
+	//
+	if( !( runset_letter.compare(string("A"))==0 || runset_letter.compare(string("B"))==0 || runset_letter.compare(string("C"))==0 || runset_letter.compare(string("D"))==0 ) )
+	{
+		cout << "Nope.  \"" << runset_letter << "\" is not a recognized electron runset."  << endl;
+		return tree_chain;
+	}
+	else
+	{
+		cout << "* Using electron runset " << runset_letter << endl;
+	}
+	for(int i=302; i<runs.N_runs; i++)
+	{
+		if(runs.good_electron[i] == true)
+		{
+			if( runset_letter.compare( runs.runset_letter[i] )==0 )
+			{
+				cout << "Using run " << i;// << endl;
+				cout << ":  runset_letter[i] = " << runs.runset_letter[i] << endl;
+				filename = get_datafilename(path, i, use_blinded);
+				tree_chain -> Add(filename.c_str());
+				
+			//	friendname = get_datafriendname(friendpath, i, use_blinded);
+			//	string get_data_multifriend_name(int runno, int threshold_index, double sigma_cut)
+			//	friend_chain -> Add(friendname.c_str());
+				
+				multifriendname = get_data_multifriend_name(i, threshold_index, sigma_cut);
+				multi_friend_chain -> Add(multifriendname.c_str());
+				
+				other_friendname = get_dataasymname(asymtree_path, i, use_blinded);  // kludge.  asymtree_path defintiion is a kludge in location.cpp
+				other_friend_chain -> Add(other_friendname.c_str());
+				asym_chain -> Add(other_friendname.c_str());
+			}
+		}
+	}
+	
+	tree_chain -> AddFriend(multi_friend_chain);
 	tree_chain -> AddFriend(other_friend_chain);
 	tree_chain -> AddFriend(asym_chain);
 	return tree_chain;
