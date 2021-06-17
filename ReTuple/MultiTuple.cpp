@@ -123,6 +123,7 @@ string int_to_string(int thisint)
 	outstring = ss.str();
 	return outstring;
 }
+/*
 string convertDouble(double value) 
 {
   std::ostringstream o;
@@ -1318,7 +1319,7 @@ int main(int argc, char *argv[])
 		
 		// ok, apply the SOE TOF walk calibration.  we can re-use nhits.  
 		// we already figured out upper_E and lower_E.  if it's g4 or old, just fill with zeroes.
-		if(electron_count>0)
+		if(electron_count>0 || is_g4)
 		{
 			double electron_time = (*electron_events)[0];
 			double e_tof_in = 0;
@@ -1397,8 +1398,9 @@ int main(int argc, char *argv[])
 		had_Nhits_bb1_t = 0;
 		had_Nhits_bb1_b = 0;
 		
-		if(upper_E < 10.0) { N_hits_scint_t=0; }
-		if(lower_E < 10.0) { N_hits_scint_b=0; }
+		// Doesn't really matter that we're doing this cut for the "set B energy".  It's a stupidly tiny value anyway.
+		if( (is_g4 && upper_E_B < 10.0) || (!is_g4 && upper_E < 10.0) ) { N_hits_scint_t=0; }
+		if( (is_g4 && lower_E_B < 10.0) || (!is_g4 && lower_E < 10.0) ) { N_hits_scint_b=0; }
 		
 		if( led_count==0 && photodiode_count==0 && (N_hits_scint_t>0 || N_hits_scint_b>0) )
 		{

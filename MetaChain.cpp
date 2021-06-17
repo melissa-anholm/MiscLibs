@@ -7,7 +7,8 @@
 #include "ChainG4.cpp"
 
 
-
+extern string int_to_string(int thisint);
+/*
 string int_to_string(int thisint)
 {
 	string outstring;
@@ -18,6 +19,9 @@ string int_to_string(int thisint)
 	outstring = ss.str();
 	return outstring;
 }
+*/
+
+//extern string convertDouble(double value);
 string convertDouble(double value) 
 {
   std::ostringstream o;
@@ -25,5 +29,6 @@ string convertDouble(double value)
     return "";
   return o.str();
 }
+
 
 #endif

@@ -424,6 +424,90 @@ TChain * get_chain_from_runlist(int argc, char* argv[], TTree * MetaTree) // thi
 	return get_chain_from_runlist(MetaTree, the_runlist);
 }
 
+
+
+
+string get_g4_multifriend_name(int runno, int threshold_index, double sigma_cut)
+{	
+	string fname;
+	std::stringstream ss;
+	ss.str( std::string() );
+	ss.clear();
+	
+	string friendpath = g4f_path;
+	//
+	string sig_str = convertDouble(sigma_cut);
+	if( (sigma_cut-double(int(sigma_cut)))==0.0 )
+	{
+		sig_str.replace(1, 1, "p0");
+	}
+	else
+	{
+		sig_str.replace(1, 1, "p");
+	}
+	string additional_filename_info = "_BCD_ind"+int_to_string(threshold_index)+"_sig"+sig_str;
+	ss << friendpath << "multifriend_" << runno << additional_filename_info << ".root";
+//	ss << "multifriend_" << runno << additional_filename_info << ".root";
+	
+	fname = ss.str();
+	return fname;
+}
+
+TChain * get_multichain_from_runlist(TTree * MetaTree, vector<int> the_runlist, int threshold_index, double sigma_cut) // this can break if the metadata has recorded more than one of the same run number.
+{
+	string path       = g4_path;
+	string friendpath = g4f_path;
+
+	int nentries = MetaTree -> GetEntries();
+
+	int run = 0;
+	MetaTree -> SetBranchAddress("Run", &run);
+	int this_neventsgenerated = 0;
+	int this_neventssaved = 0;
+	MetaTree -> SetBranchAddress("EventsGenerated", &this_neventsgenerated);
+	MetaTree -> SetBranchAddress("EventsSaved",     &this_neventssaved);
+	
+	int total_events_generated = 0;
+	int total_events_recorded = 0;
+
+	TChain * tree_chain   = new TChain("ntuple");
+	TChain * friend_chain = new TChain("friendtuple");
+	string filename;
+	string friendname;
+//	cout << "nentries = " << nentries << endl;
+	for(int i=0; i<nentries; i++)
+	{
+		MetaTree -> GetEntry(i);
+		
+		int run_index = check_runmatch(run, the_runlist);
+		if( run_index != -1 )
+		{
+			cout << "Using run " << run << "  (i=" << i << "),\tN_gen=" << this_neventsgenerated << ",\tN_saved=" << this_neventssaved << endl;
+			total_events_generated = total_events_generated + this_neventsgenerated;
+			total_events_recorded = total_events_recorded + this_neventssaved;
+		
+			filename   = get_simfilename( (TChain*)MetaTree->Clone(), run);
+		//	friendname = get_simfriendname(friendpath, run);  // check if friend exists???
+			friendname = get_g4_multifriend_name(run, threshold_index, sigma_cut);
+			tree_chain -> Add(filename.c_str());
+			friend_chain -> Add(friendname.c_str());
+
+			filename = string();
+			filename.clear();
+			friendname = string();
+			friendname.clear();
+		}
+	}
+	tree_chain -> AddFriend(friend_chain);
+	return tree_chain;
+}
+TChain * get_multichain_from_runlist(vector<int> the_runlist, int threshold_index, double sigma_cut) // wrapper
+{
+	TTree *MetaTree = load_metadata_tree(metadata_name);
+	return get_multichain_from_runlist(MetaTree, the_runlist, threshold_index, sigma_cut);
+}
+
+
 vector<int> get_summed_simlist(bool verbose=true)  // just use all the runs that "have_been_summed" yet not "is_a_sum".
 {
 	vector<int> set_of_runs;
