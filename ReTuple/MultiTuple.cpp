@@ -112,7 +112,7 @@ string make_rootfilename(string name, int parameter, string name2=string(""))
 	rootfname = ss.str();
 	return rootfname;
 }
-/*
+
 string int_to_string(int thisint)
 {
 	string outstring;
@@ -1255,7 +1255,9 @@ int main(int argc, char *argv[])
 	for(int i=0; i<nentries; i++)
 	{
 		if( (i % 100000) == 0) { cout<<"Reached entry "<< i << endl; }
+	//	cout << "i=" << i << endl;
 		tree -> GetEntry(i);
+	//	cout << "entry is got." << endl;
 		//
 		
 		// photodiode and led events, for g4:
@@ -1288,6 +1290,7 @@ int main(int argc, char *argv[])
 		}
 		else if(is_g4)
 		{
+		//	cout << "meh?" << endl;
 			all_okay = kTRUE;	
 			//
 			upper_DeltaE = 0.0;
@@ -1321,17 +1324,20 @@ int main(int argc, char *argv[])
 		// we already figured out upper_E and lower_E.  if it's g4 or old, just fill with zeroes.
 		if(electron_count>0 || is_g4)
 		{
-			double electron_time = (*electron_events)[0];
+	//		cout << "... k..." << endl;
 			double e_tof_in = 0;
 			double the_tof = 0;
+			
 			// Top:
 			if(N_hits_scint_t>0)
 			{
+	//			cout << "top!" << endl;
 				nhits = N_hits_scint_t;
 				for(int j=0; j<nhits; j++) 
 				{
 					if(!is_g4)
 					{
+						double electron_time = (*electron_events)[0];
 						the_tof = adjust_tof_t( (electron_time - scint_time_t->at(j))*v1192_to_ns, upper_E, f_quartic_t);
 						the_tof = second_adjust_t(the_tof, upper_E, f_adjset_t);
 					}
@@ -1341,18 +1347,22 @@ int main(int argc, char *argv[])
 			// Bottom:
 			if(N_hits_scint_b>0)
 			{
+	//			cout << "bottom." << endl;
 				nhits = N_hits_scint_b;
 				for(int j=0; j<nhits; j++) 
 				{
 					if(!is_g4)
 					{
+						double electron_time = (*electron_events)[0];
 						the_tof = adjust_tof_b( (electron_time - scint_time_b->at(j))*v1192_to_ns, lower_E, f_quartic_b);
 						the_tof = second_adjust_b(the_tof, lower_E, f_adjset_b);
 					}
 					scint_b_walk -> push_back(the_tof);
 				}
 			}
+	//		cout << "did we even get here?" << endl;
 		}
+	//	cout << "or here?" << endl;
 		
 		// HEX 75 calibrations:
 		if(!is_g4)
