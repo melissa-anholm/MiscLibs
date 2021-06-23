@@ -862,6 +862,7 @@ int main(int argc, char *argv[])
 			else 
 			{
 				cout << "That's bad." << endl;
+				cout << "(runs.runset_letter[runno]) = " << (runs.runset_letter[runno]) << endl;
 				return 0;
 			}
 			//
@@ -1163,7 +1164,7 @@ int main(int argc, char *argv[])
 	TBranch *scint_b_walk_branch = friend_tree -> Branch("tdc_scint_b_corrected", &scint_b_walk);
 	scint_t_walk -> clear();
 	scint_b_walk -> clear();
-	
+		
 	// ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // ---- // 
 	// BB1s:  
 	BB1Detector stripdetector[2][2];
@@ -1251,20 +1252,13 @@ int main(int argc, char *argv[])
 	zPos.clear();
 	rcode.clear();
 	
-//	vector<double> * scint_t_walk = 0;
-//	vector<double> * scint_b_walk = 0;
-//	TBranch *scint_t_walk_branch = friend_tree -> Branch("tdc_scint_t_corrected", &scint_t_walk);
-//	TBranch *scint_b_walk_branch = friend_tree -> Branch("tdc_scint_b_corrected", &scint_b_walk);
-//	scint_t_walk -> clear();
-//	scint_b_walk -> clear();
-	
+	// HEX:
 	vector<double> *u1 = 0;
 	vector<double> *u2 = 0;
 	vector<double> *v1 = 0;
 	vector<double> *v2 = 0;
 	vector<double> *w1 = 0;
 	vector<double> *w2 = 0;
-//	vector<double> *mcp = 0;
 	if(!is_g4)
 	{
 		tree -> SetBranchAddress("TDC_HEX75_U1_LE", &u1);
@@ -1274,8 +1268,6 @@ int main(int argc, char *argv[])
 		tree -> SetBranchAddress("TDC_HEX75_W1_LE", &w1);
 		tree -> SetBranchAddress("TDC_HEX75_W2_LE", &w2);
 	}
-//	tree -> SetBranchAddress("TDC_ELECTRON_MCP_LE", &mcp);
-//	tree -> SetBranchAddress("TDC_ELECTRON_MCP_LE", &electron_events);
 	//
 	
 	
@@ -1305,11 +1297,6 @@ int main(int argc, char *argv[])
 	bb1_b_y -> clear();
 	bb1_b_E -> clear();
 	bb1_b_r -> clear();
-	
-//	Bool_t bb1_t_pass = kFALSE;
-//	Bool_t bb1_b_pass = kFALSE;
-//	TBranch *bb1_t_pass_b = friend_tree -> Branch("bb1_t_pass", &bb1_t_pass);  
-//	TBranch *bb1_b_pass_b = friend_tree -> Branch("bb1_b_pass", &bb1_b_pass);  
 	
 	BB1Hit    bb1_hit[2]    = {BB1Hit(), BB1Hit()};        // 2 detectors.
 	BB1Hit    bb1_sechit[2] = {BB1Hit(), BB1Hit()};        // 2 detectors.
@@ -1451,7 +1438,7 @@ int main(int argc, char *argv[])
 	pair<double, double> coordinates = make_pair(0.0, 0.0);
 
 	Long64_t nentries = tree->GetEntries();
-	cout << "nentries = " << nentries << endl;
+//	cout << "nentries = " << nentries << endl;
 	int badint=0;
 	int skipped = 0;
 	//
@@ -1490,6 +1477,7 @@ int main(int argc, char *argv[])
 	}
 	
 	//
+	cout << "nentries = " << nentries << endl;
 	for(int i=0; i<nentries; i++)
 	{
 		if( (i % 100000) == 0) { cout<<"Reached entry "<< i << endl; }
@@ -1504,7 +1492,6 @@ int main(int argc, char *argv[])
 			tdc_photodiode -> clear();
 			tdc_pulser_led -> clear();
 		}
-		
 		runnumber = runno;
 		
 		ion_count = ion_events->size();
@@ -1714,7 +1701,6 @@ int main(int argc, char *argv[])
 				//	}
 				}
 				bb1_result[detector] = GetResult(stripdetector[detector][x], stripdetector[detector][y], threshold_index, sigma_cut); 
-			
 				bb1_hit[detector] = bb1_result[detector].hit;
 				bb1_sechit[detector] = bb1_result[detector].secHit;
 				

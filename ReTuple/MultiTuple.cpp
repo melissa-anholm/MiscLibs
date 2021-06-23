@@ -658,14 +658,7 @@ int main(int argc, char *argv[])
 //	string matched_runset = "";
 	string additional_filename_info = "";
 	//
-	double lambda_g4_res_t_B = 1.55;  // +/- 0.09
-	double lambda_g4_res_b_B = 1.28;  // +/- 0.08
-
-	double lambda_g4_res_t_CD = 1.42;  // +/- 0.08
-	double lambda_g4_res_b_CD = 1.32;  // +/- 0.08
-	
 	cout << "argc = " << argc << endl;
-	
 	if(argc>=3)
 	{
 		is_g4  = bool( atoi(argv[2]) );
@@ -712,6 +705,12 @@ int main(int argc, char *argv[])
 	string fname;
 	string friend_fname;
 	double this_opdelay;
+	
+	double lambda_g4_res_t_B = 1.55;  // +/- 0.09
+	double lambda_g4_res_b_B = 1.28;  // +/- 0.08
+	double lambda_g4_res_t_CD = 1.42;  // +/- 0.08
+	double lambda_g4_res_b_CD = 1.32;  // +/- 0.08
+	
 	TTree * MetaTree;
 	gRandom = new TRandom3();
 	
@@ -765,7 +764,7 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			cout << "BAD.  Check run number.  Note:  SlimTuple doesn't do recoils." << endl;
+			cout << "BAD.  Check run number.  Note:  MultiTuple doesn't do recoils." << endl;
 			return 0;
 		}
 		//
@@ -776,8 +775,6 @@ int main(int argc, char *argv[])
 	}
 	else // it's g4
 	{
-	//	fname  = make_rootfilename(ue_path+"output00", runno);
-		
 		cout << "Original Rand. Seed:  " << endl;
 		cout << gRandom->GetSeed() << endl;
 		gRandom->SetSeed(0);  // sets seed to something something machine time.
@@ -790,15 +787,12 @@ int main(int argc, char *argv[])
 		cout << "Looking at the metadata..." << endl;
 		MetaTree = load_metadata_tree(metadata_name);
 		fname = get_simfilename(MetaTree, runno);      //
-		
 		if(fname==string(""))
 		{
 			cout << "Exiting..." << endl;
 			return 0;
 		}
 		cout << "additional_filename_info:  " << additional_filename_info << endl;
-	//	cout << "mf_g4path:  " << mf_g4path << endl;
-	//	friend_fname = make_rootfilename(g4f_path+"friend_", runno);
 		friend_fname = make_rootfilename(mf_g4path+"multifriend_", runno, additional_filename_info);
 	}
 	cout << "fname = " << fname << endl;
@@ -905,12 +899,12 @@ int main(int argc, char *argv[])
 		TBranch *lower_e_res_branch_CD = friend_tree -> Branch("lower_scint_E_res_CD", &lower_E_res_CD);  // 
 	}
 	//
-	
-	//
 	Double_t upper_DeltaE;
 	Double_t lower_DeltaE;
 	TBranch *upper_deltaE_branch= friend_tree -> Branch("upper_scint_DeltaE", &upper_DeltaE); // how much do we change the energy if we change calibration by "one sigma"?
 	TBranch *lower_deltaE_branch= friend_tree -> Branch("lower_scint_DeltaE", &lower_DeltaE); // 
+	//
+	
 	
 	//
 	UInt_t led_count = 0;
@@ -934,7 +928,7 @@ int main(int argc, char *argv[])
 	//
 	vector<double> * scint_time_t = 0;  
 	vector<double> * scint_time_b = 0;  
-	if(is_g4 )
+	if(is_g4)
 	{
 		tree -> SetBranchAddress("TDC_SCINT_TOP",    &scint_time_t);  
 		tree -> SetBranchAddress("TDC_SCINT_BOTTOM", &scint_time_b);  
@@ -948,7 +942,7 @@ int main(int argc, char *argv[])
 	
 	// --*-- // --*-- // --*-- // --*-- // --*-- // --*-- // --*-- // --*-- // --*-- // 
 	vector<double> *electron_events = 0;
-	if(is_g4 )
+	if(is_g4)
 	{
 		tree -> SetBranchAddress("TDC_ELECTRON_MCP", &electron_events);
 	}
@@ -1025,13 +1019,13 @@ int main(int argc, char *argv[])
 		tree -> SetBranchAddress("BB1_LX_PEAKTIME", &strip_T[b][x]);
 		tree -> SetBranchAddress("BB1_LY_PEAKTIME", &strip_T[b][y]);
 	}
-//	else if(is_g4)
-//	{
-//		TBranch * bb1_ux_time = friend_tree -> Branch("BB1_UX_PEAKTIME", &strip_T[t][x]);
-//		TBranch * bb1_uy_time = friend_tree -> Branch("BB1_UY_PEAKTIME", &strip_T[t][y]);
-//		TBranch * bb1_lx_time = friend_tree -> Branch("BB1_LX_PEAKTIME", &strip_T[b][x]);
-//		TBranch * bb1_ly_time = friend_tree -> Branch("BB1_LY_PEAKTIME", &strip_T[b][y]);
-//	}
+	else if(is_g4)
+	{
+		TBranch * bb1_ux_time = friend_tree -> Branch("BB1_UX_PEAKTIME", &strip_T[t][x]);
+		TBranch * bb1_uy_time = friend_tree -> Branch("BB1_UY_PEAKTIME", &strip_T[t][y]);
+		TBranch * bb1_lx_time = friend_tree -> Branch("BB1_LX_PEAKTIME", &strip_T[b][x]);
+		TBranch * bb1_ly_time = friend_tree -> Branch("BB1_LY_PEAKTIME", &strip_T[b][y]);
+	}
 	
 	// HEX 75:
 	Hex75 * the_hex = new Hex75();
@@ -1064,7 +1058,6 @@ int main(int argc, char *argv[])
 	
 	
 	// BB1s:  
-	/*
 	vector<double> * bb1_t_x = 0;
 	vector<double> * bb1_t_y = 0;
 	vector<double> * bb1_t_E = 0;
@@ -1077,101 +1070,7 @@ int main(int argc, char *argv[])
 	bb1_t_y -> clear();
 	bb1_t_E -> clear();
 	bb1_t_r -> clear();
-	*/
 	
-	vector<double> * bb1_t_x_20 = 0;
-	vector<double> * bb1_t_y_20 = 0;
-	vector<double> * bb1_t_E_20 = 0;
-	vector<double> * bb1_t_r_20 = 0;
-	friend_tree -> Branch("bb1_top_x_20", &bb1_t_x_20);
-	friend_tree -> Branch("bb1_top_y_20", &bb1_t_y_20);
-	friend_tree -> Branch("bb1_top_E_20", &bb1_t_E_20);
-	friend_tree -> Branch("bb1_top_r_20", &bb1_t_r_20);
-	bb1_t_x_20 -> clear();
-	bb1_t_y_20 -> clear();
-	bb1_t_E_20 -> clear();
-	bb1_t_r_20 -> clear();
-	
-	vector<double> * bb1_t_x_30 = 0;
-	vector<double> * bb1_t_y_30 = 0;
-	vector<double> * bb1_t_E_30 = 0;
-	vector<double> * bb1_t_r_30 = 0;
-	friend_tree -> Branch("bb1_top_x_30", &bb1_t_x_30);
-	friend_tree -> Branch("bb1_top_y_30", &bb1_t_y_30);
-	friend_tree -> Branch("bb1_top_E_30", &bb1_t_E_30);
-	friend_tree -> Branch("bb1_top_r_30", &bb1_t_r_30);
-	bb1_t_x_30 -> clear();
-	bb1_t_y_30 -> clear();
-	bb1_t_E_30 -> clear();
-	bb1_t_r_30 -> clear();
-
-	vector<double> * bb1_t_x_40 = 0;
-	vector<double> * bb1_t_y_40 = 0;
-	vector<double> * bb1_t_E_40 = 0;
-	vector<double> * bb1_t_r_40 = 0;
-	friend_tree -> Branch("bb1_top_x_40", &bb1_t_x_40);
-	friend_tree -> Branch("bb1_top_y_40", &bb1_t_y_40);
-	friend_tree -> Branch("bb1_top_E_40", &bb1_t_E_40);
-	friend_tree -> Branch("bb1_top_r_40", &bb1_t_r_40);
-	bb1_t_x_40 -> clear();
-	bb1_t_y_40 -> clear();
-	bb1_t_E_40 -> clear();
-	bb1_t_r_40 -> clear();
-
-	vector<double> * bb1_t_x_50 = 0;
-	vector<double> * bb1_t_y_50 = 0;
-	vector<double> * bb1_t_E_50 = 0;
-	vector<double> * bb1_t_r_50 = 0;
-	friend_tree -> Branch("bb1_top_x_50", &bb1_t_x_50);
-	friend_tree -> Branch("bb1_top_y_50", &bb1_t_y_50);
-	friend_tree -> Branch("bb1_top_E_50", &bb1_t_E_50);
-	friend_tree -> Branch("bb1_top_r_50", &bb1_t_r_50);
-	bb1_t_x_50 -> clear();
-	bb1_t_y_50 -> clear();
-	bb1_t_E_50 -> clear();
-	bb1_t_r_50 -> clear();
-
-	vector<double> * bb1_t_x_60 = 0;
-	vector<double> * bb1_t_y_60 = 0;
-	vector<double> * bb1_t_E_60 = 0;
-	vector<double> * bb1_t_r_60 = 0;
-	friend_tree -> Branch("bb1_top_x_60", &bb1_t_x_60);
-	friend_tree -> Branch("bb1_top_y_60", &bb1_t_y_60);
-	friend_tree -> Branch("bb1_top_E_60", &bb1_t_E_60);
-	friend_tree -> Branch("bb1_top_r_60", &bb1_t_r_60);
-	bb1_t_x_60 -> clear();
-	bb1_t_y_60 -> clear();
-	bb1_t_E_60 -> clear();
-	bb1_t_r_60 -> clear();
-
-	vector<double> * bb1_t_x_70 = 0;
-	vector<double> * bb1_t_y_70 = 0;
-	vector<double> * bb1_t_E_70 = 0;
-	vector<double> * bb1_t_r_70 = 0;
-	friend_tree -> Branch("bb1_top_x_70", &bb1_t_x_70);
-	friend_tree -> Branch("bb1_top_y_70", &bb1_t_y_70);
-	friend_tree -> Branch("bb1_top_E_70", &bb1_t_E_70);
-	friend_tree -> Branch("bb1_top_r_70", &bb1_t_r_70);
-	bb1_t_x_70 -> clear();
-	bb1_t_y_70 -> clear();
-	bb1_t_E_70 -> clear();
-	bb1_t_r_70 -> clear();
-
-	vector<double> * bb1_t_x_80 = 0;
-	vector<double> * bb1_t_y_80 = 0;
-	vector<double> * bb1_t_E_80 = 0;
-	vector<double> * bb1_t_r_80 = 0;
-	friend_tree -> Branch("bb1_top_x_80", &bb1_t_x_80);
-	friend_tree -> Branch("bb1_top_y_80", &bb1_t_y_80);
-	friend_tree -> Branch("bb1_top_E_80", &bb1_t_E_80);
-	friend_tree -> Branch("bb1_top_r_80", &bb1_t_r_80);
-	bb1_t_x_80 -> clear();
-	bb1_t_y_80 -> clear();
-	bb1_t_E_80 -> clear();
-	bb1_t_r_80 -> clear();
-	
-	//
-	/*
 	vector<double> * bb1_b_x = 0;
 	vector<double> * bb1_b_y = 0;
 	vector<double> * bb1_b_E = 0;
@@ -1184,102 +1083,7 @@ int main(int argc, char *argv[])
 	bb1_b_y -> clear();
 	bb1_b_E -> clear();
 	bb1_b_r -> clear();
-	*/
-
-	vector<double> * bb1_b_x_20 = 0;
-	vector<double> * bb1_b_y_20 = 0;
-	vector<double> * bb1_b_E_20 = 0;
-	vector<double> * bb1_b_r_20 = 0;
-	friend_tree -> Branch("bb1_bottom_x_20", &bb1_b_x_20);
-	friend_tree -> Branch("bb1_bottom_y_20", &bb1_b_y_20);
-	friend_tree -> Branch("bb1_bottom_E_20", &bb1_b_E_20);
-	friend_tree -> Branch("bb1_bottom_r_20", &bb1_b_r_20);
-	bb1_b_x_20 -> clear();
-	bb1_b_y_20 -> clear();
-	bb1_b_E_20 -> clear();
-	bb1_b_r_20 -> clear();
 	
-	vector<double> * bb1_b_x_30 = 0;
-	vector<double> * bb1_b_y_30 = 0;
-	vector<double> * bb1_b_E_30 = 0;
-	vector<double> * bb1_b_r_30 = 0;
-	friend_tree -> Branch("bb1_bottom_x_30", &bb1_b_x_30);
-	friend_tree -> Branch("bb1_bottom_y_30", &bb1_b_y_30);
-	friend_tree -> Branch("bb1_bottom_E_30", &bb1_b_E_30);
-	friend_tree -> Branch("bb1_bottom_r_30", &bb1_b_r_30);
-	bb1_b_x_30 -> clear();
-	bb1_b_y_30 -> clear();
-	bb1_b_E_30 -> clear();
-	bb1_b_r_30 -> clear();
-
-	vector<double> * bb1_b_x_40 = 0;
-	vector<double> * bb1_b_y_40 = 0;
-	vector<double> * bb1_b_E_40 = 0;
-	vector<double> * bb1_b_r_40 = 0;
-	friend_tree -> Branch("bb1_bottom_x_40", &bb1_b_x_40);
-	friend_tree -> Branch("bb1_bottom_y_40", &bb1_b_y_40);
-	friend_tree -> Branch("bb1_bottom_E_40", &bb1_b_E_40);
-	friend_tree -> Branch("bb1_bottom_r_40", &bb1_b_r_40);
-	bb1_b_x_40 -> clear();
-	bb1_b_y_40 -> clear();
-	bb1_b_E_40 -> clear();
-	bb1_b_r_40 -> clear();
-
-	vector<double> * bb1_b_x_50 = 0;
-	vector<double> * bb1_b_y_50 = 0;
-	vector<double> * bb1_b_E_50 = 0;
-	vector<double> * bb1_b_r_50 = 0;
-	friend_tree -> Branch("bb1_bottom_x_50", &bb1_b_x_50);
-	friend_tree -> Branch("bb1_bottom_y_50", &bb1_b_y_50);
-	friend_tree -> Branch("bb1_bottom_E_50", &bb1_b_E_50);
-	friend_tree -> Branch("bb1_bottom_r_50", &bb1_b_r_50);
-	bb1_b_x_50 -> clear();
-	bb1_b_y_50 -> clear();
-	bb1_b_E_50 -> clear();
-	bb1_b_r_50 -> clear();
-
-	vector<double> * bb1_b_x_60 = 0;
-	vector<double> * bb1_b_y_60 = 0;
-	vector<double> * bb1_b_E_60 = 0;
-	vector<double> * bb1_b_r_60 = 0;
-	friend_tree -> Branch("bb1_bottom_x_60", &bb1_b_x_60);
-	friend_tree -> Branch("bb1_bottom_y_60", &bb1_b_y_60);
-	friend_tree -> Branch("bb1_bottom_E_60", &bb1_b_E_60);
-	friend_tree -> Branch("bb1_bottom_r_60", &bb1_b_r_60);
-	bb1_b_x_60 -> clear();
-	bb1_b_y_60 -> clear();
-	bb1_b_E_60 -> clear();
-	bb1_b_r_60 -> clear();
-
-	vector<double> * bb1_b_x_70 = 0;
-	vector<double> * bb1_b_y_70 = 0;
-	vector<double> * bb1_b_E_70 = 0;
-	vector<double> * bb1_b_r_70 = 0;
-	friend_tree -> Branch("bb1_bottom_x_70", &bb1_b_x_70);
-	friend_tree -> Branch("bb1_bottom_y_70", &bb1_b_y_70);
-	friend_tree -> Branch("bb1_bottom_E_70", &bb1_b_E_70);
-	friend_tree -> Branch("bb1_bottom_r_70", &bb1_b_r_70);
-	bb1_b_x_70 -> clear();
-	bb1_b_y_70 -> clear();
-	bb1_b_E_70 -> clear();
-	bb1_b_r_70 -> clear();
-
-	vector<double> * bb1_b_x_80 = 0;
-	vector<double> * bb1_b_y_80 = 0;
-	vector<double> * bb1_b_E_80 = 0;
-	vector<double> * bb1_b_r_80 = 0;
-	friend_tree -> Branch("bb1_bottom_x_80", &bb1_b_x_80);
-	friend_tree -> Branch("bb1_bottom_y_80", &bb1_b_y_80);
-	friend_tree -> Branch("bb1_bottom_E_80", &bb1_b_E_80);
-	friend_tree -> Branch("bb1_bottom_r_80", &bb1_b_r_80);
-	bb1_b_x_80 -> clear();
-	bb1_b_y_80 -> clear();
-	bb1_b_E_80 -> clear();
-	bb1_b_r_80 -> clear();
-	//
-	
-	
-	//
 	BB1Hit    bb1_hit[2]    = {BB1Hit(), BB1Hit()};        // 2 detectors.
 	BB1Hit    bb1_sechit[2] = {BB1Hit(), BB1Hit()};        // 2 detectors.
 	BB1Result bb1_result[2] = {BB1Result(), BB1Result()};  // 2 detectors.
@@ -1301,38 +1105,39 @@ int main(int argc, char *argv[])
 
 	Bool_t is_normal_t_20 = kFALSE;
 	Bool_t is_normal_b_20 = kFALSE;
-	TBranch *is_normal_t_branch_20 = friend_tree -> Branch("is_normal_t_20", &is_normal_t_20);  
-	TBranch *is_normal_b_branch_20 = friend_tree -> Branch("is_normal_b_20", &is_normal_b_20);  
 
 	Bool_t is_normal_t_30 = kFALSE;
 	Bool_t is_normal_b_30 = kFALSE;
-	TBranch *is_normal_t_branch_30 = friend_tree -> Branch("is_normal_t_30", &is_normal_t_30);
-	TBranch *is_normal_b_branch_30 = friend_tree -> Branch("is_normal_b_30", &is_normal_b_30);
 	
 	Bool_t is_normal_t_40 = kFALSE;
 	Bool_t is_normal_b_40 = kFALSE;
-	TBranch *is_normal_t_branch_40 = friend_tree -> Branch("is_normal_t_40", &is_normal_t_40);
-	TBranch *is_normal_b_branch_40 = friend_tree -> Branch("is_normal_b_40", &is_normal_b_40);
 	
 	Bool_t is_normal_t_50 = kFALSE;
 	Bool_t is_normal_b_50 = kFALSE;
-	TBranch *is_normal_t_branch_50 = friend_tree -> Branch("is_normal_t_50", &is_normal_t_50);
-	TBranch *is_normal_b_branch_50 = friend_tree -> Branch("is_normal_b_50", &is_normal_b_50);
 	
 	Bool_t is_normal_t_60 = kFALSE;
 	Bool_t is_normal_b_60 = kFALSE;
-	TBranch *is_normal_t_branch_60 = friend_tree -> Branch("is_normal_t_60", &is_normal_t_60);
-	TBranch *is_normal_b_branch_60 = friend_tree -> Branch("is_normal_b_60", &is_normal_b_60);
 
 	Bool_t is_normal_t_70 = kFALSE;
 	Bool_t is_normal_b_70 = kFALSE;
-	TBranch *is_normal_t_branch_70 = friend_tree -> Branch("is_normal_t_70", &is_normal_t_70);
-	TBranch *is_normal_b_branch_70 = friend_tree -> Branch("is_normal_b_70", &is_normal_b_70);
 
 	Bool_t is_normal_t_80 = kFALSE;
 	Bool_t is_normal_b_80 = kFALSE;
-	TBranch *is_normal_t_branch_80 = friend_tree -> Branch("is_normal_t_80", &is_normal_t_80);
-	TBranch *is_normal_b_branch_80 = friend_tree -> Branch("is_normal_b_80", &is_normal_b_80);
+
+	friend_tree -> Branch("is_normal_t_20", &is_normal_t_20);  
+	friend_tree -> Branch("is_normal_b_20", &is_normal_b_20);  
+	friend_tree -> Branch("is_normal_t_30", &is_normal_t_30);
+	friend_tree -> Branch("is_normal_b_30", &is_normal_b_30);
+	friend_tree -> Branch("is_normal_t_40", &is_normal_t_40);
+	friend_tree -> Branch("is_normal_b_40", &is_normal_b_40);
+	friend_tree -> Branch("is_normal_t_50", &is_normal_t_50);
+	friend_tree -> Branch("is_normal_b_50", &is_normal_b_50);
+	friend_tree -> Branch("is_normal_t_60", &is_normal_t_60);
+	friend_tree -> Branch("is_normal_b_60", &is_normal_b_60);
+	friend_tree -> Branch("is_normal_t_70", &is_normal_t_70);
+	friend_tree -> Branch("is_normal_b_70", &is_normal_b_70);
+	friend_tree -> Branch("is_normal_t_80", &is_normal_t_80);
+	friend_tree -> Branch("is_normal_b_80", &is_normal_b_80);
 	
 	
 	// This info was already available as the size argument in any of several branches, 
@@ -1344,86 +1149,38 @@ int main(int argc, char *argv[])
 	int N_hits_scint_b = 0;
 	TBranch * N_hits_scint_t_branch = friend_tree -> Branch("N_hits_scint_t", &N_hits_scint_t);
 	TBranch * N_hits_scint_b_branch = friend_tree -> Branch("N_hits_scint_b", &N_hits_scint_b);
-	
-	//
-	int had_Nhits_bb1_t = 0;
-	int had_Nhits_bb1_b = 0;
-	friend_tree -> Branch("had_Nhits_bb1_t", &had_Nhits_bb1_t);
-	friend_tree -> Branch("had_Nhits_bb1_b", &had_Nhits_bb1_b);
-	/*
-	// Below:  these aren't a thing!  
-	int had_Nhits_bb1_t_20 = 0;
-	int had_Nhits_bb1_b_20 = 0;
-	friend_tree -> Branch("had_Nhits_bb1_t_20", &had_Nhits_bb1_t_20);
-	friend_tree -> Branch("had_Nhits_bb1_b_20", &had_Nhits_bb1_b_20);
-
-	int had_Nhits_bb1_t_30 = 0;
-	int had_Nhits_bb1_b_30 = 0;
-	friend_tree -> Branch("had_Nhits_bb1_t_30", &had_Nhits_bb1_t_30);
-	friend_tree -> Branch("had_Nhits_bb1_b_30", &had_Nhits_bb1_b_30);
-	
-	int had_Nhits_bb1_t_40 = 0;
-	int had_Nhits_bb1_b_40 = 0;
-	friend_tree -> Branch("had_Nhits_bb1_t_40", &had_Nhits_bb1_t_40);
-	friend_tree -> Branch("had_Nhits_bb1_b_40", &had_Nhits_bb1_b_40);
-	
-	int had_Nhits_bb1_t_50 = 0;
-	int had_Nhits_bb1_b_50 = 0;
-	friend_tree -> Branch("had_Nhits_bb1_t_50", &had_Nhits_bb1_t_50);
-	friend_tree -> Branch("had_Nhits_bb1_b_50", &had_Nhits_bb1_b_50);
-	
-	int had_Nhits_bb1_t_60 = 0;
-	int had_Nhits_bb1_b_60 = 0;
-	friend_tree -> Branch("had_Nhits_bb1_t_60", &had_Nhits_bb1_t_60);
-	friend_tree -> Branch("had_Nhits_bb1_b_60", &had_Nhits_bb1_b_60);
-	
-	int had_Nhits_bb1_t_70 = 0;
-	int had_Nhits_bb1_b_70 = 0;
-	friend_tree -> Branch("had_Nhits_bb1_t_70", &had_Nhits_bb1_t_70);
-	friend_tree -> Branch("had_Nhits_bb1_b_70", &had_Nhits_bb1_b_70);
-	
-	int had_Nhits_bb1_t_80 = 0;
-	int had_Nhits_bb1_b_80 = 0;
-	friend_tree -> Branch("had_Nhits_bb1_t_80", &had_Nhits_bb1_t_80);
-	friend_tree -> Branch("had_Nhits_bb1_b_80", &had_Nhits_bb1_b_80);
-	*/
 	//
 	
-	
-//	int N_hits_bb1_t = 0;
-//	int N_hits_bb1_b = 0;
-//	TBranch * N_hits_bb1_t_branch = friend_tree -> Branch("N_hits_bb1_t", &N_hits_bb1_t);
-//	TBranch * N_hits_bb1_b_branch = friend_tree -> Branch("N_hits_bb1_b", &N_hits_bb1_b);
-	int N_hits_bb1_t_20 = 0;
-	int N_hits_bb1_b_20 = 0;
-	TBranch * N_hits_bb1_t_branch_20 = friend_tree -> Branch("N_hits_bb1_t_20", &N_hits_bb1_t_20);
-	TBranch * N_hits_bb1_b_branch_20 = friend_tree -> Branch("N_hits_bb1_b_20", &N_hits_bb1_b_20);
-	int N_hits_bb1_t_30 = 0;
-	int N_hits_bb1_b_30 = 0;
-	TBranch * N_hits_bb1_t_branch_30 = friend_tree -> Branch("N_hits_bb1_t_30", &N_hits_bb1_t_30);
-	TBranch * N_hits_bb1_b_branch_30 = friend_tree -> Branch("N_hits_bb1_b_30", &N_hits_bb1_b_30);
-	int N_hits_bb1_t_40 = 0;
-	int N_hits_bb1_b_40 = 0;
-	TBranch * N_hits_bb1_t_branch_40 = friend_tree -> Branch("N_hits_bb1_t_40", &N_hits_bb1_t_40);
-	TBranch * N_hits_bb1_b_branch_40 = friend_tree -> Branch("N_hits_bb1_b_40", &N_hits_bb1_b_40);
-	int N_hits_bb1_t_50 = 0;
-	int N_hits_bb1_b_50 = 0;
-	TBranch * N_hits_bb1_t_branch_50 = friend_tree -> Branch("N_hits_bb1_t_50", &N_hits_bb1_t_50);
-	TBranch * N_hits_bb1_b_branch_50 = friend_tree -> Branch("N_hits_bb1_b_50", &N_hits_bb1_b_50);
-	int N_hits_bb1_t_60 = 0;  // 60 is the 'default'.
-	int N_hits_bb1_b_60 = 0;
-	TBranch * N_hits_bb1_t_branch_60 = friend_tree -> Branch("N_hits_bb1_t_60", &N_hits_bb1_t_60);
-	TBranch * N_hits_bb1_b_branch_60 = friend_tree -> Branch("N_hits_bb1_b_60", &N_hits_bb1_b_60);
-	int N_hits_bb1_t_70 = 0;
-	int N_hits_bb1_b_70 = 0;
-	TBranch * N_hits_bb1_t_branch_70 = friend_tree -> Branch("N_hits_bb1_t_70", &N_hits_bb1_t_70);
-	TBranch * N_hits_bb1_b_branch_70 = friend_tree -> Branch("N_hits_bb1_b_70", &N_hits_bb1_b_70);
-	int N_hits_bb1_t_80 = 0;
-	int N_hits_bb1_b_80 = 0;
-	TBranch * N_hits_bb1_t_branch_80 = friend_tree -> Branch("N_hits_bb1_t_80", &N_hits_bb1_t_80);
-	TBranch * N_hits_bb1_b_branch_80 = friend_tree -> Branch("N_hits_bb1_b_80", &N_hits_bb1_b_80);
-
-
+//	int N_hits_bb1_t_20 = 0;
+//	int N_hits_bb1_b_20 = 0;
+	int N_hits_bb1_20[2];
+	int N_hits_bb1_30[2];
+	int N_hits_bb1_40[2];
+	int N_hits_bb1_50[2];
+	int N_hits_bb1_60[2];  // 60 is the 'default'.
+	int N_hits_bb1_70[2];
+	int N_hits_bb1_80[2];
+	friend_tree -> Branch("N_hits_bb1_t_20", &N_hits_bb1_20[t]);
+	friend_tree -> Branch("N_hits_bb1_b_20", &N_hits_bb1_20[b]);
+	friend_tree -> Branch("N_hits_bb1_t_30", &N_hits_bb1_30[t]);
+	friend_tree -> Branch("N_hits_bb1_b_30", &N_hits_bb1_30[b]);
+	friend_tree -> Branch("N_hits_bb1_t_40", &N_hits_bb1_40[t]);
+	friend_tree -> Branch("N_hits_bb1_b_40", &N_hits_bb1_40[b]);
+	friend_tree -> Branch("N_hits_bb1_t_50", &N_hits_bb1_50[t]);
+	friend_tree -> Branch("N_hits_bb1_b_50", &N_hits_bb1_50[b]);
+	friend_tree -> Branch("N_hits_bb1_t_60", &N_hits_bb1_60[t]);
+	friend_tree -> Branch("N_hits_bb1_b_60", &N_hits_bb1_60[b]);
+	friend_tree -> Branch("N_hits_bb1_t_70", &N_hits_bb1_70[t]);
+	friend_tree -> Branch("N_hits_bb1_b_70", &N_hits_bb1_70[b]);
+	friend_tree -> Branch("N_hits_bb1_t_80", &N_hits_bb1_80[t]);
+	friend_tree -> Branch("N_hits_bb1_b_80", &N_hits_bb1_80[b]);
+	//
+//	int had_Nhits_bb1_t = 0;
+//	int had_Nhits_bb1_b = 0;
+	int had_Nhits_bb1[2];
+	friend_tree -> Branch("had_Nhits_bb1_t", &had_Nhits_bb1[t]);
+	friend_tree -> Branch("had_Nhits_bb1_b", &had_Nhits_bb1[b]);	
+	//
 	
 	
 	// bad times overhead:
@@ -1438,11 +1195,11 @@ int main(int argc, char *argv[])
 	
 	// DLD Calibration overhead:
 	int nhits = 0;
-	calibration * my_cals = new calibration(runno); 
-	pair<double, double> coordinates = make_pair(0.0, 0.0);
+//	calibration * my_cals = new calibration(runno); 
+//	pair<double, double> coordinates = make_pair(0.0, 0.0);
 
 	Long64_t nentries = tree->GetEntries();
-	cout << "nentries = " << nentries << endl;
+//	cout << "nentries = " << nentries << endl;
 	int badint=0;
 	int skipped = 0;
 	//
@@ -1481,6 +1238,7 @@ int main(int argc, char *argv[])
 	}
 	
 	//
+	cout << "nentries = " << nentries << endl;
 	for(int i=0; i<nentries; i++)
 	{
 		if( (i % 100000) == 0) { cout<<"Reached entry "<< i << endl; }
@@ -1494,7 +1252,6 @@ int main(int argc, char *argv[])
 			tdc_photodiode -> clear();
 			tdc_pulser_led -> clear();
 		}
-		
 		runnumber = runno;
 		
 		electron_count = electron_events->size();
@@ -1518,29 +1275,25 @@ int main(int argc, char *argv[])
 		{
 			all_okay = kTRUE;	
 			//
-			upper_DeltaE = 0.0;
+			upper_DeltaE = 0.0;  // get_upper_DeltaE(...) just returns 0 for g4, you know.
 			lower_DeltaE = 0.0;
 			
 			// apply a scint resolution on the G4 data.
 			upper_E_B     = get_upper_E(upper_qdc_d, runno, is_g4); // if it's G4 (and if we've got here, it is), then this returns the true energy deposited in the scintillator.  No resolution.
 			lower_E_B     = get_lower_E(lower_qdc_d, runno, is_g4);
-			upper_E_res_B = get_upper_E_res(upper_E_B, runno, is_g4);  // for G4, this just returns 0.
-			lower_E_res_B = get_lower_E_res(lower_E_B, runno, is_g4);  
 			//
 			upper_E_B     = getE_withresolution(  upper_E_B, lambda_g4_res_t_B);
 			lower_E_B     = getE_withresolution(  lower_E_B, lambda_g4_res_b_B);
-			upper_E_res_B = getres_withresolution(upper_E_B, lambda_g4_res_t_B);
+			upper_E_res_B = getres_withresolution(upper_E_B, lambda_g4_res_t_B);  // call this function *after* resolution has been applied to the energy.
 			lower_E_res_B = getres_withresolution(lower_E_B, lambda_g4_res_b_B);
 
 			// apply a scint resolution on the G4 data.
 			upper_E_CD     = get_upper_E(upper_qdc_d, runno, is_g4); // if it's G4 (and if we've got here, it is), then this returns the true energy deposited in the scintillator.  No resolution.
 			lower_E_CD     = get_lower_E(lower_qdc_d, runno, is_g4);
-			upper_E_res_CD = get_upper_E_res(upper_E_CD, runno, is_g4);  // for G4, this just returns 0.
-			lower_E_res_CD = get_lower_E_res(lower_E_CD, runno, is_g4);  
 			//
 			upper_E_CD     = getE_withresolution(  upper_E_CD, lambda_g4_res_t_CD);
 			lower_E_CD     = getE_withresolution(  lower_E_CD, lambda_g4_res_b_CD);
-			upper_E_res_CD = getres_withresolution(upper_E_CD, lambda_g4_res_t_CD);
+			upper_E_res_CD = getres_withresolution(upper_E_CD, lambda_g4_res_t_CD);  // call this function *after* resolution has been applied to the energy.
 			lower_E_res_CD = getres_withresolution(lower_E_CD, lambda_g4_res_b_CD);
 			
 		}
@@ -1610,23 +1363,23 @@ int main(int argc, char *argv[])
 		is_normal_b_80 = kFALSE;	
 		
 		// BB1 shizzle:
-		N_hits_bb1_t_20 = 0;
-		N_hits_bb1_b_20 = 0;
-		N_hits_bb1_t_30 = 0;
-		N_hits_bb1_b_30 = 0;
-		N_hits_bb1_t_40 = 0;
-		N_hits_bb1_b_40 = 0;
-		N_hits_bb1_t_50 = 0;
-		N_hits_bb1_b_50 = 0;
-		N_hits_bb1_t_60 = 0;  // 60 is the 'default'.
-		N_hits_bb1_b_60 = 0;
-		N_hits_bb1_t_70 = 0;
-		N_hits_bb1_b_70 = 0;
-		N_hits_bb1_t_80 = 0;
-		N_hits_bb1_b_80 = 0;
+		N_hits_bb1_20[t] = 0;
+		N_hits_bb1_20[b] = 0;
+		N_hits_bb1_30[t] = 0;
+		N_hits_bb1_30[b] = 0;
+		N_hits_bb1_40[t] = 0;
+		N_hits_bb1_40[b] = 0;
+		N_hits_bb1_50[t] = 0;
+		N_hits_bb1_50[b] = 0;
+		N_hits_bb1_60[t] = 0;  // 60 is the 'default'.
+		N_hits_bb1_60[b] = 0;
+		N_hits_bb1_70[t] = 0;
+		N_hits_bb1_70[b] = 0;
+		N_hits_bb1_80[t] = 0;
+		N_hits_bb1_80[b] = 0;
 		
-		had_Nhits_bb1_t = 0;
-		had_Nhits_bb1_b = 0;
+		had_Nhits_bb1[t] = 0;
+		had_Nhits_bb1[b] = 0;
 		
 		// Doesn't really matter that we're doing this cut for the "set B energy".  It's a stupidly tiny value anyway.
 		if( (is_g4 && upper_E_B < 10.0) || (!is_g4 && upper_E < 10.0) ) { N_hits_scint_t=0; }
@@ -1674,258 +1427,101 @@ int main(int argc, char *argv[])
 				{
 					if(detector == t)
 					{
-						had_Nhits_bb1_t=1;
-						if( bb1_hit[detector].energy >= 80.0 )
-						{
-							N_hits_bb1_t_80++;
-							bb1_t_x_80 -> push_back( bb1_hit[detector].xpos );
-							bb1_t_y_80 -> push_back( bb1_hit[detector].ypos );
-							bb1_t_E_80 -> push_back( bb1_hit[detector].energy );
-							bb1_t_r_80 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-						}
-						if( bb1_hit[detector].energy >= 70.0 )
-						{
-							N_hits_bb1_t_70++;
-							bb1_t_x_70 -> push_back( bb1_hit[detector].xpos );
-							bb1_t_y_70 -> push_back( bb1_hit[detector].ypos );
-							bb1_t_E_70 -> push_back( bb1_hit[detector].energy );
-							bb1_t_r_70 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-						}
-						if( bb1_hit[detector].energy >= 60.0 )
-						{
-							N_hits_bb1_t_60++;
-							bb1_t_x_60 -> push_back( bb1_hit[detector].xpos );
-							bb1_t_y_60 -> push_back( bb1_hit[detector].ypos );
-							bb1_t_E_60 -> push_back( bb1_hit[detector].energy );
-							bb1_t_r_60 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-						}
-						if( bb1_hit[detector].energy >= 50.0 )
-						{
-							N_hits_bb1_t_50++;
-							bb1_t_x_50 -> push_back( bb1_hit[detector].xpos );
-							bb1_t_y_50 -> push_back( bb1_hit[detector].ypos );
-							bb1_t_E_50 -> push_back( bb1_hit[detector].energy );
-							bb1_t_r_50 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-						}
-						if( bb1_hit[detector].energy >= 40.0 )
-						{
-							N_hits_bb1_t_40++;
-							bb1_t_x_40 -> push_back( bb1_hit[detector].xpos );
-							bb1_t_y_40 -> push_back( bb1_hit[detector].ypos );
-							bb1_t_E_40 -> push_back( bb1_hit[detector].energy );
-							bb1_t_r_40 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-						}
-						if( bb1_hit[detector].energy >= 30.0 )
-						{
-							N_hits_bb1_t_30++; 
-							bb1_t_x_30 -> push_back( bb1_hit[detector].xpos );
-							bb1_t_y_30 -> push_back( bb1_hit[detector].ypos );
-							bb1_t_E_30 -> push_back( bb1_hit[detector].energy );
-							bb1_t_r_30 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-						}
-						if( bb1_hit[detector].energy >= 20.0 )
-						{
-							N_hits_bb1_t_20++; 
-							bb1_t_x_20 -> push_back( bb1_hit[detector].xpos );
-							bb1_t_y_20 -> push_back( bb1_hit[detector].ypos );
-							bb1_t_E_20 -> push_back( bb1_hit[detector].energy );
-							bb1_t_r_20 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-						}
+						had_Nhits_bb1[t]=1;
+						bb1_t_x -> push_back( bb1_hit[detector].xpos );
+						bb1_t_y -> push_back( bb1_hit[detector].ypos );
+						bb1_t_E -> push_back( bb1_hit[detector].energy );
+						bb1_t_r -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
 					}
 					else if(detector == b)
 					{
-						had_Nhits_bb1_b=1;
-						if( bb1_hit[detector].energy >= 80.0 )
-						{
-							N_hits_bb1_b_80++;
-							bb1_b_x_80 -> push_back( bb1_hit[detector].xpos );
-							bb1_b_y_80 -> push_back( bb1_hit[detector].ypos );
-							bb1_b_E_80 -> push_back( bb1_hit[detector].energy );
-							bb1_b_r_80 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-						}
-						if( bb1_hit[detector].energy >= 70.0 )
-						{
-							N_hits_bb1_b_70++;
-							bb1_b_x_70 -> push_back( bb1_hit[detector].xpos );
-							bb1_b_y_70 -> push_back( bb1_hit[detector].ypos );
-							bb1_b_E_70 -> push_back( bb1_hit[detector].energy );
-							bb1_b_r_70 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-						}
-						if( bb1_hit[detector].energy >= 60.0 )
-						{
-							N_hits_bb1_b_60++;
-							bb1_b_x_60 -> push_back( bb1_hit[detector].xpos );
-							bb1_b_y_60 -> push_back( bb1_hit[detector].ypos );
-							bb1_b_E_60 -> push_back( bb1_hit[detector].energy );
-							bb1_b_r_60 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-						}
-						if( bb1_hit[detector].energy >= 50.0 )
-						{
-							N_hits_bb1_b_50++;
-							bb1_b_x_50 -> push_back( bb1_hit[detector].xpos );
-							bb1_b_y_50 -> push_back( bb1_hit[detector].ypos );
-							bb1_b_E_50 -> push_back( bb1_hit[detector].energy );
-							bb1_b_r_50 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-						}
-						if( bb1_hit[detector].energy >= 40.0 )
-						{
-							N_hits_bb1_b_40++;
-							bb1_b_x_40 -> push_back( bb1_hit[detector].xpos );
-							bb1_b_y_40 -> push_back( bb1_hit[detector].ypos );
-							bb1_b_E_40 -> push_back( bb1_hit[detector].energy );
-							bb1_b_r_40 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-						}
+						had_Nhits_bb1[b]=1;
+						bb1_b_x -> push_back( bb1_hit[detector].xpos );
+						bb1_b_y -> push_back( bb1_hit[detector].ypos );
+						bb1_b_E -> push_back( bb1_hit[detector].energy );
+						bb1_b_r -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
+					}
+					if( bb1_hit[detector].energy >= 20.0 )
+					{
+						N_hits_bb1_20[detector]++; 
 						if( bb1_hit[detector].energy >= 30.0 )
 						{
-							N_hits_bb1_b_30++;
-							bb1_b_x_30 -> push_back( bb1_hit[detector].xpos );
-							bb1_b_y_30 -> push_back( bb1_hit[detector].ypos );
-							bb1_b_E_30 -> push_back( bb1_hit[detector].energy );
-							bb1_b_r_30 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-						}
-						if( bb1_hit[detector].energy >= 20.0 )
-						{
-							N_hits_bb1_b_20++;
-							bb1_b_x_20 -> push_back( bb1_hit[detector].xpos );
-							bb1_b_y_20 -> push_back( bb1_hit[detector].ypos );
-							bb1_b_E_20 -> push_back( bb1_hit[detector].energy );
-							bb1_b_r_20 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
+							N_hits_bb1_30[detector]++;
+							if( bb1_hit[detector].energy >= 40.0 )
+							{
+								N_hits_bb1_40[detector]++;
+								if( bb1_hit[detector].energy >= 50.0 )
+								{
+									N_hits_bb1_50[detector]++;
+									if( bb1_hit[detector].energy >= 60.0 )
+									{
+										N_hits_bb1_60[detector]++;
+										if( bb1_hit[detector].energy >= 70.0 )
+										{
+											N_hits_bb1_70[detector]++;
+											if( bb1_hit[detector].energy >= 80.0 )
+											{
+												N_hits_bb1_80[detector]++;
+											}
+										}
+									}
+								}
+							}
 						}
 					}
 				}
 				//
 				if(bb1_result[detector].twoHits == true)
 				{
-					if(detector == t)
-					{
-						had_Nhits_bb1_t=2;
-					}
-					else if(detector == b)
-					{
-						had_Nhits_bb1_b=2;
-					}
 					if(bb1_sechit[detector].pass == true)
 					{
 						if(detector == t)
 						{
-							if( bb1_hit[detector].energy >= 80.0 )
-							{
-								N_hits_bb1_t_80++;
-								bb1_t_x_80 -> push_back( bb1_sechit[detector].xpos );
-								bb1_t_y_80 -> push_back( bb1_sechit[detector].ypos );
-								bb1_t_E_80 -> push_back( bb1_sechit[detector].energy );
-								bb1_t_r_80 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-							}
-							if( bb1_hit[detector].energy >= 70.0 )
-							{
-								N_hits_bb1_t_70++;
-								bb1_t_x_70 -> push_back( bb1_sechit[detector].xpos );
-								bb1_t_y_70 -> push_back( bb1_sechit[detector].ypos );
-								bb1_t_E_70 -> push_back( bb1_sechit[detector].energy );
-								bb1_t_r_70 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-							}
-							if( bb1_hit[detector].energy >= 60.0 )
-							{
-								N_hits_bb1_t_60++;
-								bb1_t_x_60 -> push_back( bb1_sechit[detector].xpos );
-								bb1_t_y_60 -> push_back( bb1_sechit[detector].ypos );
-								bb1_t_E_60 -> push_back( bb1_sechit[detector].energy );
-								bb1_t_r_60 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-							}
-							if( bb1_hit[detector].energy >= 50.0 )
-							{
-								N_hits_bb1_t_50++;
-								bb1_t_x_50 -> push_back( bb1_sechit[detector].xpos );
-								bb1_t_y_50 -> push_back( bb1_sechit[detector].ypos );
-								bb1_t_E_50 -> push_back( bb1_sechit[detector].energy );
-								bb1_t_r_50 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-							}
-							if( bb1_hit[detector].energy >= 40.0 )
-							{
-								N_hits_bb1_t_40++;
-								bb1_t_x_40 -> push_back( bb1_sechit[detector].xpos );
-								bb1_t_y_40 -> push_back( bb1_sechit[detector].ypos );
-								bb1_t_E_40 -> push_back( bb1_sechit[detector].energy );
-								bb1_t_r_40 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-							}
-							if( bb1_hit[detector].energy >= 30.0 )
-							{
-								N_hits_bb1_t_30++;
-								bb1_t_x_30 -> push_back( bb1_sechit[detector].xpos );
-								bb1_t_y_30 -> push_back( bb1_sechit[detector].ypos );
-								bb1_t_E_30 -> push_back( bb1_sechit[detector].energy );
-								bb1_t_r_30 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-							}
-							if( bb1_hit[detector].energy >= 20.0 )
-							{
-								N_hits_bb1_t_20++;
-								bb1_t_x_20 -> push_back( bb1_sechit[detector].xpos );
-								bb1_t_y_20 -> push_back( bb1_sechit[detector].ypos );
-								bb1_t_E_20 -> push_back( bb1_sechit[detector].energy );
-								bb1_t_r_20 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-							}
+							had_Nhits_bb1[t]=2;
+							bb1_t_x -> push_back( bb1_sechit[detector].xpos );
+							bb1_t_y -> push_back( bb1_sechit[detector].ypos );
+							bb1_t_E -> push_back( bb1_sechit[detector].energy );
+							bb1_t_r -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
 						}
 						else if(detector == b)
 						{
-							if( bb1_hit[detector].energy >= 80.0 )
-							{
-								N_hits_bb1_b_80++;
-								bb1_b_x_80 -> push_back( bb1_sechit[detector].xpos );
-								bb1_b_y_80 -> push_back( bb1_sechit[detector].ypos );
-								bb1_b_E_80 -> push_back( bb1_sechit[detector].energy );
-								bb1_b_r_80 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-							}
-							if( bb1_hit[detector].energy >= 70.0 )
-							{
-								N_hits_bb1_b_70++;
-								bb1_b_x_70 -> push_back( bb1_sechit[detector].xpos );
-								bb1_b_y_70 -> push_back( bb1_sechit[detector].ypos );
-								bb1_b_E_70 -> push_back( bb1_sechit[detector].energy );
-								bb1_b_r_70 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-							}
-							if( bb1_hit[detector].energy >= 60.0 )
-							{
-								N_hits_bb1_b_60++;
-								bb1_b_x_60 -> push_back( bb1_sechit[detector].xpos );
-								bb1_b_y_60 -> push_back( bb1_sechit[detector].ypos );
-								bb1_b_E_60 -> push_back( bb1_sechit[detector].energy );
-								bb1_b_r_60 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-							}
-							if( bb1_hit[detector].energy >= 50.0 )
-							{
-								N_hits_bb1_b_50++;
-								bb1_b_x_50 -> push_back( bb1_sechit[detector].xpos );
-								bb1_b_y_50 -> push_back( bb1_sechit[detector].ypos );
-								bb1_b_E_50 -> push_back( bb1_sechit[detector].energy );
-								bb1_b_r_50 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-							}
-							if( bb1_hit[detector].energy >= 40.0 )
-							{
-								N_hits_bb1_b_40++;
-								bb1_b_x_40 -> push_back( bb1_sechit[detector].xpos );
-								bb1_b_y_40 -> push_back( bb1_sechit[detector].ypos );
-								bb1_b_E_40 -> push_back( bb1_sechit[detector].energy );
-								bb1_b_r_40 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-							}
+							had_Nhits_bb1[b]=2;
+							bb1_b_x -> push_back( bb1_sechit[detector].xpos );
+							bb1_b_y -> push_back( bb1_sechit[detector].ypos );
+							bb1_b_E -> push_back( bb1_sechit[detector].energy );
+							bb1_b_r -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+						}
+						if( bb1_hit[detector].energy >= 20.0 )
+						{
+							N_hits_bb1_20[detector]++; 
 							if( bb1_hit[detector].energy >= 30.0 )
 							{
-								N_hits_bb1_b_30++;
-								bb1_b_x_30 -> push_back( bb1_sechit[detector].xpos );
-								bb1_b_y_30 -> push_back( bb1_sechit[detector].ypos );
-								bb1_b_E_30 -> push_back( bb1_sechit[detector].energy );
-								bb1_b_r_30 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-							}
-							if( bb1_hit[detector].energy >= 20.0 )
-							{
-								N_hits_bb1_b_20++;
-								bb1_b_x_20 -> push_back( bb1_sechit[detector].xpos );
-								bb1_b_y_20 -> push_back( bb1_sechit[detector].ypos );
-								bb1_b_E_20 -> push_back( bb1_sechit[detector].energy );
-								bb1_b_r_20 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+								N_hits_bb1_30[detector]++;
+								if( bb1_hit[detector].energy >= 40.0 )
+								{
+									N_hits_bb1_40[detector]++;
+									if( bb1_hit[detector].energy >= 50.0 )
+									{
+										N_hits_bb1_50[detector]++;
+										if( bb1_hit[detector].energy >= 60.0 )
+										{
+											N_hits_bb1_60[detector]++;
+											if( bb1_hit[detector].energy >= 70.0 )
+											{
+												N_hits_bb1_70[detector]++;
+												if( bb1_hit[detector].energy >= 80.0 )
+												{
+													N_hits_bb1_80[detector]++;
+												}
+											}
+										}
+									}
+								}
 							}
 						}
 						//
 					}
+					//
 				}
 			}
 			// that was the loop over BB1 detectors.  now these things have appropriate values:
@@ -1936,23 +1532,23 @@ int main(int argc, char *argv[])
 		//	// Normal
 			if(N_hits_scint_t>=1 && N_hits_scint_b==0) 
 			{
-				if(N_hits_bb1_t_20==1 && N_hits_bb1_b_20==0) { is_normal_t_20 = kTRUE; }
-				if(N_hits_bb1_t_30==1 && N_hits_bb1_b_30==0) { is_normal_t_30 = kTRUE; }
-				if(N_hits_bb1_t_40==1 && N_hits_bb1_b_40==0) { is_normal_t_40 = kTRUE; }
-				if(N_hits_bb1_t_50==1 && N_hits_bb1_b_50==0) { is_normal_t_50 = kTRUE; }
-				if(N_hits_bb1_t_60==1 && N_hits_bb1_b_60==0) { is_normal_t_60 = kTRUE; }
-				if(N_hits_bb1_t_70==1 && N_hits_bb1_b_70==0) { is_normal_t_70 = kTRUE; }
-				if(N_hits_bb1_t_80==1 && N_hits_bb1_b_80==0) { is_normal_t_80 = kTRUE; }
+				if(N_hits_bb1_20[t]==1 && N_hits_bb1_20[b]==0) { is_normal_t_20 = kTRUE; }
+				if(N_hits_bb1_30[t]==1 && N_hits_bb1_30[b]==0) { is_normal_t_30 = kTRUE; }
+				if(N_hits_bb1_40[t]==1 && N_hits_bb1_40[b]==0) { is_normal_t_40 = kTRUE; }
+				if(N_hits_bb1_50[t]==1 && N_hits_bb1_50[b]==0) { is_normal_t_50 = kTRUE; }
+				if(N_hits_bb1_60[t]==1 && N_hits_bb1_60[b]==0) { is_normal_t_60 = kTRUE; }
+				if(N_hits_bb1_70[t]==1 && N_hits_bb1_70[b]==0) { is_normal_t_70 = kTRUE; }
+				if(N_hits_bb1_80[t]==1 && N_hits_bb1_80[b]==0) { is_normal_t_80 = kTRUE; }
 			}
 			if(N_hits_scint_t==0 && N_hits_scint_b>=1)
 			{
-				if(N_hits_bb1_t_20==0 && N_hits_bb1_b_20==1) { is_normal_b_20 = kTRUE; }
-				if(N_hits_bb1_t_30==0 && N_hits_bb1_b_30==1) { is_normal_b_30 = kTRUE; }
-				if(N_hits_bb1_t_40==0 && N_hits_bb1_b_40==1) { is_normal_b_40 = kTRUE; }
-				if(N_hits_bb1_t_50==0 && N_hits_bb1_b_50==1) { is_normal_b_50 = kTRUE; }
-				if(N_hits_bb1_t_60==0 && N_hits_bb1_b_60==1) { is_normal_b_60 = kTRUE; }
-				if(N_hits_bb1_t_70==0 && N_hits_bb1_b_70==1) { is_normal_b_70 = kTRUE; }
-				if(N_hits_bb1_t_80==0 && N_hits_bb1_b_80==1) { is_normal_b_80 = kTRUE; }
+				if(N_hits_bb1_20[t]==0 && N_hits_bb1_20[b]==1) { is_normal_b_20 = kTRUE; }
+				if(N_hits_bb1_30[t]==0 && N_hits_bb1_30[b]==1) { is_normal_b_30 = kTRUE; }
+				if(N_hits_bb1_40[t]==0 && N_hits_bb1_40[b]==1) { is_normal_b_40 = kTRUE; }
+				if(N_hits_bb1_50[t]==0 && N_hits_bb1_50[b]==1) { is_normal_b_50 = kTRUE; }
+				if(N_hits_bb1_60[t]==0 && N_hits_bb1_60[b]==1) { is_normal_b_60 = kTRUE; }
+				if(N_hits_bb1_70[t]==0 && N_hits_bb1_70[b]==1) { is_normal_b_70 = kTRUE; }
+				if(N_hits_bb1_80[t]==0 && N_hits_bb1_80[b]==1) { is_normal_b_80 = kTRUE; }
 			}
 		}
 		
@@ -1997,12 +1593,13 @@ int main(int argc, char *argv[])
 					}
 					else if (delta_ac != 0)
 					{
-						cout << "I don't even.  delta_ac=" << delta_ac << endl;
+						cout << "I don't even.  delta_ac=" << delta_ac << ";\tis_polarized=" << is_polarized << ", bc acmot_last=" << acmot_last << ",\t(i=" << i << ")"<< endl;
 					}
 				}
 				// no timestamp at the end of the 100th cycle, so remind it when it's done.
 				if (accycle_count == 100) 
 				{
+				//	cout << "cycle 100.  is_polarized=" << is_polarized << ", bc acmot_last=" << acmot_last << ",\t(i=" << i << ")"<< endl;
 					if( int(eventtime) - ac_start.ts() >= ac_cyclelength )  
 					// if the most recent ac start time had acmot_last==0, then:
 					// 	(a) it was right at the beginning of ac cycle 100, and 
@@ -2011,6 +1608,7 @@ int main(int argc, char *argv[])
 					// For these events, I *don't* want to trigger the cycle count to increment.
 					{
 						accycle_count=0;
+				//		cout << "\tReset cyclecount." << endl;
 					}
 				}
 			}
@@ -2020,82 +1618,25 @@ int main(int argc, char *argv[])
 		//
 		friend_tree -> Fill();
 		//
-	//	bb1_t_x -> clear();
-	//	bb1_t_y -> clear();
-	//	bb1_t_E -> clear();
-	//	bb1_t_r -> clear();
-	//	
-	//	bb1_b_x -> clear();
-	//	bb1_b_y -> clear();
-	//	bb1_b_E -> clear();
-	//	bb1_b_r -> clear();
+		bb1_t_x -> clear();
+		bb1_t_y -> clear();
+		bb1_t_E -> clear();
+		bb1_t_r -> clear();
 		
-		bb1_t_x_20 -> clear();
-		bb1_t_y_20 -> clear();
-		bb1_t_E_20 -> clear();
-		bb1_t_r_20 -> clear();
-		bb1_b_x_20 -> clear();
-		bb1_b_y_20 -> clear();
-		bb1_b_E_20 -> clear();
-		bb1_b_r_20 -> clear();
-		
-		bb1_t_x_30 -> clear();
-		bb1_t_y_30 -> clear();
-		bb1_t_E_30 -> clear();
-		bb1_t_r_30 -> clear();
-		bb1_b_x_30 -> clear();
-		bb1_b_y_30 -> clear();
-		bb1_b_E_30 -> clear();
-		bb1_b_r_30 -> clear();
-
-		bb1_t_x_40 -> clear();
-		bb1_t_y_40 -> clear();
-		bb1_t_E_40 -> clear();
-		bb1_t_r_40 -> clear();
-		bb1_b_x_40 -> clear();
-		bb1_b_y_40 -> clear();
-		bb1_b_E_40 -> clear();
-		bb1_b_r_40 -> clear();
-
-		bb1_t_x_50 -> clear();
-		bb1_t_y_50 -> clear();
-		bb1_t_E_50 -> clear();
-		bb1_t_r_50 -> clear();
-		bb1_b_x_50 -> clear();
-		bb1_b_y_50 -> clear();
-		bb1_b_E_50 -> clear();
-		bb1_b_r_50 -> clear();
-
-		bb1_t_x_60 -> clear();
-		bb1_t_y_60 -> clear();
-		bb1_t_E_60 -> clear();
-		bb1_t_r_60 -> clear();
-		bb1_b_x_60 -> clear();
-		bb1_b_y_60 -> clear();
-		bb1_b_E_60 -> clear();
-		bb1_b_r_60 -> clear();
-		
-		bb1_t_x_70 -> clear();
-		bb1_t_y_70 -> clear();
-		bb1_t_E_70 -> clear();
-		bb1_t_r_70 -> clear();
-		bb1_b_x_70 -> clear();
-		bb1_b_y_70 -> clear();
-		bb1_b_E_70 -> clear();
-		bb1_b_r_70 -> clear();
-
-		bb1_t_x_80 -> clear();
-		bb1_t_y_80 -> clear();
-		bb1_t_E_80 -> clear();
-		bb1_t_r_80 -> clear();
-		bb1_b_x_80 -> clear();
-		bb1_b_y_80 -> clear();
-		bb1_b_E_80 -> clear();
-		bb1_b_r_80 -> clear();
-		
+		bb1_b_x -> clear();
+		bb1_b_y -> clear();
+		bb1_b_E -> clear();
+		bb1_b_r -> clear();
+				
 		scint_t_walk -> clear();
 		scint_b_walk -> clear();
-	}
+		
+		if( had_Nhits_bb1[t]>2 || had_Nhits_bb1[b]>2 )
+		{
+			cout << "had_Nhits_bb1[t]=" << had_Nhits_bb1[t] << ";\thad_Nhits_bb1[b]=" << had_Nhits_bb1[b] << endl;
+		}
+	}  // end loop over events.
+	//
 	if(!is_g4)
 	{
 		cout << "final unix_time = " << unix_time << endl;

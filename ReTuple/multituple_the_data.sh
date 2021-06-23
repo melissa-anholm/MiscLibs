@@ -33,9 +33,9 @@
 #./multituple 484 0 0 3.0
 #./multituple 485 0 0 3.0
 #./multituple 486 0 0 3.0
-#./multituple 487 0 0 3.0
-#./multituple 488 0 0 3.0
-#./multituple 489 0 0 3.0
+#./multituple 487 0 0 3.0  # short run.  but sometimes I don't even.
+#./multituple 488 0 0 3.0  # short run.  but sometimes I don't even.
+#./multituple 489 0 0 3.0  # short run.  but sometimes I don't even.
 #./multituple 502 0 0 3.0
 #./multituple 503 0 0 3.0
 #./multituple 504 0 0 3.0
