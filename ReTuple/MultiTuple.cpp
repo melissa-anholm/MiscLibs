@@ -1064,6 +1064,7 @@ int main(int argc, char *argv[])
 	
 	
 	// BB1s:  
+	/*
 	vector<double> * bb1_t_x = 0;
 	vector<double> * bb1_t_y = 0;
 	vector<double> * bb1_t_E = 0;
@@ -1076,7 +1077,101 @@ int main(int argc, char *argv[])
 	bb1_t_y -> clear();
 	bb1_t_E -> clear();
 	bb1_t_r -> clear();
+	*/
+	
+	vector<double> * bb1_t_x_20 = 0;
+	vector<double> * bb1_t_y_20 = 0;
+	vector<double> * bb1_t_E_20 = 0;
+	vector<double> * bb1_t_r_20 = 0;
+	friend_tree -> Branch("bb1_top_x_20", &bb1_t_x_20);
+	friend_tree -> Branch("bb1_top_y_20", &bb1_t_y_20);
+	friend_tree -> Branch("bb1_top_E_20", &bb1_t_E_20);
+	friend_tree -> Branch("bb1_top_r_20", &bb1_t_r_20);
+	bb1_t_x_20 -> clear();
+	bb1_t_y_20 -> clear();
+	bb1_t_E_20 -> clear();
+	bb1_t_r_20 -> clear();
+	
+	vector<double> * bb1_t_x_30 = 0;
+	vector<double> * bb1_t_y_30 = 0;
+	vector<double> * bb1_t_E_30 = 0;
+	vector<double> * bb1_t_r_30 = 0;
+	friend_tree -> Branch("bb1_top_x_30", &bb1_t_x_30);
+	friend_tree -> Branch("bb1_top_y_30", &bb1_t_y_30);
+	friend_tree -> Branch("bb1_top_E_30", &bb1_t_E_30);
+	friend_tree -> Branch("bb1_top_r_30", &bb1_t_r_30);
+	bb1_t_x_30 -> clear();
+	bb1_t_y_30 -> clear();
+	bb1_t_E_30 -> clear();
+	bb1_t_r_30 -> clear();
 
+	vector<double> * bb1_t_x_40 = 0;
+	vector<double> * bb1_t_y_40 = 0;
+	vector<double> * bb1_t_E_40 = 0;
+	vector<double> * bb1_t_r_40 = 0;
+	friend_tree -> Branch("bb1_top_x_40", &bb1_t_x_40);
+	friend_tree -> Branch("bb1_top_y_40", &bb1_t_y_40);
+	friend_tree -> Branch("bb1_top_E_40", &bb1_t_E_40);
+	friend_tree -> Branch("bb1_top_r_40", &bb1_t_r_40);
+	bb1_t_x_40 -> clear();
+	bb1_t_y_40 -> clear();
+	bb1_t_E_40 -> clear();
+	bb1_t_r_40 -> clear();
+
+	vector<double> * bb1_t_x_50 = 0;
+	vector<double> * bb1_t_y_50 = 0;
+	vector<double> * bb1_t_E_50 = 0;
+	vector<double> * bb1_t_r_50 = 0;
+	friend_tree -> Branch("bb1_top_x_50", &bb1_t_x_50);
+	friend_tree -> Branch("bb1_top_y_50", &bb1_t_y_50);
+	friend_tree -> Branch("bb1_top_E_50", &bb1_t_E_50);
+	friend_tree -> Branch("bb1_top_r_50", &bb1_t_r_50);
+	bb1_t_x_50 -> clear();
+	bb1_t_y_50 -> clear();
+	bb1_t_E_50 -> clear();
+	bb1_t_r_50 -> clear();
+
+	vector<double> * bb1_t_x_60 = 0;
+	vector<double> * bb1_t_y_60 = 0;
+	vector<double> * bb1_t_E_60 = 0;
+	vector<double> * bb1_t_r_60 = 0;
+	friend_tree -> Branch("bb1_top_x_60", &bb1_t_x_60);
+	friend_tree -> Branch("bb1_top_y_60", &bb1_t_y_60);
+	friend_tree -> Branch("bb1_top_E_60", &bb1_t_E_60);
+	friend_tree -> Branch("bb1_top_r_60", &bb1_t_r_60);
+	bb1_t_x_60 -> clear();
+	bb1_t_y_60 -> clear();
+	bb1_t_E_60 -> clear();
+	bb1_t_r_60 -> clear();
+
+	vector<double> * bb1_t_x_70 = 0;
+	vector<double> * bb1_t_y_70 = 0;
+	vector<double> * bb1_t_E_70 = 0;
+	vector<double> * bb1_t_r_70 = 0;
+	friend_tree -> Branch("bb1_top_x_70", &bb1_t_x_70);
+	friend_tree -> Branch("bb1_top_y_70", &bb1_t_y_70);
+	friend_tree -> Branch("bb1_top_E_70", &bb1_t_E_70);
+	friend_tree -> Branch("bb1_top_r_70", &bb1_t_r_70);
+	bb1_t_x_70 -> clear();
+	bb1_t_y_70 -> clear();
+	bb1_t_E_70 -> clear();
+	bb1_t_r_70 -> clear();
+
+	vector<double> * bb1_t_x_80 = 0;
+	vector<double> * bb1_t_y_80 = 0;
+	vector<double> * bb1_t_E_80 = 0;
+	vector<double> * bb1_t_r_80 = 0;
+	friend_tree -> Branch("bb1_top_x_80", &bb1_t_x_80);
+	friend_tree -> Branch("bb1_top_y_80", &bb1_t_y_80);
+	friend_tree -> Branch("bb1_top_E_80", &bb1_t_E_80);
+	friend_tree -> Branch("bb1_top_r_80", &bb1_t_r_80);
+	bb1_t_x_80 -> clear();
+	bb1_t_y_80 -> clear();
+	bb1_t_E_80 -> clear();
+	bb1_t_r_80 -> clear();
+	
+	//
+	/*
 	vector<double> * bb1_b_x = 0;
 	vector<double> * bb1_b_y = 0;
 	vector<double> * bb1_b_E = 0;
@@ -1089,6 +1184,100 @@ int main(int argc, char *argv[])
 	bb1_b_y -> clear();
 	bb1_b_E -> clear();
 	bb1_b_r -> clear();
+	*/
+
+	vector<double> * bb1_b_x_20 = 0;
+	vector<double> * bb1_b_y_20 = 0;
+	vector<double> * bb1_b_E_20 = 0;
+	vector<double> * bb1_b_r_20 = 0;
+	friend_tree -> Branch("bb1_bottom_x_20", &bb1_b_x_20);
+	friend_tree -> Branch("bb1_bottom_y_20", &bb1_b_y_20);
+	friend_tree -> Branch("bb1_bottom_E_20", &bb1_b_E_20);
+	friend_tree -> Branch("bb1_bottom_r_20", &bb1_b_r_20);
+	bb1_b_x_20 -> clear();
+	bb1_b_y_20 -> clear();
+	bb1_b_E_20 -> clear();
+	bb1_b_r_20 -> clear();
+	
+	vector<double> * bb1_b_x_30 = 0;
+	vector<double> * bb1_b_y_30 = 0;
+	vector<double> * bb1_b_E_30 = 0;
+	vector<double> * bb1_b_r_30 = 0;
+	friend_tree -> Branch("bb1_bottom_x_30", &bb1_b_x_30);
+	friend_tree -> Branch("bb1_bottom_y_30", &bb1_b_y_30);
+	friend_tree -> Branch("bb1_bottom_E_30", &bb1_b_E_30);
+	friend_tree -> Branch("bb1_bottom_r_30", &bb1_b_r_30);
+	bb1_b_x_30 -> clear();
+	bb1_b_y_30 -> clear();
+	bb1_b_E_30 -> clear();
+	bb1_b_r_30 -> clear();
+
+	vector<double> * bb1_b_x_40 = 0;
+	vector<double> * bb1_b_y_40 = 0;
+	vector<double> * bb1_b_E_40 = 0;
+	vector<double> * bb1_b_r_40 = 0;
+	friend_tree -> Branch("bb1_bottom_x_40", &bb1_b_x_40);
+	friend_tree -> Branch("bb1_bottom_y_40", &bb1_b_y_40);
+	friend_tree -> Branch("bb1_bottom_E_40", &bb1_b_E_40);
+	friend_tree -> Branch("bb1_bottom_r_40", &bb1_b_r_40);
+	bb1_b_x_40 -> clear();
+	bb1_b_y_40 -> clear();
+	bb1_b_E_40 -> clear();
+	bb1_b_r_40 -> clear();
+
+	vector<double> * bb1_b_x_50 = 0;
+	vector<double> * bb1_b_y_50 = 0;
+	vector<double> * bb1_b_E_50 = 0;
+	vector<double> * bb1_b_r_50 = 0;
+	friend_tree -> Branch("bb1_bottom_x_50", &bb1_b_x_50);
+	friend_tree -> Branch("bb1_bottom_y_50", &bb1_b_y_50);
+	friend_tree -> Branch("bb1_bottom_E_50", &bb1_b_E_50);
+	friend_tree -> Branch("bb1_bottom_r_50", &bb1_b_r_50);
+	bb1_b_x_50 -> clear();
+	bb1_b_y_50 -> clear();
+	bb1_b_E_50 -> clear();
+	bb1_b_r_50 -> clear();
+
+	vector<double> * bb1_b_x_60 = 0;
+	vector<double> * bb1_b_y_60 = 0;
+	vector<double> * bb1_b_E_60 = 0;
+	vector<double> * bb1_b_r_60 = 0;
+	friend_tree -> Branch("bb1_bottom_x_60", &bb1_b_x_60);
+	friend_tree -> Branch("bb1_bottom_y_60", &bb1_b_y_60);
+	friend_tree -> Branch("bb1_bottom_E_60", &bb1_b_E_60);
+	friend_tree -> Branch("bb1_bottom_r_60", &bb1_b_r_60);
+	bb1_b_x_60 -> clear();
+	bb1_b_y_60 -> clear();
+	bb1_b_E_60 -> clear();
+	bb1_b_r_60 -> clear();
+
+	vector<double> * bb1_b_x_70 = 0;
+	vector<double> * bb1_b_y_70 = 0;
+	vector<double> * bb1_b_E_70 = 0;
+	vector<double> * bb1_b_r_70 = 0;
+	friend_tree -> Branch("bb1_bottom_x_70", &bb1_b_x_70);
+	friend_tree -> Branch("bb1_bottom_y_70", &bb1_b_y_70);
+	friend_tree -> Branch("bb1_bottom_E_70", &bb1_b_E_70);
+	friend_tree -> Branch("bb1_bottom_r_70", &bb1_b_r_70);
+	bb1_b_x_70 -> clear();
+	bb1_b_y_70 -> clear();
+	bb1_b_E_70 -> clear();
+	bb1_b_r_70 -> clear();
+
+	vector<double> * bb1_b_x_80 = 0;
+	vector<double> * bb1_b_y_80 = 0;
+	vector<double> * bb1_b_E_80 = 0;
+	vector<double> * bb1_b_r_80 = 0;
+	friend_tree -> Branch("bb1_bottom_x_80", &bb1_b_x_80);
+	friend_tree -> Branch("bb1_bottom_y_80", &bb1_b_y_80);
+	friend_tree -> Branch("bb1_bottom_E_80", &bb1_b_E_80);
+	friend_tree -> Branch("bb1_bottom_r_80", &bb1_b_r_80);
+	bb1_b_x_80 -> clear();
+	bb1_b_y_80 -> clear();
+	bb1_b_E_80 -> clear();
+	bb1_b_r_80 -> clear();
+	//
+	
 	
 	//
 	BB1Hit    bb1_hit[2]    = {BB1Hit(), BB1Hit()};        // 2 detectors.
@@ -1156,10 +1345,50 @@ int main(int argc, char *argv[])
 	TBranch * N_hits_scint_t_branch = friend_tree -> Branch("N_hits_scint_t", &N_hits_scint_t);
 	TBranch * N_hits_scint_b_branch = friend_tree -> Branch("N_hits_scint_b", &N_hits_scint_b);
 	
+	//
 	int had_Nhits_bb1_t = 0;
 	int had_Nhits_bb1_b = 0;
-	TBranch * twohits_bb1_t_branch = friend_tree -> Branch("had_Nhits_bb1_t", &had_Nhits_bb1_t);
-	TBranch * twohits_bb1_b_branch = friend_tree -> Branch("had_Nhits_bb1_b", &had_Nhits_bb1_b);
+	friend_tree -> Branch("had_Nhits_bb1_t", &had_Nhits_bb1_t);
+	friend_tree -> Branch("had_Nhits_bb1_b", &had_Nhits_bb1_b);
+	/*
+	// Below:  these aren't a thing!  
+	int had_Nhits_bb1_t_20 = 0;
+	int had_Nhits_bb1_b_20 = 0;
+	friend_tree -> Branch("had_Nhits_bb1_t_20", &had_Nhits_bb1_t_20);
+	friend_tree -> Branch("had_Nhits_bb1_b_20", &had_Nhits_bb1_b_20);
+
+	int had_Nhits_bb1_t_30 = 0;
+	int had_Nhits_bb1_b_30 = 0;
+	friend_tree -> Branch("had_Nhits_bb1_t_30", &had_Nhits_bb1_t_30);
+	friend_tree -> Branch("had_Nhits_bb1_b_30", &had_Nhits_bb1_b_30);
+	
+	int had_Nhits_bb1_t_40 = 0;
+	int had_Nhits_bb1_b_40 = 0;
+	friend_tree -> Branch("had_Nhits_bb1_t_40", &had_Nhits_bb1_t_40);
+	friend_tree -> Branch("had_Nhits_bb1_b_40", &had_Nhits_bb1_b_40);
+	
+	int had_Nhits_bb1_t_50 = 0;
+	int had_Nhits_bb1_b_50 = 0;
+	friend_tree -> Branch("had_Nhits_bb1_t_50", &had_Nhits_bb1_t_50);
+	friend_tree -> Branch("had_Nhits_bb1_b_50", &had_Nhits_bb1_b_50);
+	
+	int had_Nhits_bb1_t_60 = 0;
+	int had_Nhits_bb1_b_60 = 0;
+	friend_tree -> Branch("had_Nhits_bb1_t_60", &had_Nhits_bb1_t_60);
+	friend_tree -> Branch("had_Nhits_bb1_b_60", &had_Nhits_bb1_b_60);
+	
+	int had_Nhits_bb1_t_70 = 0;
+	int had_Nhits_bb1_b_70 = 0;
+	friend_tree -> Branch("had_Nhits_bb1_t_70", &had_Nhits_bb1_t_70);
+	friend_tree -> Branch("had_Nhits_bb1_b_70", &had_Nhits_bb1_b_70);
+	
+	int had_Nhits_bb1_t_80 = 0;
+	int had_Nhits_bb1_b_80 = 0;
+	friend_tree -> Branch("had_Nhits_bb1_t_80", &had_Nhits_bb1_t_80);
+	friend_tree -> Branch("had_Nhits_bb1_b_80", &had_Nhits_bb1_b_80);
+	*/
+	//
+	
 	
 //	int N_hits_bb1_t = 0;
 //	int N_hits_bb1_b = 0;
@@ -1255,10 +1484,7 @@ int main(int argc, char *argv[])
 	for(int i=0; i<nentries; i++)
 	{
 		if( (i % 100000) == 0) { cout<<"Reached entry "<< i << endl; }
-	//	cout << "i=" << i << endl;
 		tree -> GetEntry(i);
-	//	cout << "entry is got." << endl;
-		//
 		
 		// photodiode and led events, for g4:
 		if(is_g4)
@@ -1290,7 +1516,6 @@ int main(int argc, char *argv[])
 		}
 		else if(is_g4)
 		{
-		//	cout << "meh?" << endl;
 			all_okay = kTRUE;	
 			//
 			upper_DeltaE = 0.0;
@@ -1324,14 +1549,12 @@ int main(int argc, char *argv[])
 		// we already figured out upper_E and lower_E.  if it's g4 or old, just fill with zeroes.
 		if(electron_count>0 || is_g4)
 		{
-	//		cout << "... k..." << endl;
 			double e_tof_in = 0;
 			double the_tof = 0;
 			
 			// Top:
 			if(N_hits_scint_t>0)
 			{
-	//			cout << "top!" << endl;
 				nhits = N_hits_scint_t;
 				for(int j=0; j<nhits; j++) 
 				{
@@ -1347,7 +1570,6 @@ int main(int argc, char *argv[])
 			// Bottom:
 			if(N_hits_scint_b>0)
 			{
-	//			cout << "bottom." << endl;
 				nhits = N_hits_scint_b;
 				for(int j=0; j<nhits; j++) 
 				{
@@ -1360,9 +1582,7 @@ int main(int argc, char *argv[])
 					scint_b_walk -> push_back(the_tof);
 				}
 			}
-	//		cout << "did we even get here?" << endl;
 		}
-	//	cout << "or here?" << endl;
 		
 		// HEX 75 calibrations:
 		if(!is_g4)
@@ -1447,129 +1667,262 @@ int main(int argc, char *argv[])
 				//	}
 				}
 				bb1_result[detector] = GetResult(stripdetector[detector][x], stripdetector[detector][y], threshold_index, sigma_cut); 
-			
 				bb1_hit[detector] = bb1_result[detector].hit;
 				bb1_sechit[detector] = bb1_result[detector].secHit;
 				
 				if(bb1_hit[detector].pass == true)
 				{
-					if( bb1_hit[detector].energy >= 20.0 /* bb1_energy_threshold */ )
+					if(detector == t)
 					{
-						if(detector == t)
-						{
-							had_Nhits_bb1_t=1;
-							bb1_t_x -> push_back( bb1_hit[detector].xpos );
-							bb1_t_y -> push_back( bb1_hit[detector].ypos );
-							bb1_t_E -> push_back( bb1_hit[detector].energy );
-							bb1_t_r -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-					//		N_hits_bb1_t++;
-						}
-						else if(detector == b)
-						{
-							had_Nhits_bb1_b=1;
-							bb1_b_x -> push_back( bb1_hit[detector].xpos );
-							bb1_b_y -> push_back( bb1_hit[detector].ypos );
-							bb1_b_E -> push_back( bb1_hit[detector].energy );
-							bb1_b_r -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
-					//		N_hits_bb1_b++;
-						}
-						//
+						had_Nhits_bb1_t=1;
 						if( bb1_hit[detector].energy >= 80.0 )
 						{
-							if(detector == t)      { N_hits_bb1_t_80++; }
-							else if(detector == b) { N_hits_bb1_b_80++; }
+							N_hits_bb1_t_80++;
+							bb1_t_x_80 -> push_back( bb1_hit[detector].xpos );
+							bb1_t_y_80 -> push_back( bb1_hit[detector].ypos );
+							bb1_t_E_80 -> push_back( bb1_hit[detector].energy );
+							bb1_t_r_80 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
 						}
 						if( bb1_hit[detector].energy >= 70.0 )
 						{
-							if(detector == t)      { N_hits_bb1_t_70++; }
-							else if(detector == b) { N_hits_bb1_b_70++; }
+							N_hits_bb1_t_70++;
+							bb1_t_x_70 -> push_back( bb1_hit[detector].xpos );
+							bb1_t_y_70 -> push_back( bb1_hit[detector].ypos );
+							bb1_t_E_70 -> push_back( bb1_hit[detector].energy );
+							bb1_t_r_70 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
 						}
 						if( bb1_hit[detector].energy >= 60.0 )
 						{
-							if(detector == t)      { N_hits_bb1_t_60++; }
-							else if(detector == b) { N_hits_bb1_b_60++; }
+							N_hits_bb1_t_60++;
+							bb1_t_x_60 -> push_back( bb1_hit[detector].xpos );
+							bb1_t_y_60 -> push_back( bb1_hit[detector].ypos );
+							bb1_t_E_60 -> push_back( bb1_hit[detector].energy );
+							bb1_t_r_60 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
 						}
 						if( bb1_hit[detector].energy >= 50.0 )
 						{
-							if(detector == t)      { N_hits_bb1_t_50++; }
-							else if(detector == b) { N_hits_bb1_b_50++; }
+							N_hits_bb1_t_50++;
+							bb1_t_x_50 -> push_back( bb1_hit[detector].xpos );
+							bb1_t_y_50 -> push_back( bb1_hit[detector].ypos );
+							bb1_t_E_50 -> push_back( bb1_hit[detector].energy );
+							bb1_t_r_50 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
 						}
 						if( bb1_hit[detector].energy >= 40.0 )
 						{
-							if(detector == t)      { N_hits_bb1_t_40++; }
-							else if(detector == b) { N_hits_bb1_b_40++; }
+							N_hits_bb1_t_40++;
+							bb1_t_x_40 -> push_back( bb1_hit[detector].xpos );
+							bb1_t_y_40 -> push_back( bb1_hit[detector].ypos );
+							bb1_t_E_40 -> push_back( bb1_hit[detector].energy );
+							bb1_t_r_40 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
 						}
 						if( bb1_hit[detector].energy >= 30.0 )
 						{
-							if(detector == t)      { N_hits_bb1_t_30++; }
-							else if(detector == b) { N_hits_bb1_b_30++; }
+							N_hits_bb1_t_30++; 
+							bb1_t_x_30 -> push_back( bb1_hit[detector].xpos );
+							bb1_t_y_30 -> push_back( bb1_hit[detector].ypos );
+							bb1_t_E_30 -> push_back( bb1_hit[detector].energy );
+							bb1_t_r_30 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
 						}
 						if( bb1_hit[detector].energy >= 20.0 )
 						{
-							if(detector == t)      { N_hits_bb1_t_20++; }
-							else if(detector == b) { N_hits_bb1_b_20++; }
+							N_hits_bb1_t_20++; 
+							bb1_t_x_20 -> push_back( bb1_hit[detector].xpos );
+							bb1_t_y_20 -> push_back( bb1_hit[detector].ypos );
+							bb1_t_E_20 -> push_back( bb1_hit[detector].energy );
+							bb1_t_r_20 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
 						}
-						//
+					}
+					else if(detector == b)
+					{
+						had_Nhits_bb1_b=1;
+						if( bb1_hit[detector].energy >= 80.0 )
+						{
+							N_hits_bb1_b_80++;
+							bb1_b_x_80 -> push_back( bb1_hit[detector].xpos );
+							bb1_b_y_80 -> push_back( bb1_hit[detector].ypos );
+							bb1_b_E_80 -> push_back( bb1_hit[detector].energy );
+							bb1_b_r_80 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
+						}
+						if( bb1_hit[detector].energy >= 70.0 )
+						{
+							N_hits_bb1_b_70++;
+							bb1_b_x_70 -> push_back( bb1_hit[detector].xpos );
+							bb1_b_y_70 -> push_back( bb1_hit[detector].ypos );
+							bb1_b_E_70 -> push_back( bb1_hit[detector].energy );
+							bb1_b_r_70 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
+						}
+						if( bb1_hit[detector].energy >= 60.0 )
+						{
+							N_hits_bb1_b_60++;
+							bb1_b_x_60 -> push_back( bb1_hit[detector].xpos );
+							bb1_b_y_60 -> push_back( bb1_hit[detector].ypos );
+							bb1_b_E_60 -> push_back( bb1_hit[detector].energy );
+							bb1_b_r_60 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
+						}
+						if( bb1_hit[detector].energy >= 50.0 )
+						{
+							N_hits_bb1_b_50++;
+							bb1_b_x_50 -> push_back( bb1_hit[detector].xpos );
+							bb1_b_y_50 -> push_back( bb1_hit[detector].ypos );
+							bb1_b_E_50 -> push_back( bb1_hit[detector].energy );
+							bb1_b_r_50 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
+						}
+						if( bb1_hit[detector].energy >= 40.0 )
+						{
+							N_hits_bb1_b_40++;
+							bb1_b_x_40 -> push_back( bb1_hit[detector].xpos );
+							bb1_b_y_40 -> push_back( bb1_hit[detector].ypos );
+							bb1_b_E_40 -> push_back( bb1_hit[detector].energy );
+							bb1_b_r_40 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
+						}
+						if( bb1_hit[detector].energy >= 30.0 )
+						{
+							N_hits_bb1_b_30++;
+							bb1_b_x_30 -> push_back( bb1_hit[detector].xpos );
+							bb1_b_y_30 -> push_back( bb1_hit[detector].ypos );
+							bb1_b_E_30 -> push_back( bb1_hit[detector].energy );
+							bb1_b_r_30 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
+						}
+						if( bb1_hit[detector].energy >= 20.0 )
+						{
+							N_hits_bb1_b_20++;
+							bb1_b_x_20 -> push_back( bb1_hit[detector].xpos );
+							bb1_b_y_20 -> push_back( bb1_hit[detector].ypos );
+							bb1_b_E_20 -> push_back( bb1_hit[detector].energy );
+							bb1_b_r_20 -> push_back( get_r(bb1_hit[detector].xpos, bb1_hit[detector].ypos) );
+						}
 					}
 				}
 				//
 				if(bb1_result[detector].twoHits == true)
 				{
-					if(bb1_sechit[detector].pass == true && bb1_hit[detector].energy >= 20.0 /* bb1_energy_threshold */ )
+					if(detector == t)
+					{
+						had_Nhits_bb1_t=2;
+					}
+					else if(detector == b)
+					{
+						had_Nhits_bb1_b=2;
+					}
+					if(bb1_sechit[detector].pass == true)
 					{
 						if(detector == t)
 						{
-							had_Nhits_bb1_t=2;
-							bb1_t_x -> push_back( bb1_sechit[detector].xpos );
-							bb1_t_y -> push_back( bb1_sechit[detector].ypos );
-							bb1_t_E -> push_back( bb1_sechit[detector].energy );
-							bb1_t_r -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-					//		N_hits_bb1_t++;
+							if( bb1_hit[detector].energy >= 80.0 )
+							{
+								N_hits_bb1_t_80++;
+								bb1_t_x_80 -> push_back( bb1_sechit[detector].xpos );
+								bb1_t_y_80 -> push_back( bb1_sechit[detector].ypos );
+								bb1_t_E_80 -> push_back( bb1_sechit[detector].energy );
+								bb1_t_r_80 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+							}
+							if( bb1_hit[detector].energy >= 70.0 )
+							{
+								N_hits_bb1_t_70++;
+								bb1_t_x_70 -> push_back( bb1_sechit[detector].xpos );
+								bb1_t_y_70 -> push_back( bb1_sechit[detector].ypos );
+								bb1_t_E_70 -> push_back( bb1_sechit[detector].energy );
+								bb1_t_r_70 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+							}
+							if( bb1_hit[detector].energy >= 60.0 )
+							{
+								N_hits_bb1_t_60++;
+								bb1_t_x_60 -> push_back( bb1_sechit[detector].xpos );
+								bb1_t_y_60 -> push_back( bb1_sechit[detector].ypos );
+								bb1_t_E_60 -> push_back( bb1_sechit[detector].energy );
+								bb1_t_r_60 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+							}
+							if( bb1_hit[detector].energy >= 50.0 )
+							{
+								N_hits_bb1_t_50++;
+								bb1_t_x_50 -> push_back( bb1_sechit[detector].xpos );
+								bb1_t_y_50 -> push_back( bb1_sechit[detector].ypos );
+								bb1_t_E_50 -> push_back( bb1_sechit[detector].energy );
+								bb1_t_r_50 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+							}
+							if( bb1_hit[detector].energy >= 40.0 )
+							{
+								N_hits_bb1_t_40++;
+								bb1_t_x_40 -> push_back( bb1_sechit[detector].xpos );
+								bb1_t_y_40 -> push_back( bb1_sechit[detector].ypos );
+								bb1_t_E_40 -> push_back( bb1_sechit[detector].energy );
+								bb1_t_r_40 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+							}
+							if( bb1_hit[detector].energy >= 30.0 )
+							{
+								N_hits_bb1_t_30++;
+								bb1_t_x_30 -> push_back( bb1_sechit[detector].xpos );
+								bb1_t_y_30 -> push_back( bb1_sechit[detector].ypos );
+								bb1_t_E_30 -> push_back( bb1_sechit[detector].energy );
+								bb1_t_r_30 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+							}
+							if( bb1_hit[detector].energy >= 20.0 )
+							{
+								N_hits_bb1_t_20++;
+								bb1_t_x_20 -> push_back( bb1_sechit[detector].xpos );
+								bb1_t_y_20 -> push_back( bb1_sechit[detector].ypos );
+								bb1_t_E_20 -> push_back( bb1_sechit[detector].energy );
+								bb1_t_r_20 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+							}
 						}
 						else if(detector == b)
 						{
-							had_Nhits_bb1_b=2;
-							bb1_b_x -> push_back( bb1_sechit[detector].xpos );
-							bb1_b_y -> push_back( bb1_sechit[detector].ypos );
-							bb1_b_E -> push_back( bb1_sechit[detector].energy );
-							bb1_b_r -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
-					//		N_hits_bb1_b++;
-						}
-						//
-						if( bb1_hit[detector].energy >= 80.0 )
-						{
-							if(detector == t)      { N_hits_bb1_t_80++; }
-							else if(detector == b) { N_hits_bb1_b_80++; }
-						}
-						if( bb1_hit[detector].energy >= 70.0 )
-						{
-							if(detector == t)      { N_hits_bb1_t_70++; }
-							else if(detector == b) { N_hits_bb1_b_70++; }
-						}
-						if( bb1_hit[detector].energy >= 60.0 )
-						{
-							if(detector == t)      { N_hits_bb1_t_60++; }
-							else if(detector == b) { N_hits_bb1_b_60++; }
-						}
-						if( bb1_hit[detector].energy >= 50.0 )
-						{
-							if(detector == t)      { N_hits_bb1_t_50++; }
-							else if(detector == b) { N_hits_bb1_b_50++; }
-						}
-						if( bb1_hit[detector].energy >= 40.0 )
-						{
-							if(detector == t)      { N_hits_bb1_t_40++; }
-							else if(detector == b) { N_hits_bb1_b_40++; }
-						}
-						if( bb1_hit[detector].energy >= 30.0 )
-						{
-							if(detector == t)      { N_hits_bb1_t_30++; }
-							else if(detector == b) { N_hits_bb1_b_30++; }
-						}
-						if( bb1_hit[detector].energy >= 20.0 )
-						{
-							if(detector == t)      { N_hits_bb1_t_20++; }
-							else if(detector == b) { N_hits_bb1_b_20++; }
+							if( bb1_hit[detector].energy >= 80.0 )
+							{
+								N_hits_bb1_b_80++;
+								bb1_b_x_80 -> push_back( bb1_sechit[detector].xpos );
+								bb1_b_y_80 -> push_back( bb1_sechit[detector].ypos );
+								bb1_b_E_80 -> push_back( bb1_sechit[detector].energy );
+								bb1_b_r_80 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+							}
+							if( bb1_hit[detector].energy >= 70.0 )
+							{
+								N_hits_bb1_b_70++;
+								bb1_b_x_70 -> push_back( bb1_sechit[detector].xpos );
+								bb1_b_y_70 -> push_back( bb1_sechit[detector].ypos );
+								bb1_b_E_70 -> push_back( bb1_sechit[detector].energy );
+								bb1_b_r_70 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+							}
+							if( bb1_hit[detector].energy >= 60.0 )
+							{
+								N_hits_bb1_b_60++;
+								bb1_b_x_60 -> push_back( bb1_sechit[detector].xpos );
+								bb1_b_y_60 -> push_back( bb1_sechit[detector].ypos );
+								bb1_b_E_60 -> push_back( bb1_sechit[detector].energy );
+								bb1_b_r_60 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+							}
+							if( bb1_hit[detector].energy >= 50.0 )
+							{
+								N_hits_bb1_b_50++;
+								bb1_b_x_50 -> push_back( bb1_sechit[detector].xpos );
+								bb1_b_y_50 -> push_back( bb1_sechit[detector].ypos );
+								bb1_b_E_50 -> push_back( bb1_sechit[detector].energy );
+								bb1_b_r_50 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+							}
+							if( bb1_hit[detector].energy >= 40.0 )
+							{
+								N_hits_bb1_b_40++;
+								bb1_b_x_40 -> push_back( bb1_sechit[detector].xpos );
+								bb1_b_y_40 -> push_back( bb1_sechit[detector].ypos );
+								bb1_b_E_40 -> push_back( bb1_sechit[detector].energy );
+								bb1_b_r_40 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+							}
+							if( bb1_hit[detector].energy >= 30.0 )
+							{
+								N_hits_bb1_b_30++;
+								bb1_b_x_30 -> push_back( bb1_sechit[detector].xpos );
+								bb1_b_y_30 -> push_back( bb1_sechit[detector].ypos );
+								bb1_b_E_30 -> push_back( bb1_sechit[detector].energy );
+								bb1_b_r_30 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+							}
+							if( bb1_hit[detector].energy >= 20.0 )
+							{
+								N_hits_bb1_b_20++;
+								bb1_b_x_20 -> push_back( bb1_sechit[detector].xpos );
+								bb1_b_y_20 -> push_back( bb1_sechit[detector].ypos );
+								bb1_b_E_20 -> push_back( bb1_sechit[detector].energy );
+								bb1_b_r_20 -> push_back( get_r(bb1_sechit[detector].xpos, bb1_sechit[detector].ypos) );
+							}
 						}
 						//
 					}
@@ -1667,15 +2020,78 @@ int main(int argc, char *argv[])
 		//
 		friend_tree -> Fill();
 		//
-		bb1_t_x -> clear();
-		bb1_t_y -> clear();
-		bb1_t_E -> clear();
-		bb1_t_r -> clear();
+	//	bb1_t_x -> clear();
+	//	bb1_t_y -> clear();
+	//	bb1_t_E -> clear();
+	//	bb1_t_r -> clear();
+	//	
+	//	bb1_b_x -> clear();
+	//	bb1_b_y -> clear();
+	//	bb1_b_E -> clear();
+	//	bb1_b_r -> clear();
 		
-		bb1_b_x -> clear();
-		bb1_b_y -> clear();
-		bb1_b_E -> clear();
-		bb1_b_r -> clear();
+		bb1_t_x_20 -> clear();
+		bb1_t_y_20 -> clear();
+		bb1_t_E_20 -> clear();
+		bb1_t_r_20 -> clear();
+		bb1_b_x_20 -> clear();
+		bb1_b_y_20 -> clear();
+		bb1_b_E_20 -> clear();
+		bb1_b_r_20 -> clear();
+		
+		bb1_t_x_30 -> clear();
+		bb1_t_y_30 -> clear();
+		bb1_t_E_30 -> clear();
+		bb1_t_r_30 -> clear();
+		bb1_b_x_30 -> clear();
+		bb1_b_y_30 -> clear();
+		bb1_b_E_30 -> clear();
+		bb1_b_r_30 -> clear();
+
+		bb1_t_x_40 -> clear();
+		bb1_t_y_40 -> clear();
+		bb1_t_E_40 -> clear();
+		bb1_t_r_40 -> clear();
+		bb1_b_x_40 -> clear();
+		bb1_b_y_40 -> clear();
+		bb1_b_E_40 -> clear();
+		bb1_b_r_40 -> clear();
+
+		bb1_t_x_50 -> clear();
+		bb1_t_y_50 -> clear();
+		bb1_t_E_50 -> clear();
+		bb1_t_r_50 -> clear();
+		bb1_b_x_50 -> clear();
+		bb1_b_y_50 -> clear();
+		bb1_b_E_50 -> clear();
+		bb1_b_r_50 -> clear();
+
+		bb1_t_x_60 -> clear();
+		bb1_t_y_60 -> clear();
+		bb1_t_E_60 -> clear();
+		bb1_t_r_60 -> clear();
+		bb1_b_x_60 -> clear();
+		bb1_b_y_60 -> clear();
+		bb1_b_E_60 -> clear();
+		bb1_b_r_60 -> clear();
+		
+		bb1_t_x_70 -> clear();
+		bb1_t_y_70 -> clear();
+		bb1_t_E_70 -> clear();
+		bb1_t_r_70 -> clear();
+		bb1_b_x_70 -> clear();
+		bb1_b_y_70 -> clear();
+		bb1_b_E_70 -> clear();
+		bb1_b_r_70 -> clear();
+
+		bb1_t_x_80 -> clear();
+		bb1_t_y_80 -> clear();
+		bb1_t_E_80 -> clear();
+		bb1_t_r_80 -> clear();
+		bb1_b_x_80 -> clear();
+		bb1_b_y_80 -> clear();
+		bb1_b_E_80 -> clear();
+		bb1_b_r_80 -> clear();
 		
 		scint_t_walk -> clear();
 		scint_b_walk -> clear();
