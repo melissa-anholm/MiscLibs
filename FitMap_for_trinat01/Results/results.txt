@@ -1,0 +1,46 @@
+///  --- *** ---  ///  --- *** ---  ///
+Fit Results Summary:  
+
+Using Files:  
+pizza_B:  /Users/anholm/Desktop/Anal-Ysis/Sim_to_Asym/Output/pizzafile_BCD_ind0_sig3p0_bbr15p5_SetB_thr60.root
+pizza_CD: /Users/anholm/Desktop/Anal-Ysis/Sim_to_Asym/Output/pizzafile_BCD_ind0_sig3p0_bbr15p5_SetCD_thr60.root
+data_B:  ~/Desktop/Anal-Ysis/Abeta2/Get_Abeta2/Files/JustPlotA_B_ind0_sig3p0_bbr15p5.root
+data_C:  ~/Desktop/Anal-Ysis/Abeta2/Get_Abeta2/Files/JustPlotA_C_ind0_sig3p0_bbr15p5.root
+data_D:  ~/Desktop/Anal-Ysis/Abeta2/Get_Abeta2/Files/JustPlotA_D_ind0_sig3p0_bbr15p5.root
+
+Fit Range:  
+A_beta:  [-0.622500, -0.532500], 	dA=0.005000(N_A=18)
+b_Fierz: [-0.525000, 0.425000], 	db=0.050000(N_b=19)
+nominal_zoomlevel:  0
+
+Parameter Settings:  
+BS_scale:  100.000000%
+SS_scale:  100.000000%
+BG_scale:  100.000000%
+BB1 SNR threshold index: 0
+BB1 sigma E agreement:   3.000000
+BB1 max. radius:         15.500000
+BB1 Energy Threshold:    60.000000
+
+Merged Results (One Sigma Interval):  
+A_best=-0.570000 	[-0.580000, -0.565000]	(Sets BCD, one sigma)
+b_best=0.000000 	[-0.050000, 0.100000]	(Sets BCD, one sigma)
+
+Merged Results (90% Confidence Interval):  
+A_best=-0.570000 	[-0.580000, -0.560000]	(Sets BCD, 90% CI)
+b_best=0.000000 	[-0.100000, 0.100000]	(Sets BCD, 90% CI)
+Merged Results (95% Confidence Interval):  
+A_best=-0.570000 	[-0.585000, -0.560000]	(Sets BCD, 95% CI)
+b_best=0.000000 	[-0.100000, 0.150000]	(Sets BCD, 95% CI)
+
+Individual Results (One Sigma Interval):  
+   A_B=-0.560000 	[-0.580000, -0.550000]	(Set B, one sigma)
+   b_B=-0.100000 	[-0.200000, 0.100000]	(Set B, one sigma)
+
+   A_C=-0.570000 	[-0.620000, -0.535000]	(Set C, one sigma)
+   b_C=-0.100000 	[-0.450000, 0.400000]	(Set C, one sigma)
+
+   A_D=-0.570000 	[-0.580000, -0.565000]	(Set D, one sigma)
+   b_D=0.000000 	[-0.050000, 0.100000]	(Set D, one sigma)
+
+
