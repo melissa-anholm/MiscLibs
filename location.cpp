@@ -65,6 +65,9 @@ string hexpath_wisely = "/Users/anholm/Packages/MiscLibs/ReTuple/HexCal";  // He
 //string asymtree_path_wisely = "/Users/anholm/Desktop/Anal-Ysis/Unblinded_Friends_2014/AsymTree/";
 //string asymtree_path_wisely = "/Users/anholm/Desktop/Anal-Ysis/ReAnalyzedFriends_2014/AsymTree/";
 
+string fitresults_path_wisely = "/Users/anholm/Packages/MiscLibs/FitMap_for_trinat01/Results/";
+string pizza_path_wisely      = "/Users/anholm/Packages/MiscLibs/FitMap_for_trinat01/Pizzas/";
+string JustPlotA_path_wisely  = "/Users/anholm/Packages/MiscLibs/FitMap_for_trinat01/Data_Asyms/";
 //
 string br_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
 string be_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
@@ -121,6 +124,11 @@ string bb1_prefix_trinat01  = "/home/trinat/anholm/Packages/MiscLibs/BB1/";
 string mf_datapath_trinat01 = "/pool/trinat/MultiFriends_Data/";
 string mf_g4path_trinat01   = "/pool/trinat/MultiFriends_G4/";
 
+
+string fitresults_path_trinat01 = "/home/trinat/anholm/Packages/MiscLibs/FitMap_for_trinat01/Results/";
+string pizza_path_trinat01      = "/home/trinat/anholm/Packages/MiscLibs/FitMap_for_trinat01/Pizzas/";
+string JustPlotA_path_trinat01  = "/home/trinat/anholm/Packages/MiscLibs/FitMap_for_trinat01/Data_Asyms/";
+
 //
 string mf_datapath = mf_datapath_trinat01;
 string mf_g4path   = mf_g4path_trinat01;
@@ -143,6 +151,10 @@ string metadata_name = g4_path+"MetaData.txt";
 string bb1_prefix = bb1_prefix_fifteen;
 string hexpath = hexpath_wisely;
 string asymtree_path;
+
+string fitresults_path;
+string pizza_path;
+string JustPlotA_path;
 
 //
 
@@ -183,7 +195,7 @@ bool setup_location()
 		g4_path  = g4_path_fifteen;
 		g4f_path = g4_path+"Friends/";
 		metadata_name = g4_path+"MetaData.txt";
-
+		
 		bb1_prefix = bb1_prefix_fifteen;
 		return true;
 	}
@@ -208,7 +220,11 @@ bool setup_location()
 		bb1_prefix = bb1_prefix_wisely;
 		hexpath = hexpath_wisely;
 		asymtree_path = uf_path+"AsymTree/";
-
+		
+		fitresults_path = fitresults_path_wisely;
+		pizza_path      = pizza_path_wisely;
+		JustPlotA_path  = JustPlotA_path_wisely;
+		
 		return true;
 	}
 	else if(strcmp(this_location, "trinat01")==0)
@@ -233,6 +249,10 @@ bool setup_location()
 		bb1_prefix = bb1_prefix_trinat01;
 		hexpath = hexpath_trinat01;
 		asymtree_path = uf_path+"AsymTree/";
+		
+		fitresults_path = fitresults_path_trinat01;
+		pizza_path      = pizza_path_trinat01;
+		JustPlotA_path  = JustPlotA_path_trinat01;
 		
 		return true;
 	}
