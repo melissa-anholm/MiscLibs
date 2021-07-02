@@ -7,6 +7,7 @@ ReTuple/Makefile
 ReTuple/libbb1_strip.a
 BB1_old/*
 ReTuple/._*
+ReTuple/multituple
 ._*
 .fuse_*
 TheMadHadder/cmake_install.cmake
@@ -17,3 +18,10 @@ madhadd
 *.d
 *.so
 *.dSYM
+*.a
+FitMap_for_trinat01/Results/*
+FitMap_for_trinat01/Fitter/CMakeCache.txt
+FitMap_for_trinat01/Fitter/*.a
+FitMap_for_trinat01/Fitter/Makefile
+FitMap_for_trinat01/Fitter/doasym
+FitMap_for_trinat01/Fitter/cmake_install.cmake
