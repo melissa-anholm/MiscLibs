@@ -24,8 +24,8 @@ using std::stringstream;
 #include "TStyle.h"
 //#include "FitUtility.cpp"
 
-#include "/Users/anholm/Packages/MiscLibs/HistExtras.h" 
-#include "/Users/anholm/Packages/MiscLibs/ColorExtras.h"
+#include "HistExtras.h" 
+#include "ColorExtras.h"
 
 
 #undef NDEBUG

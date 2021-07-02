@@ -1,10 +1,39 @@
 // pizza.h
 
-#include "/Users/anholm/Packages/MiscLibs/HistExtras.cpp"
+//#include "/Users/anholm/Packages/MiscLibs/HistExtras.cpp"
+#include "AsymmetryCanvasLibs.cpp"
+
+#include "HistExtras.cpp"
 //extern setup_location();
+
+using std::string;
 
 //string pizza_path = "/Users/anholm/Desktop/Anal-Ysis/Sim_to_Asym/Output/";
 extern string pizza_path;
+
+
+string convertDouble(double value) 
+{
+  std::ostringstream o;
+  if (!(o << value))
+    return "";
+  return o.str();
+}
+string int_to_string(int the_int)
+{
+	std::stringstream ss;
+	ss << the_int;
+	string the_string = ss.str();
+	return the_string;
+}
+
+TH1D * make_superratioasymmetry_direct(TH1D* h_tp, TH1D* h_tm, TH1D* h_bp, TH1D* h_bm)  // do this to get an asymmetry from the full spectrum.
+{
+	int plotmarkerstyle=7;
+	TH1D * h_asym = make_asymmetry_histogram(h_tp, h_tm, h_bp, h_bm, string("Superratio Asymmetry"), int(kBlack), plotmarkerstyle);
+	h_asym -> GetYaxis()->SetRangeUser(-0.62, -0.455);
+	return h_asym;
+} // from MakeMap.h
 
 string fake_to_string(double thisnumber)  // This thing super doesn't work!!!  :(  ...wait, what?  It's fine.
 {

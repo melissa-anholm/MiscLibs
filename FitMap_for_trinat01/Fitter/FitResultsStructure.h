@@ -1,6 +1,10 @@
+using std::string;
+
 extern string fake_itoa(int);
 extern string fake_to_string(double);
 //extern setup_location();
+
+extern string fitresults_path;
 
 struct fitresults
 {
@@ -15,25 +19,17 @@ struct fitresults
 		Amin1s_BCD(0), 
 		Amax1s_B(0), Amax1s_C(0), Amax1s_D(0), 
 		Amax1s_BCD(0), 
-	//	Amin90_B(0), Amin90_C(0), Amin90_D(0), 
 		Amin90_BCD(0), 
-	//	Amax90_B(0), Amax90_C(0), Amax90_D(0), 
 		Amax90_BCD(0), 
-	//	Amin95_B(0), Amin95_C(0), Amin95_D(0), 
 		Amin95_BCD(0), 
-	//	Amax95_B(0), Amax95_C(0), Amax95_D(0), 
 		Amax95_BCD(0), 
 		bmin1s_B(0), bmin1s_C(0), bmin1s_D(0), 
 		bmin1s_BCD(0), 
 		bmax1s_B(0), bmax1s_C(0), bmax1s_D(0), 
 		bmax1s_BCD(0), 
-	//	bmin90_B(0), bmin90_C(0), bmin90_D(0), 
 		bmin90_BCD(0), 
-	//	bmax90_B(0), bmax90_C(0), bmax90_D(0), 
 		bmax90_BCD(0), 
-	//	bmin95_B(0), bmin95_C(0), bmin95_D(0), 
 		bmin95_BCD(0), 
-	//	bmax95_B(0), bmax95_C(0), bmax95_D(0), 
 		bmax95_BCD(0)
 	{
 		
@@ -76,24 +72,16 @@ struct fitresults
 	double bmin1s_B, bmin1s_C, bmin1s_D, bmin1s_BCD;
 	double bmax1s_B, bmax1s_C, bmax1s_D, bmax1s_BCD;
 
-//	double Amin90_B, Amin90_C, Amin90_D, 
 	double Amin90_BCD;
-//	double Amax90_B, Amax90_C, Amax90_D, 
 	double Amax90_BCD;
 
-//	double bmin90_B, bmin90_C, bmin90_D, 
 	double bmin90_BCD;
-//	double bmax90_B, bmax90_C, bmax90_D, 
 	double bmax90_BCD;
 
-//	double Amin95_B, Amin95_C, Amin95_D, 
 	double Amin95_BCD;
-//	double Amax95_B, Amax95_C, Amax95_D, 
 	double Amax95_BCD;
 
-//	double bmin95_B, bmin95_C, bmin95_D, 
 	double bmin95_BCD;
-//	double bmax95_B, bmax95_C, bmax95_D, 
 	double bmax95_BCD;
 	//
 	
@@ -113,7 +101,7 @@ struct fitresults
 //	void print_header(string resultsfilename);
 //	void SaveMetaData(string resultsfilename);
 	
-	void save_descriptorfile(string resultsfilename ="tmp.txt", string path="/Users/anholm/Desktop/Anal-Ysis/Sim_to_Asym/Output/")
+	void save_descriptorfile(string resultsfilename ="tmp.txt", string path="")
 	{
 	//	string path="/Users/anholm/Desktop/Anal-Ysis/Sim_to_Asym/Output/";
 	//	string resultsfilename ="tmp.txt";
@@ -122,7 +110,7 @@ struct fitresults
 		io_file = fopen( (path+resultsfilename).c_str(), "a+");  // create the file if it doesn't exist.
 		if(io_file==NULL)
 		{
-			cout << "ERROR:  " << resultsfilename << " could not be opened." << endl;
+			cout << "ERROR:  " << path+resultsfilename << " could not be opened." << endl;
 			return;
 		}
 		fprintf(io_file, "%s",     "///  --- *** ---  ///  --- *** ---  ///\n");

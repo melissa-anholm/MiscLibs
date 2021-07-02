@@ -3,15 +3,25 @@
 //#include <cstdlib>
 
 #include <sstream>
-#include "MakeMap.h"
+//#include "MakeMap.h"
+#include "location.cpp"
+#include "GraphExtras.h"
 
 #include "TLatex.h"
+#include "TF1.h"
+#include "TFile.h"
+#include "TFitResult.h"
+#include "TCanvas.h"
+#include "TLine.h"
+#include "TStyle.h"
 
-#include "/Users/anholm/Desktop/Anal-Ysis/Sim_to_Asym/pizza.h"
+//#include "/Users/anholm/Desktop/Anal-Ysis/Sim_to_Asym/pizza.h"
+#include "pizza.h"
 #include "FitResultsStructure.h"
 //string output_path = "/Users/anholm/Desktop/Anal-Ysis/Sim_to_Asym/Output/";
 
 //using std::itoa;
+using std::string;
 
 //string the_datafilepath = "~/Desktop/Anal-Ysis/Abeta2/Get_Abeta2/Files/";
 extern string JustPlotA_path;
@@ -20,15 +30,6 @@ extern string fitresults_path;
 #define __SHORT_FORM_OF_FILE__ \
 (strrchr(__FILE__,'/') ? strrchr(__FILE__,'/')+1 : __FILE__ )
 
-/*
-string convertDouble(double value) 
-{
-  std::ostringstream o;
-  if (!(o << value))
-    return "";
-  return o.str();
-}
-*/
 string fake_itoa(int the_int)
 {
   std::ostringstream o;
@@ -36,7 +37,6 @@ string fake_itoa(int the_int)
     return "";
   return o.str();
 }
-
 
 TH1D* get_simple_residuals(TH1D* h1, TH1D* h2, double ymin=0, double ymax=0)
 {
@@ -212,212 +212,6 @@ double justgetthedamnchisquared(TH1D * h1, TH1D * h2, /* bool already_weighted=t
 	return chi2;  // returns 0 if hists don't have the same binning.
 }
 
-void makesave_fullspectrum_maphist(string namestub, double gS, double gT, int N_rebin=1)
-{
-	MapSetup * the_map = new MapSetup();
-	TChain * TreeChain = get_fullspectrum_chain_from_from_gS_gT(gS, gT);
-	the_map -> LoadFromTree(TreeChain, N_rebin);  // default N_rebin_hists=1 if called with no argument.
-	the_map -> AdjustTheColors();
-	//
-	the_map -> save_to_file( (namestub+string(".root")) );
-	delete the_map;
-}
-void makesave_sm_maphist()
-{
-	double gS = 0.0;
-	double gT = 0.0;
-	string namestub = "map_out_full_sm";
-	makesave_fullspectrum_maphist(namestub, gS, gT);
-}
-void makesave_bsm_p_maphist()
-{
-	double gS = 0.1;
-	double gT = 0.0;
-	string namestub = "map_out_full_bsm_p";
-	makesave_fullspectrum_maphist(namestub, gS, gT);
-}
-void makesave_bsm_m_maphist()
-{
-	double gS =-0.1;
-	double gT = 0.0;
-	string namestub = "map_out_full_bsm_m";
-	makesave_fullspectrum_maphist(namestub, gS, gT);
-}
-void makesave_reconstructions(int N_rebin, string linedists_filename, string mapfilename, string otherfilename)
-{
-	set_of_distributions * linedists = new set_of_distributions(N_rebin);
-	linedists->load_from_file(linedists_filename.c_str());
-	
-	MapSetup * the_map = new MapSetup();
-	the_map  -> LoadFromFile( mapfilename.c_str() );
-	// --- // --- // --- // --- // --- // --- // --- //
-	
-	TH1D* h_tp = (TH1D*)the_map->naive_EnergyT_p_hist;
-	TH1D* h_bp = (TH1D*)the_map->naive_EnergyB_p_hist;
-	TH1D* h_tm = (TH1D*)the_map->naive_EnergyT_m_hist;
-	TH1D* h_bm = (TH1D*)the_map->naive_EnergyB_m_hist;
-	h_tp -> SetLineColor(kOrange);
-	h_bp -> SetLineColor(kOrange);
-	h_tm -> SetLineColor(kOrange);
-	h_bm -> SetLineColor(kOrange);
-	h_tp -> SetMarkerColor(kOrange);
-	h_bp -> SetMarkerColor(kOrange);
-	h_tm -> SetMarkerColor(kOrange);
-	h_bm -> SetMarkerColor(kOrange);
-	
-	cout << "reconstructing tp:  " << endl;
-	linedists -> do_reconstructions_tp(h_tp);
-	cout << "reconstructing bp:  " << endl;
-	linedists -> do_reconstructions_bp(h_bp);
-	cout << "reconstructing tm:  " << endl;
-	linedists -> do_reconstructions_tm(h_tm);
-	cout << "reconstructing bm:  " << endl;
-	linedists -> do_reconstructions_bm(h_bm);
-	//
-	
-	TH1D* reconstructed_cdf_tp = linedists->h_reconstructed_h_cdf_tp;
-	TH1D* reconstructed_cdf_bp = linedists->h_reconstructed_h_cdf_bp;
-	TH1D* reconstructed_cdf_tm = linedists->h_reconstructed_h_cdf_tm;
-	TH1D* reconstructed_cdf_bm = linedists->h_reconstructed_h_cdf_bm;
-	reconstructed_cdf_tp->Sumw2(true);
-	reconstructed_cdf_bp->Sumw2(true);
-	reconstructed_cdf_tm->Sumw2(true);
-	reconstructed_cdf_bm->Sumw2(true);
-	
-	h_tp->Rebin(N_rebin);
-	h_bp->Rebin(N_rebin);
-	h_tm->Rebin(N_rebin);
-	h_bm->Rebin(N_rebin);
-	
-	TH1D* hfull_tp = (TH1D*)the_map->measured_EnergyT_p_bb1_r155_one;
-	TH1D* hfull_bp = (TH1D*)the_map->measured_EnergyB_p_bb1_r155_one;
-	TH1D* hfull_tm = (TH1D*)the_map->measured_EnergyT_m_bb1_r155_one;
-	TH1D* hfull_bm = (TH1D*)the_map->measured_EnergyB_m_bb1_r155_one;
-	hfull_tp -> SetLineColor(kBlack);
-	hfull_bp -> SetLineColor(kBlack); 
-	hfull_tm -> SetLineColor(kBlack);
-	hfull_bm -> SetLineColor(kBlack);
-	hfull_tp->Sumw2(true);
-	hfull_bp->Sumw2(true);
-	hfull_tm->Sumw2(true);
-	hfull_bm->Sumw2(true);
-	
-	hfull_tp->Rebin(N_rebin);
-	hfull_bp->Rebin(N_rebin);
-	hfull_tm->Rebin(N_rebin);
-	hfull_bm->Rebin(N_rebin);
-	
-	// --- // --- // --- // --- // --- // --- // --- //
-	TH1D * hfull_asym  = make_superratioasymmetry_direct(hfull_tp, hfull_tm, hfull_bp, hfull_bm);
-	hfull_asym -> SetName("Full Spectrum Superratio Asymmetry");
-	hfull_asym -> SetTitle("Full Spectrum Superratio Asymmetry");
-	hfull_asym  -> SetMarkerStyle(24);
-	TGraphErrors* gfull_asym  = new TGraphErrors(hfull_asym);
-	
-	TH1D * hre_cdf_asym  = make_superratioasymmetry_direct(reconstructed_cdf_tp, reconstructed_cdf_tm, reconstructed_cdf_bp, reconstructed_cdf_bm);
-	hre_cdf_asym -> SetName("Reconstructed Superratio Asymmetry (CDF)");
-	hre_cdf_asym -> SetTitle("Reconstructed Superratio Asymmetry (CDF)");
-	hre_cdf_asym  -> SetMarkerColor(kBlue);
-	hre_cdf_asym  -> SetLineColor(kBlue);
-	TGraphErrors* gre_cdf_asym  = new TGraphErrors(hre_cdf_asym);
-	
-	//
-	TH1D* hresid_asym_cdf  = get_residuals(hfull_asym, hre_cdf_asym);
-	hresid_asym_cdf -> SetLineColor(hre_cdf_asym->GetLineColor());
-	hresid_asym_cdf -> SetMarkerColor(hre_cdf_asym->GetMarkerColor());
-	hresid_asym_cdf -> SetMarkerStyle(hre_cdf_asym->GetMarkerStyle());
-	
-	TGraphErrors* gresid_asym_cdf  = new TGraphErrors(hresid_asym_cdf);
-	
-	
-	// --- // --- // --- // --- // --- // --- // --- //
-	// --- // --- // --- // --- // --- // --- // --- //
-	TLegend * myLegend;
-	TText *datalabel = new TText();
-	datalabel -> SetNDC();
-	datalabel -> SetTextColor(1);
-	datalabel -> SetTextSize(0.018);
-	TText *datalabel_rhs = new TText();
-	datalabel_rhs -> SetNDC();
-	datalabel_rhs -> SetTextColor(1);
-	datalabel_rhs -> SetTextSize(0.018);
-	datalabel_rhs->SetTextAlign(31);
-	
-	TText *datalabel2 = new TText();
-	datalabel2 -> SetNDC();
-	datalabel2 -> SetTextColor(1);
-	datalabel2 -> SetTextSize(0.018*2);
-
-	// --- //  // --- // 
-	TCanvas * c4 = new TCanvas("c4 Canvas", "c4 Canvas", 100, 0, 900, 700);
-	c4->Divide(2,2);
-	c4->cd(1);  // tp
-	hfull_tp -> Draw("hist");
-	h_tp -> Draw("hist same");  // naive counts;  orange?
-	reconstructed_cdf_tp -> Draw("hist same");  // 
-	
-	c4->cd(2);  // tm
-	hfull_tm -> Draw("hist");
-	h_tm -> Draw("hist same");
-	reconstructed_cdf_tm -> Draw("hist same");
-	
-	c4->cd(3);  // bp
-	hfull_bp -> Draw("hist");
-	h_bp -> Draw("hist same");
-	reconstructed_cdf_bp -> Draw("hist same");
-	
-	c4->cd(4);  // bm
-	hfull_bm -> Draw("hist");
-	h_bm -> Draw("hist same");
-	reconstructed_cdf_bm -> Draw("hist same");
-	gPad->Update();
-	
-	//
-	TCanvas * c1 = new TCanvas("SuperAsym Canvas", "SuperAsym Canvas", 100, 0, 900, 700);
-	c1->cd();
-	hfull_asym     -> Draw();
-	gfull_asym     -> Draw("lpx same");      // probably black?
-	gre_cdf_asym   -> Draw("lpx same");  // blue
-	datalabel -> DrawText(0.10, 0.908, __SHORT_FORM_OF_FILE__);
-	gPad->Update();
-	
-	
-	// --- // --- // --- // --- // --- // --- // --- //
-	// --- // --- // --- // --- // --- // --- // --- //
-	TFile * f = new TFile(otherfilename.c_str(), "RECREATE");
-
-	c4->Write("",TObject::kOverwrite);
-	hfull_tp             -> Write("",TObject::kOverwrite);
-	h_tp                 -> Write("",TObject::kOverwrite);
-	reconstructed_cdf_tp -> Write("",TObject::kOverwrite);
-
-	hfull_bp             -> Write("",TObject::kOverwrite);
-	h_bp                 -> Write("",TObject::kOverwrite);
-	reconstructed_cdf_bp -> Write("",TObject::kOverwrite);
-
-	hfull_tm             -> Write("",TObject::kOverwrite);
-	h_tm                 -> Write("",TObject::kOverwrite);
-	reconstructed_cdf_tm -> Write("",TObject::kOverwrite);
-
-	hfull_bm             -> Write("",TObject::kOverwrite);
-	h_bm                 -> Write("",TObject::kOverwrite);
-	reconstructed_cdf_bm -> Write("",TObject::kOverwrite);
-	
-	//
-	c1->Write("",TObject::kOverwrite);
-	hfull_asym   -> Write("",TObject::kOverwrite);
-	gfull_asym   -> Write("",TObject::kOverwrite);
-	gre_cdf_asym -> Write("",TObject::kOverwrite);
-	hre_cdf_asym -> Write("",TObject::kOverwrite);
-	//
-	
-	
-	f->Close();
-	cout << "Done-ish." << endl;
-	return;
-}
-
-
 double get_CS_from_gS(double g_S)
 {
 	double C_S = g_S/sqrt(2.0);
@@ -469,45 +263,6 @@ double get_Abeta_from_gA_gS(double g_A, double g_S)
 	double Abeta = Axi / xi;
 	return Abeta;
 }
-
-/*
-double get_lambda_from_gS(double g_S)
-{
-	double g_S_G4 =  0.1;
-	double g_A_G4 =  0.912100;
-	
-	double xi_num = get_xi_from_gA_gS(g_A_G4, g_S_G4);
-	double xi_den = get_xi_from_gA_gS(g_A_G4, g_S);
-	
-	double lambda = (g_S/g_S_G4) * (xi_num/xi_den);
-	
-	return lambda;
-}
-double get_Delta_from_gA_gS(double g_A, double g_S)
-{
-//	double g_S_G4 =  0.1;
-	double g_A_G4 =  0.912100;
-
-	double xi_num = get_xi_from_gA_gS(g_A_G4, g_S);
-	double xi_den = get_xi_from_gA_gS(g_A, g_S);
-	
-	double Delta = xi_num/xi_den;
-	
-	return Delta;
-}
-double get_q_from_gA(double g_A)
-{
-//	double g_S_G4 =  0.1;
-	double g_A_G4 =  0.912100;
-	
-	double Axi_num = get_Axi_from_gA(g_A);
-	double Axi_den = get_Axi_from_gA(g_A_G4);
-	
-	double q = Axi_num / Axi_den;
-	
-	return q;
-}
-*/
 
 double get_Abest(TFitResultPtr r)
 {
@@ -572,7 +327,7 @@ double get_sigmab(TFitResultPtr r)
 	double sigmab = sqrt(db_fitminerr*db_fitminerr + db_uponechi2*db_uponechi2);
 	return sigmab;
 }
-
+//
 double get_bmin(TFitResultPtr r)
 {
 	double b_best = get_bbest(r);
@@ -717,119 +472,6 @@ string make_asymplot_datafilename(string namestub, string runset, int threshold_
 	return outfname;
 }
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
-void do_prelim_stuff()
-{
-//	// Before anything, make sure this has been done already:
-//	makesave_sm_maphist();     // "map_out_full_sm.root"
-	makesave_bsm_p_maphist();  // "map_out_full_bsm_p.root".  Call this when we get more data!
-	makesave_bsm_p_maphist();
-	
-//	int N_rebin = 100;
-//	GenEnergyAsym();
-}
-
-TCanvas * make_1D_projections(TH2D* h2, string the_title="Projection Canvas")
-{
-	TCanvas * c1 = new TCanvas(the_title.c_str(), the_title.c_str(), 100, 0, 900, 700);
-	
-//	TCanvas *c1 = new TCanvas("c1", "c1",900,900);
-	gStyle->SetOptStat(0);
-
-	// Create the three pads
-	TPad * center_pad = new TPad("center_pad", "center_pad",0.0,0.0,0.6,0.6);
-	center_pad->Draw();
-
-	TPad * right_pad = new TPad("right_pad", "right_pad",0.55,0.0,1.0,0.6);
-	right_pad->Draw();
-
-	TPad * top_pad = new TPad("top_pad", "top_pad",0.0,0.55,0.6,1.0);
-	top_pad->Draw();
-
-	TH1D * projh2X = h2->ProjectionX();
-	TH1D * projh2Y = h2->ProjectionY();
-	
-	projh2X->Sumw2(false);
-	projh2Y->Sumw2(false);
-	
-	// Drawing
-	center_pad->cd();
-	h2->Draw("colz");
-
-	top_pad->cd();
-	projh2X->SetFillColor(kAzure);
-	projh2X->Draw("bar");
-
-	right_pad->cd();
-	projh2Y->SetFillColor(kAzure);
-	projh2Y->Draw("hbar");
-	
-	/*
-	c1->cd();
-	TLatex *t = new TLatex();
-	t->SetTextFont(42);
-	t->SetTextSize(0.02);
-	t->DrawLatex(0.6,0.88,"This example demonstrate how to display");
-	t->DrawLatex(0.6,0.85,"a histogram and its two projections.");
-	*/
-	
-	return c1;
-}
-
-TCanvas * make_1D_projections_2(TH2D* h2, double minchi2, string the_title="Projection Canvas 2")
-{
-	TCanvas * c1 = new TCanvas(the_title.c_str(), the_title.c_str(), 100, 0, 900, 700);
-	gStyle->SetOptStat(0);
-
-	// Create the three pads
-	TPad * center_pad = new TPad("center_pad", "center_pad",0.0,0.0,0.6,0.6);
-	center_pad->Draw();
-
-	TPad * right_pad = new TPad("right_pad", "right_pad",0.55,0.0,1.0,0.6);
-	right_pad->Draw();
-
-	TPad * top_pad = new TPad("top_pad", "top_pad",0.0,0.55,0.6,1.0);
-	top_pad->Draw();
-
-	TH1D * projh2X = h2->ProjectionX("b_Fierz Projection");
-	projh2X->SetTitle(projh2X->GetName());
-	TH1D * projh2Y = h2->ProjectionY("A_beta Projection");
-	projh2Y->SetTitle(projh2Y->GetName());
-	
-	projh2X->Sumw2(false);
-	projh2Y->Sumw2(false);
-	
-	
-	double epsilon = 0.001;
-	double contours_full[4];
-	contours_full[0] = minchi2 + epsilon;
-	contours_full[1] = minchi2 + 2.30;  // 68.27 %
-	contours_full[2] = minchi2 + 4.61;  // 90 %
-	contours_full[3] = minchi2 + 5.99;  // 95 %
-	
-	TH1D* contours =(TH1D*)h2->Clone();
-	contours -> SetContour(4,contours_full);
-	contours -> SetLineColor(kRed);	
-	
-	
-	// Drawing
-	center_pad->cd();
-	h2->Draw("colz");
-	contours -> Draw("cont3 same");
-	gPad->Update();
-
-
-	top_pad->cd();
-	projh2X->SetFillColor(kAzure);
-	projh2X->Draw("bar");
-
-	right_pad->cd();
-	projh2Y->SetFillColor(kAzure);
-	projh2Y->Draw("hbar");
-	
-
-	
-	return c1;
-}
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
@@ -839,7 +481,6 @@ int main(int argc, char *argv[])
 	gStyle->SetErrorX(0);
 	gStyle->SetOptStat(0);
 //	gStyle->SetPalette(kIsland);
-	
 //	gStyle->SetPalette(kDeepSea);
 //	gStyle->SetPalette(kOcean);
 //	gStyle->SetPalette(kSunset);
@@ -850,44 +491,33 @@ int main(int argc, char *argv[])
 	
 	gStyle->SetNumberContours(255);
 	
-//	TFile * f;
-	
 //	TApplication* rootapp = 0;
 //	char ** mychar = NULL;
 //	rootapp = new TApplication("blarg",0, mychar);
 	
 	bool cook_fast = true;
-//	string use_these_runs = string("B");
-//	string use_these_runs = string("C");
-//	string use_these_runs = string("D");
 	// Add the ability to call with a set of arguments..
 	double topping_bs_scale = 1.0;
 	double topping_ss_scale = 1.0;
 	double topping_bg_scale = 1.0;
-//	int N_vals = 12*2+1;
-//	int N_vals = 193;
 	//
-//	use_these_runs = string("BCD");
+	int threshold_index = 0;
+	double sigma_cut    = 3.0;
+	double bb1_maxr     = 15.5;
+	int bb1_threshold   = 50;
 	
 //	double A_res = 0.0009375;
 //	double b_res = 0.009375;
 	double dA = 0.001; // zoomout 97
 	double db = 0.01;  // zoomout 97
-//	bool zoomout=true;
 	int zoomlevel=1;
 	
 	double the_Amin, the_Amax;
 	double the_bmin, the_bmax;
 
-	if(argc>=4)
+	if(argc>=2)
 	{
-		topping_bs_scale = atof(argv[1]);
-		topping_ss_scale = atof(argv[2]);
-		topping_bg_scale = atof(argv[3]);
-	}
-	if(argc>=5)
-	{
-		zoomlevel = atoi(argv[4]);
+		zoomlevel = atoi(argv[1]);
 		if(zoomlevel==0)  // only for the simplest of code tests.
 		{
 			the_Amin = -0.62;
@@ -910,7 +540,18 @@ int main(int argc, char *argv[])
 			// N_A = 90 ?
 			// N_b = 91 ?
 		}
-		else if(zoomlevel==2)  //  <5min
+		else if(zoomlevel==2)  // actually zoomed out.  probably slow to run.
+		{
+			the_Amin = -0.62;
+			the_Amax = -0.53;
+			the_bmin = -0.50;
+			the_bmax =  0.40;
+			dA = 0.0005;
+			db = 0.005;
+			// N_A = 180 ?
+			// N_b = 182 ?
+		}
+		else if(zoomlevel==3)  //  <5min
 		{
 			the_Amin = -0.590;
 			the_Amax = -0.555;
@@ -921,7 +562,7 @@ int main(int argc, char *argv[])
 			// N_A = 88
 			// N_b = 76
 		}
-		else if(zoomlevel==3)  // too long.  but should be shorter now.
+		else if(zoomlevel==4)  // too long.  but should be shorter now.  still 36 min on trinat01.
 		{
 			the_Amin = -0.590;
 			the_Amax = -0.555;
@@ -932,7 +573,7 @@ int main(int argc, char *argv[])
 			// N_A = 175
 			// N_b = 151
 		}
-		else if(zoomlevel==4)
+		else if(zoomlevel==5)
 		{
 			the_Amin = -0.590;
 			the_Amax = -0.555;
@@ -950,42 +591,47 @@ int main(int argc, char *argv[])
 		}
 	}
 	cout << "Using zoomlevel:  " << zoomlevel << endl;
-	
-	
+	if(argc>=5)
+	{
+		topping_bs_scale = atof(argv[2]);
+		topping_ss_scale = atof(argv[3]);
+		topping_bg_scale = atof(argv[4]);
+	}
+	if(argc>=9)
+	{
+		threshold_index = atoi(argv[5]);
+		sigma_cut       = atof(argv[6]);
+		bb1_maxr        = atof(argv[7]);
+		bb1_threshold   = atoi(argv[8]);
+	}
+	string results_file_namestub = "results";
+	if(argc>=10)
+	{
+		results_file_namestub = argv[9];  // can I do this?
+	}
 	
 	// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
-	int blue_mid=kAzure;
-	int blue_dark=kAzure-6;
-	int blue_light=kAzure+7;
+//	int blue_mid=kAzure;
+//	int blue_dark=kAzure-6;
+//	int blue_light=kAzure+7;
+//	
+//	int green_mid=kGreen+1;
+//	int green_dark=kGreen+3;
+//	int green_light=kGreen-6;
+//	
+//	int orange_mid = kOrange+7;
+//	int orange_dark = kOrange+9;
+//	int orange_light = kOrange+1;
 	
-	int green_mid=kGreen+1;
-	int green_dark=kGreen+3;
-	int green_light=kGreen-6;
 	
-	int orange_mid = kOrange+7;
-	int orange_dark = kOrange+9;
-	int orange_light = kOrange+1;
-	
-	
-	int threshold_index;
-	double sigma_cut;
-	double bb1_maxr;
 	string matched_set;
-	int bb1_threshold;
-	
-	threshold_index = 0;
-	sigma_cut       = 3.0;
-	bb1_maxr        = 15.5;
 	
 	cout << "Getting pizzas..." << endl;
 //	pizza the_pizza = get_pizza("pizzafile.root");
-	
 	matched_set     ="B";
-	bb1_threshold   =60;
 	pizza the_pizza_B = get_pizza("pizzafile", matched_set, threshold_index, sigma_cut, bb1_threshold, bb1_maxr);
 
 	matched_set     ="CD";
-	bb1_threshold   =60;
 	pizza the_pizza_CD = get_pizza("pizzafile", matched_set, threshold_index, sigma_cut, bb1_threshold, bb1_maxr);
 	//
 	
@@ -1013,17 +659,26 @@ int main(int argc, char *argv[])
 	string bb_str  = convertDouble(bb1_maxr);
 	string snr_str = int_to_string(threshold_index);
 	
+	int data_color = kPink-2;
+	int sim_color  = kAzure-3;
 	TH1D * h_Abeta_data_B = (TH1D*)data_file_B->Get( (string("Superratio Asymmetry from Data, with TOF Cut ("+int_to_string(bb1_threshold)+"keV)")).c_str() );  // this has already been rebinned... 
 	h_Abeta_data_B -> SetTitle( (string("Superratio Asymmetry from Data, with TOF Cut -- Set B (SNR ind.="+int_to_string(threshold_index)+", thr="+int_to_string(bb1_threshold)+"keV, bb1_maxr="+convertDouble(bb1_maxr)+", sig_agr="+ convertDouble(sigma_cut)+")")).c_str() );
 	h_Abeta_data_B -> SetName(h_Abeta_data_B->GetTitle());
-
+	h_Abeta_data_B->SetLineColor(data_color);
+	h_Abeta_data_B->SetMarkerColor(h_Abeta_data_B->GetLineColor());
+	
+	
 	TH1D * h_Abeta_data_C = (TH1D*)data_file_C->Get( (string("Superratio Asymmetry from Data, with TOF Cut ("+int_to_string(bb1_threshold)+"keV)")).c_str() );
 	h_Abeta_data_C -> SetTitle( (string("Superratio Asymmetry from Data, with TOF Cut -- Set C (SNR ind.="+int_to_string(threshold_index)+", thr="+int_to_string(bb1_threshold)+"keV, bb1_maxr="+convertDouble(bb1_maxr)+", sig_agr="+ convertDouble(sigma_cut)+")")).c_str() );
 	h_Abeta_data_C -> SetName(h_Abeta_data_C->GetTitle());
+	h_Abeta_data_C->SetLineColor(data_color);
+	h_Abeta_data_C->SetMarkerColor(h_Abeta_data_C->GetLineColor());
 
 	TH1D * h_Abeta_data_D = (TH1D*)data_file_D->Get( (string("Superratio Asymmetry from Data, with TOF Cut ("+int_to_string(bb1_threshold)+"keV)")).c_str() );
 	h_Abeta_data_D -> SetTitle( (string("Superratio Asymmetry from Data, with TOF Cut -- Set D (SNR ind.="+int_to_string(threshold_index)+", thr="+int_to_string(bb1_threshold)+"keV, bb1_maxr="+convertDouble(bb1_maxr)+", sig_agr="+ convertDouble(sigma_cut)+")")).c_str() );
 	h_Abeta_data_D -> SetName(h_Abeta_data_D->GetTitle());
+	h_Abeta_data_D->SetLineColor(data_color);
+	h_Abeta_data_D->SetMarkerColor(h_Abeta_data_D->GetLineColor());
 	
 	cout << "asymmetries are gotten." << endl;
 	
@@ -1050,24 +705,6 @@ int main(int argc, char *argv[])
 	double xmin = 400.0;
 	double xmax = 4800.0-0.001;
 	
-	/*
-//	double the_Amin, the_Amax;
-//	double the_bmin, the_bmax;
-	if(zoomout==true)
-	{
-		the_Amin = -0.62;
-		the_Amax = -0.53;
-		the_bmin = -0.50;
-		the_bmax =  0.40;
-	}
-	else
-	{
-		the_Amin = -0.590;
-		the_Amax = -0.555;
-		the_bmin = -0.150;
-		the_bmax =  0.150;
-	}
-	*/
 	int N_A_vals = int( (the_Amax - the_Amin)/dA ) + 1;
 	int N_b_vals = int( (the_bmax - the_bmin)/db ) + 1;
 	//
@@ -1076,8 +713,8 @@ int main(int argc, char *argv[])
 	the_Amax = the_Amin + double(N_A_vals)*dA;  // 
 	the_bmax = the_bmin + double(N_b_vals)*db;  // the_Amax and the_bmax that are baked in above are really only approximate.
 	
-	cout << "A=[" << the_Amin << "," << the_Amax << "];  dA=" << dA << ";\tdA=" << dA << endl;
-	cout << "b=[" << the_bmin << "," << the_bmax << "];\t  db=" << db << ";\tdb="<< db << endl;
+	cout << "A=[" << the_Amin << "," << the_Amax << "];  dA="   << dA << endl;
+	cout << "b=[" << the_bmin << "," << the_bmax << "];\t  db=" << db << endl;
 
 	TH2D * fitmap_B = new TH2D("Runset B Chi^2 Map",   "Runset B Chi^2 Map",   N_b_vals, the_bmin, the_bmax, N_A_vals, the_Amin, the_Amax);
 	fitmap_B -> GetXaxis()-> SetTitle("b_Fierz");
@@ -1844,9 +1481,11 @@ int main(int argc, char *argv[])
 	vector<TPad *> the_residupad1_B = make_residupad(h_Abeta_data_B, residuhist_B, string("E1") );
 	the_residupad1_B.at(0) -> cd();
 	h_Abeta_data_B -> GetXaxis()->SetNdivisions(10);  // 
+	h_best_B->SetLineColor(sim_color);
+	h_best_B->SetMarkerColor(h_best_B->GetLineColor());
 	h_best_B -> Draw("E1 same");
 //	h_Abeta_data_B -> Draw("e1 same");
-	gPad->BuildLegend(.44,.80,.98,.92,"");
+	gPad->BuildLegend(.34,.80,.98,.92,"");
 	fitrange_min_line->Draw("same");
 	fitrange_max_line->Draw("same");
 	gPad->Update();
@@ -1856,9 +1495,11 @@ int main(int argc, char *argv[])
 	vector<TPad *> the_residupad1_C = make_residupad(h_Abeta_data_C, residuhist_C, string("E1") );
 	the_residupad1_C.at(0) -> cd();
 	h_Abeta_data_C -> GetXaxis()->SetNdivisions(10);  // 
+	h_best_C->SetLineColor(sim_color);
+	h_best_C->SetMarkerColor(h_best_C->GetLineColor());
 	h_best_C -> Draw("E1 same");
 //	h_Abeta_data_C -> Draw("e1 same");
-	gPad->BuildLegend(.44,.80,.98,.92,"");
+	gPad->BuildLegend(.34,.80,.98,.92,"");
 	fitrange_min_line->Draw("same");
 	fitrange_max_line->Draw("same");
 	gPad->Update();
@@ -1868,9 +1509,11 @@ int main(int argc, char *argv[])
 	vector<TPad *> the_residupad1_D = make_residupad(h_Abeta_data_D, residuhist_D, string("E1") );
 	the_residupad1_D.at(0) -> cd();
 	h_Abeta_data_D -> GetXaxis()->SetNdivisions(10);  // 
+	h_best_D->SetLineColor(sim_color);
+	h_best_D->SetMarkerColor(h_best_D->GetLineColor());
 	h_best_D -> Draw("E1 same");
 //	h_Abeta_data_D -> Draw("e1 same");
-	gPad->BuildLegend(.44,.80,.98,.92,"");
+	gPad->BuildLegend(.34,.80,.98,.92,"");
 	fitrange_min_line->Draw("same");
 	fitrange_max_line->Draw("same");
 	gPad->Update();
@@ -2096,7 +1739,7 @@ int main(int argc, char *argv[])
 	
 	
 	//
-	string results_filename = fitresults_path+"results";
+	string results_filename = fitresults_path+results_file_namestub;
 	if(cook_fast) { results_filename = results_filename + "_simple"; }
 	results_filename = results_filename + ".txt";
 	//

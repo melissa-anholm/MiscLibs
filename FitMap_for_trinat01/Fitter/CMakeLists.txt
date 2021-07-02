@@ -18,18 +18,19 @@ LINK_DIRECTORIES ($ENV{MISC_INCLUDE_DIR})
 
 #Compiler Flags=========================
 #SET(CMAKE_BUILD_TYPE ReLWithDebInfo)
+ADD_DEFINITIONS(-g -O3 -std=c++11 -W -Wall -Wpointer-arith)  # Needed for trinat01 !
 
 #Adding the Libraries ==================
 #add_library (bb1_strip /Users/spiffyzha/Packages/MiscLibs/BB1/bb1_strip.cpp)
 #add_library (minuit_parameter /Users/spiffyzha/Packages/MiscLibs/MinuitWrapperWrapper_fitparam.cpp)
 #add_library (minuit_wrapper /Users/spiffyzha/Packages/MiscLibs/MinuitWrapperWrapper3.cpp)
 #add_library (some_functions /Users/spiffyzha/Packages/MiscLibs/SomeFunctions.cpp)
-add_library (canvas_plots /Users/anholm/Packages/MiscLibs/CartoLibs/canvasplots.cpp)
-add_library (map_utility  /Users/anholm/Packages/MiscLibs/CartoLibs/MapUtility.cpp)
-add_library (fit_utility  /Users/anholm/Packages/MiscLibs/CartoLibs/FitUtility.cpp)
-add_library (color_extras /Users/anholm/Packages/MiscLibs/ColorExtras.cpp)
-add_library (hist_extras  /Users/anholm/Packages/MiscLibs/HistExtras.cpp)
-add_library (graph_extras /Users/anholm/Packages/MiscLibs/GraphExtras.cpp)
+add_library (canvas_plots $ENV{MISC_INCLUDE_DIR}/CartoLibs/canvasplots.cpp)
+add_library (map_utility  $ENV{MISC_INCLUDE_DIR}/CartoLibs/MapUtility.cpp)
+add_library (fit_utility  $ENV{MISC_INCLUDE_DIR}/CartoLibs/FitUtility.cpp)
+add_library (color_extras $ENV{MISC_INCLUDE_DIR}/ColorExtras.cpp)
+add_library (hist_extras  $ENV{MISC_INCLUDE_DIR}/HistExtras.cpp)
+add_library (graph_extras $ENV{MISC_INCLUDE_DIR}/GraphExtras.cpp)
 # add_library (graph_extras GraphExtras.cpp)
 
 #Linking the Executable ================
@@ -49,7 +50,7 @@ target_link_libraries (doasym
              #          minuit_parameter
              #          some_functions
              #          minuit_wrapper
-                       minuit
+       #               minuit
                        Gui
                        Core
                 #       Cint #doesn't work with rootv6.  I can comment it out, but then does root still work?!

@@ -9,7 +9,7 @@
 using std::string;
 
 //#include "TCanvas.h"
-#include "/Users/anholm/Packages/MiscLibs/ColorExtras.h"
+#include "ColorExtras.h"
 
 #include <iostream>  // cout
 using std::string;

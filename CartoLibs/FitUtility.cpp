@@ -8,7 +8,7 @@
 //#include "MakeSomeTF1s.cpp"
 
 #include "FitUtility.h"
-#include "/Users/anholm/Packages/MiscLibs/ColorExtras.h"
+#include "ColorExtras.h"
 
 #include <string>
 #include <iostream>  // cout
