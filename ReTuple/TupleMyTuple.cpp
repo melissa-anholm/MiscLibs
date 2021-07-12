@@ -225,6 +225,74 @@ Double_t get_lower_E(double qdc, int run, bool g4data=false)
 	return E;
 }
 
+Double_t get_upper_DeltaE(int qdc, int run, bool g4data=false)  // it just returns 0 for G4.  
+{
+	double DeltaE = 0;
+	if(g4data) { return DeltaE; }
+	//
+	double slope;
+	double delta_m;
+	double offset;
+	double delta_b;
+	
+	if (run < 450) // A, B
+	{
+		offset = 110.0;  // +/- 0.3
+		slope  = 398.5;  // +/- 0.4
+		
+		delta_m = 0.4;
+		delta_b = 0.3;
+	} 
+	else // C, D, (E)
+	{
+		offset = 110.7;  // +/- 0.2
+		slope  = 388.3;  // +/- 0.4
+		
+		delta_m = 0.4;
+		delta_b = 0.2;
+		
+	}
+//	double E = 1000.0*(qdc - offset) / slope;
+	double dEdm = 1000.0*(qdc - offset) / (slope + delta_m);
+	double dEdb = 1000.0*(qdc - (offset+delta_b) ) / slope;
+	//
+	DeltaE = sqrt( pow(delta_m*dEdm, 2) + pow(delta_b*dEdb, 2) );
+	return DeltaE;
+}
+Double_t get_lower_DeltaE(int qdc, int run, bool g4data=false)  // just returns 0 for G4.  Might want to fix that sometime.
+{
+	double DeltaE = 0;
+	if(g4data) { return DeltaE; }
+	//
+	double slope;
+	double delta_m;
+	double offset;
+	double delta_b;
+	
+	if (run < 450) 
+	{
+		offset = 142.0;  // +/- 0.3
+		slope  = 423.4;  // +/- 0.4
+		
+		delta_m = 0.4;
+		delta_b = 0.3;
+	} 
+	else 
+	{
+		offset = 143.0;  // +/- 0.3
+		slope  = 413.2;  // +/- 0.4
+		
+		delta_m = 0.4;
+		delta_b = 0.3;
+	}
+//	double E = 1000.0*(qdc - offset) / slope;
+	double dEdm = 1000.0*(qdc - offset) / (slope + delta_m);
+	double dEdb = 1000.0*(qdc - (offset+delta_b) ) / slope;
+	//
+	DeltaE = sqrt( pow(delta_m*dEdm, 2) + pow(delta_b*dEdb, 2) );
+	return DeltaE;
+}
+/*
 Double_t get_upper_DeltaE(int qdc, int run, bool g4data=false)  // it just returns 0 for G4.  Might want to fix that sometime.
 {
 	double DeltaE = 0;
@@ -258,7 +326,6 @@ Double_t get_upper_DeltaE(int qdc, int run, bool g4data=false)  // it just retur
 	//
 	return DeltaE;
 }
-
 Double_t get_lower_DeltaE(int qdc, int run, bool g4data=false)  // just returns 0 for G4.  Might want to fix that sometime.
 {
 	double DeltaE = 0;
@@ -292,6 +359,7 @@ Double_t get_lower_DeltaE(int qdc, int run, bool g4data=false)  // just returns 
 	//
 	return DeltaE;
 }
+*/
 
 Double_t get_upper_E_Rb(double ch)  // preliminary calibrations from James  (what units?)
 {
