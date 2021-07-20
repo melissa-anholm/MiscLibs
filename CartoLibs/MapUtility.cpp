@@ -638,7 +638,6 @@ void MapSetup::LoadSimpleFromTree(TChain * the_tree, int N_rebin_hists)
 	th2_ana_Eout_v_Ein_tm -> GetYaxis() -> SetTitle("Measured Scintillator Energy [keV]");
 	th2_ana_Eout_v_Ein_bm -> GetYaxis() -> SetTitle("Measured Scintillator Energy [keV]");
 	*/
-//	cout << "LoadSimpleFromTree is done creating mapping hists.  ...for now." << endl;
 	
 	Double_t naive_hit_t;
 	Double_t naive_hit_b;

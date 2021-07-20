@@ -266,9 +266,9 @@ Double_t get_upper_DeltaE(int qdc, int run, bool g4data=false)  // it just retur
 		delta_b = 0.2;
 		
 	}
-//	double E = 1000.0*(qdc - offset) / slope;
-	double dEdm = 1000.0*(qdc - offset) / (slope + delta_m);
-	double dEdb = 1000.0*(qdc - (offset+delta_b) ) / slope;
+	double E = 1000.0*(qdc - offset) / slope;
+	double dEdm = 1000.0*(qdc - offset) / (slope + delta_m) - E;
+	double dEdb = 1000.0*(qdc - (offset+delta_b) ) / slope - E;
 	//
 	DeltaE = sqrt( pow(delta_m*dEdm, 2) + pow(delta_b*dEdb, 2) );
 	return DeltaE;
@@ -299,9 +299,9 @@ Double_t get_lower_DeltaE(int qdc, int run, bool g4data=false)  // just returns 
 		delta_m = 0.4;
 		delta_b = 0.3;
 	}
-//	double E = 1000.0*(qdc - offset) / slope;
-	double dEdm = 1000.0*(qdc - offset) / (slope + delta_m);
-	double dEdb = 1000.0*(qdc - (offset+delta_b) ) / slope;
+	double E = 1000.0*(qdc - offset) / slope;
+	double dEdm = 1000.0*(qdc - offset) / (slope + delta_m) - E;
+	double dEdb = 1000.0*(qdc - (offset+delta_b) ) / slope - E;
 	//
 	DeltaE = sqrt( pow(delta_m*dEdm, 2) + pow(delta_b*dEdb, 2) );
 	return DeltaE;
