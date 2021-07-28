@@ -15,6 +15,8 @@
 #include "TLine.h"
 #include "TStyle.h"
 #include "TFrame.h"
+//#include "TH1.h"
+//#include "TH2.h"
 
 #include "pizza.h"
 #include "FitResultsStructure.h"
@@ -497,7 +499,6 @@ int main(int argc, char *argv[])
 //	rootapp = new TApplication("blarg",0, mychar);
 	
 	bool cook_fast = true;
-	// Add the ability to call with a set of arguments..
 	double topping_bs_scale = 1.0;
 	double topping_ss_scale = 1.0;
 	double topping_bg_scale = 1.0;
@@ -507,18 +508,21 @@ int main(int argc, char *argv[])
 	double bb1_maxr     = 15.5;
 	int bb1_threshold   = 50;
 	
-//	double A_res = 0.0009375;
-//	double b_res = 0.009375;
 	double dA = 0.001; // zoomout 97
 	double db = 0.01;  // zoomout 97
-	int zoomlevel=1;
+	int zoomlevel=6;
 	
 	double the_Amin, the_Amax;
 	double the_bmin, the_bmax;
-
+	
+	double dA_v2 = 0.0004;  // set it to literally anything.
+	double db_v2 = 0.004;
+	double A_size_v2, b_size_v2;
+	
 	if(argc>=2)
 	{
 		zoomlevel = atoi(argv[1]);
+		/*
 		if(zoomlevel==0)  // only for the simplest of code tests.
 		{
 			the_Amin = -0.62;
@@ -585,13 +589,57 @@ int main(int argc, char *argv[])
 			// N_A = 350
 			// N_b = 301
 		}
-		else
-		{
-			cout << "Oh no!" << endl;
-			return 0;
-		}
+		*/
+	}
+	if(zoomlevel<6)
+	{
+		cout << "Oh no!" << endl;
+		return 0;
+	}
+	else if(zoomlevel==6)  // 
+	{
+	//	zoomlevel==3;  // <5min for zoomed out part.
+		the_Amin = -0.590;
+		the_Amax = -0.555;
+		the_bmin = -0.150;
+		the_bmax =  0.150;
+		dA = 0.0004;
+		db = 0.004;
+		// N_A = 88
+		// N_b = 76
+		
+		dA_v2 = 0.0001;
+		db_v2 = 0.001;
+		A_size_v2 = 0.005;
+		b_size_v2 = 0.03;
+		// N_A_v2 = 51
+		// N_b_v2 = 31
+	}
+	else if(zoomlevel==7)  // ~ 20 min on Wisely?
+	{
+		the_Amin = -0.590;
+		the_Amax = -0.555;
+		the_bmin = -0.150;
+		the_bmax =  0.150;
+		dA = 0.0004;
+		db = 0.004;
+		// N_A = 88
+		// N_b = 76
+		
+		dA_v2 = 0.0001;
+		db_v2 = 0.0001;
+		A_size_v2 = 0.004;
+		b_size_v2 = 0.02;
+		// N_A_v2 = 41
+		// N_b_v2 = 201
+	}
+	else
+	{
+		cout << "Oh no!" << endl;
+		return 0;
 	}
 	cout << "Using zoomlevel:  " << zoomlevel << endl;
+	//
 	if(argc>=5)
 	{
 		topping_bs_scale = atof(argv[2]);
@@ -701,7 +749,6 @@ int main(int argc, char *argv[])
 	h_Abeta_data_B->SetLineColor(data_color);
 	h_Abeta_data_B->SetMarkerColor(h_Abeta_data_B->GetLineColor());
 	
-	
 	TH1D * h_Abeta_data_C = (TH1D*)data_file_C->Get( (string("Superratio Asymmetry from Data, with TOF Cut ("+int_to_string(bb1_threshold)+"keV)")).c_str() );
 	h_Abeta_data_C -> SetTitle( (string("Superratio Asymmetry from Data, with TOF Cut -- Set C (SNR ind.="+int_to_string(threshold_index)+", thr="+int_to_string(bb1_threshold)+"keV, bb1_maxr="+convertDouble(bb1_maxr)+", sig_agr="+ convertDouble(sigma_cut)+")")).c_str() );
 	h_Abeta_data_C -> SetName(h_Abeta_data_C->GetTitle());
@@ -724,17 +771,22 @@ int main(int argc, char *argv[])
 	datalabel2 -> SetNDC();
 	datalabel2 -> SetTextColor(1);
 	datalabel2 -> SetTextSize(0.018*2);
-	TText *datalabelr = new TText();
-	datalabelr -> SetNDC();
-	datalabelr -> SetTextColor(1);
-	datalabelr -> SetTextSize(0.018*1.4);
 	TText *datalabel_rhs = new TText();
 	datalabel_rhs -> SetNDC();
 	datalabel_rhs -> SetTextColor(1);
 	datalabel_rhs -> SetTextSize(0.018);
-	datalabel_rhs->SetTextAlign(31);
+	datalabel_rhs ->SetTextAlign(31);
+	TText *datalabel2_rhs = new TText();
+	datalabel2_rhs -> SetNDC();
+	datalabel2_rhs -> SetTextColor(1);
+	datalabel2_rhs -> SetTextSize(0.018*2);
+	datalabel2_rhs -> SetTextAlign(31);
 	
-	
+	TText *datalabelr = new TText();
+	datalabelr -> SetNDC();
+	datalabelr -> SetTextColor(1);
+	datalabelr -> SetTextSize(0.018*1.4);
+
 	// --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 //	double xmin = 400.0;
 //	double xmax = 4800.0-0.001;
@@ -776,18 +828,20 @@ int main(int argc, char *argv[])
 	
 	
 	double this_A, this_b;
-	double this_alpha, this_beta;
+//	double this_alpha, this_beta;
 	//
 	double this_chi2_B;
 	double this_chi2_C;
 	double this_chi2_D;
 	
-	TH1D * h_asym = new TH1D();
+//	TH1D * h_asym = new TH1D();
+	TH1D * h_asym_B  = new TH1D();
+	TH1D * h_asym_CD = new TH1D();
 	
 	TH1D * h_best_B = new TH1D();
 	TH1D * h_best_C = new TH1D();
 	TH1D * h_best_D = new TH1D();
-	TH1D * h_globalbest_B = new TH1D();
+	TH1D * h_globalbest_B  = new TH1D();
 	TH1D * h_globalbest_CD = new TH1D();
 	
 	double minchi2_B     = 5000;
@@ -801,114 +855,87 @@ int main(int argc, char *argv[])
 	double global_minchi2_C     = 5000;
 	double global_minchi2_D     = 5000;
 	
-//	double minchi1_fromlastrun = 35.4461;
-	/*
-//	prev. best:
-//	A_best = -0.5681;
-//	b_best = -0.0266;
-//	values that break it:
-	A_best = -0.6;
-	b_best = -0.175;
-	
-	the_toppings = pick_toppings(A_best, b_best, 1.0, 1.0, 0.0);
-	h_asym = cook(the_pizza, the_toppings);
-	this_chi2 = justgetthedamnchisquared(h_asym, h_Abeta_data, xmin, xmax);
-	h_best = (TH1D*)h_asym->Clone("Best Fit");
-	cout << "A=" << A_best << ";\tb=" << b_best << ";\tchi^2=" << this_chi2 << endl;
-	*/
+	double A_best_BCD, b_best_BCD;
+	double this_chi2_BCD;
+	double minchi2_BCD = 5000;
 	
 	// Set B:
 	cout << "N_A_vals = " << N_A_vals << endl;
 	cout << "N_b_vals = " << N_b_vals << endl;
 	for(int j=0; j<=N_A_vals; j++)
 	{
-		this_A = the_Amin-0.5*dA + double(j)*dA;
-	//	this_A = the_Amin+0.5*dA + double(j)*dA;
+		this_A = the_Amin -0.5*dA + double(j)*dA;
 		if(j%10 == 0)  { cout << "j=" << j << ";\tthis_A=" << this_A << endl; }
 		//
 		for(int i=0; i<=N_b_vals; i++)
 		{
-		//	this_b = the_bmin+0.5*db + double(i)*db;
-			this_b = the_bmin-0.5*db + double(i)*db;
+			this_b = the_bmin -0.5*db + double(i)*db;  // if i=0, put the content in (the center of) the underflow bin.
 			the_toppings = pick_toppings(this_A, this_b, topping_bs_scale, topping_ss_scale, topping_bg_scale);
 			
 			if(cook_fast)
 			{
-				h_asym = simple_cook(the_pizza_B, the_toppings);
+				h_asym_B = simple_cook(the_pizza_B, the_toppings);
+				h_asym_CD = simple_cook(the_pizza_CD, the_toppings);
 			}
 			else
 			{
-				h_asym = cook(the_pizza_B, the_toppings);
+				h_asym_B = cook(the_pizza_B, the_toppings);
+				h_asym_CD = cook(the_pizza_CD, the_toppings);
 			}
 			//
-			this_chi2_B = justgetthedamnchisquared(h_asym, h_Abeta_data_B, E_min, E_max-0.001);
+			this_chi2_B = justgetthedamnchisquared(h_asym_B, h_Abeta_data_B, E_min, E_max-0.001);
 			fitmap_B     -> Fill(this_b, this_A, this_chi2_B);
+			this_chi2_C = justgetthedamnchisquared(h_asym_CD, h_Abeta_data_C, E_min, E_max-0.001);
+			fitmap_C     -> Fill(this_b, this_A, this_chi2_C);
+			this_chi2_D = justgetthedamnchisquared(h_asym_CD, h_Abeta_data_D, E_min, E_max-0.001);
+			fitmap_D     -> Fill(this_b, this_A, this_chi2_D);
+			//
+			this_chi2_BCD = this_chi2_B + this_chi2_C + this_chi2_D;
+			fitmap_BCD   -> Fill(this_b, this_A, this_chi2_BCD);
 			//
 			if(this_chi2_B < minchi2_B)
 			{
 				minchi2_B= this_chi2_B;
 				A_best_B = this_A;
 				b_best_B = this_b;
-				h_best_B = (TH1D*)h_asym->Clone();
-			//	h_best_B -> SetLineColor(kAzure+10);
-			//	h_best_B -> SetMarkerColor(kAzure+10);
+			//	h_best_B = (TH1D*)h_asym_B->Clone();
 			}
-		}
-	}
-//	cout << "A_best_B=" << A_best_B << ";\t convertDouble(A_best_B)=" << convertDouble(A_best_B) << endl;
-	string titlestring;
-	titlestring = string("Set B Best Fit -- A=")+convertDouble(A_best_B)+", b="+convertDouble(b_best_B)+";  chi^2="+convertDouble(minchi2_B);
-	h_best_B->SetName( titlestring.c_str() );
-	h_best_B->SetTitle(h_best_B->GetName());
-	cout << "First loop (B) is done." << endl;
-	//
-	for(int j=0; j<=N_A_vals; j++)
-	{
-	//	this_A = the_Amin+0.5*dA + double(j)*dA;
-		this_A = the_Amin-0.5*dA + double(j)*dA;
-		if(j%10 == 0)  { cout << "j=" << j << ";\tthis_A=" << this_A << endl; }
-		//
-		for(int i=0; i<=N_b_vals; i++)
-		{
-		//	this_b = the_bmin+0.5*db + double(i)*db;
-			this_b = the_bmin-0.5*db + double(i)*db;
-			the_toppings = pick_toppings(this_A, this_b, topping_bs_scale, topping_ss_scale, topping_bg_scale);
-			
-			if(cook_fast)
-			{
-				h_asym = simple_cook(the_pizza_CD, the_toppings);
-			}
-			else
-			{
-				h_asym = cook(the_pizza_CD, the_toppings);
-			}
-			//
-			this_chi2_C = justgetthedamnchisquared(h_asym, h_Abeta_data_C, E_min, E_max-0.001);
-			fitmap_C     -> Fill(this_b, this_A, this_chi2_C);
-
-			this_chi2_D = justgetthedamnchisquared(h_asym, h_Abeta_data_D, E_min, E_max-0.001);
-			fitmap_D     -> Fill(this_b, this_A, this_chi2_D);
-			//
 			if(this_chi2_C < minchi2_C)
 			{
 				minchi2_C= this_chi2_C;
 				A_best_C = this_A;
 				b_best_C = this_b;
-				h_best_C = (TH1D*)h_asym->Clone();
-			//	h_best_C -> SetLineColor(kAzure+10);
-			//	h_best_C -> SetMarkerColor(kAzure+10);
+			//	h_best_C = (TH1D*)h_asym_CD->Clone();
 			}
 			if(this_chi2_D < minchi2_D)
 			{
 				minchi2_D= this_chi2_D;
 				A_best_D = this_A;
 				b_best_D = this_b;
-				h_best_D = (TH1D*)h_asym->Clone();
-			//	h_best_D -> SetLineColor(kAzure+10);
-			//	h_best_D -> SetMarkerColor(kAzure+10);
+			//	h_best_D = (TH1D*)h_asym_CD->Clone();
+			}
+			if(this_chi2_BCD <= minchi2_BCD)
+			{
+				minchi2_BCD = this_chi2_BCD;
+				A_best_BCD  = this_A;
+				b_best_BCD  = this_b;
 			}
 		}
 	}
+	the_toppings = pick_toppings(A_best_B, b_best_B, topping_bs_scale, topping_ss_scale, topping_bg_scale);
+	if(cook_fast) { h_best_B = simple_cook(the_pizza_B, the_toppings); }
+	else          { h_best_B = cook(the_pizza_B, the_toppings);        }
+	the_toppings = pick_toppings(A_best_C, b_best_C, topping_bs_scale, topping_ss_scale, topping_bg_scale);
+	if(cook_fast) { h_best_C = simple_cook(the_pizza_CD, the_toppings); }
+	else          { h_best_C = cook(the_pizza_CD, the_toppings);        }
+	the_toppings = pick_toppings(A_best_D, b_best_D, topping_bs_scale, topping_ss_scale, topping_bg_scale);
+	if(cook_fast) { h_best_D = simple_cook(the_pizza_CD, the_toppings); }
+	else          { h_best_D = cook(the_pizza_CD, the_toppings);        }
+	
+	string titlestring;
+	titlestring = string("Set B Best Fit -- A=")+convertDouble(A_best_B)+", b="+convertDouble(b_best_B)+";  chi^2="+convertDouble(minchi2_B);
+	h_best_B->SetName( titlestring.c_str() );
+	h_best_B->SetTitle(h_best_B->GetName());
 	titlestring = string("Set C Best Fit -- A=")+convertDouble(A_best_C)+", b="+convertDouble(b_best_C)+";  chi^2="+convertDouble(minchi2_C);
 	h_best_C->SetName( (titlestring).c_str() );
 	h_best_C->SetTitle(h_best_C->GetName());
@@ -916,75 +943,12 @@ int main(int argc, char *argv[])
 	h_best_D->SetName( (titlestring).c_str() );
 	h_best_D->SetTitle(h_best_D->GetName());
 	
-	cout << "Second loop (CD) is done." << endl;
+	cout << "Combo loop BCD (1) is done." << endl;
 	//
-	fitmap_BCD->Add(fitmap_B);
-	fitmap_BCD->Add(fitmap_C);
-	fitmap_BCD->Add(fitmap_D);
-
-	double A_best_BCD, b_best_BCD;
-	double this_chi2_BCD;
-	double minchi2_BCD = 5000;
-	
 	//
-	for(int j=1; j<=N_A_vals; j++)  // skip underflow and overflow bins. ... no don't.
-	{
-	//	this_A = double(j)*dA - the_Amin+0.5*dA;
-		this_A = the_Amin-0.5*dA + double(j)*dA;
-		
-		for(int i=1; i<=N_b_vals; i++)
-		{
-		//	this_b = double(i)*db - the_bmin+0.5*db;
-			this_b = the_bmin-0.5*db + double(i)*db;
-		//	this_chi2_BCD= fitmap_BCD->GetBinContent(i+1, j+1);
-			this_chi2_BCD= fitmap_BCD->GetBinContent(i, j);
-			//
-			if(this_chi2_BCD <= minchi2_BCD)
-			{
-				minchi2_BCD= this_chi2_BCD;
-				A_best_BCD = this_A;
-				b_best_BCD = this_b;
-				
-				
-			//	cout << "(j="<< j << ", i=" << i << ");\t   minchi2_BCD=" << minchi2_BCD << ";\t A=" << this_A << ", \tb=" << this_b << endl;
-				
-				// if it's the global best chi^2, set the global best 3 histograms.
-			//	h_globalbest_B = new TH1D();
-				the_toppings = pick_toppings(this_A, this_b, topping_bs_scale, topping_ss_scale, topping_bg_scale);
-				if(cook_fast)
-				{
-					h_globalbest_B  = simple_cook(the_pizza_B,  the_toppings);
-					h_globalbest_CD = simple_cook(the_pizza_CD, the_toppings);
-				}
-				else
-				{
-					h_globalbest_B  = cook(the_pizza_B,  the_toppings);
-					h_globalbest_CD = cook(the_pizza_CD, the_toppings);
-				}
-			}
-		}
-	}
-	global_minchi2_B = justgetthedamnchisquared(h_globalbest_B,  h_Abeta_data_B, E_min, E_max-0.001);
-	global_minchi2_C = justgetthedamnchisquared(h_globalbest_CD, h_Abeta_data_C, E_min, E_max-0.001);
-	global_minchi2_D = justgetthedamnchisquared(h_globalbest_CD, h_Abeta_data_D, E_min, E_max-0.001);
-
-	titlestring = string("BCD Best Fit for Set B -- A=")+convertDouble(A_best_BCD)+", b="+convertDouble(b_best_BCD)+";  chi^2="+convertDouble(global_minchi2_B);
-	h_globalbest_B->SetName( (titlestring).c_str() );
-	h_globalbest_B->SetTitle(h_globalbest_B->GetName());
-	
-	TH1D* h_globalbest_C = (TH1D*)h_globalbest_CD->Clone();
-	titlestring = string("BCD Best Fit for Sets CD -- A=")+convertDouble(A_best_BCD)+", b="+convertDouble(b_best_BCD)+";  chi^2="+convertDouble(global_minchi2_C);
-	h_globalbest_C->SetName( (titlestring).c_str() );
-	h_globalbest_C->SetTitle(h_globalbest_C->GetName());
-	
-	TH1D* h_globalbest_D = (TH1D*)h_globalbest_CD->Clone();
-	titlestring = string("BCD Best Fit for Sets CD -- A=")+convertDouble(A_best_BCD)+", b="+convertDouble(b_best_BCD)+";  chi^2="+convertDouble(global_minchi2_D);
-	h_globalbest_D->SetName( (titlestring).c_str() );
-	h_globalbest_D->SetTitle(h_globalbest_C->GetName());
-	
-	cout << "Third loop (BCD Combo) is done." << endl;
 	
 	// OK, just do the whole damn thing twice to get the sigmas.
+	/*
 	double A_min_1s_B =  0.0;
 	double A_max_1s_B = -1.0;
 	double b_min_1s_B =  0.1;
@@ -1011,6 +975,7 @@ int main(int argc, char *argv[])
 	double A_for_bmax_D = -1.0;
 	double b_for_Amin_D = -0.1;
 	double b_for_Amax_D =  0.1;
+	*/
 	//
 	double A_min_1s_BCD =  0.0;
 	double A_max_1s_BCD = -1.0;
@@ -1018,62 +983,35 @@ int main(int argc, char *argv[])
 	double b_max_1s_BCD = -0.1;
 	double A_for_bmin_BCD =  0.0;
 	double A_for_bmax_BCD = -1.0;
-	double b_for_Amin_BCD = -0.1;
-	double b_for_Amax_BCD =  0.1;
+//	double b_for_Amin_BCD = -0.1;
+//	double b_for_Amax_BCD =  0.1;
 	//
-	double A_min_90_B =  0.0;
-	double A_max_90_B = -1.0;
-	double b_min_90_B =  0.1;
-	double b_max_90_B = -0.1;
-	double A_min_90_C =  0.0;
-	double A_max_90_C = -1.0;
-	double b_min_90_C =  0.1;
-	double b_max_90_C = -0.1;
-	double A_min_90_D =  0.0;
-	double A_max_90_D = -1.0;
-	double b_min_90_D =  0.1;
-	double b_max_90_D = -0.1;
 	double A_min_90_BCD =  0.0;
 	double A_max_90_BCD = -1.0;
 	double b_min_90_BCD =  0.1;
 	double b_max_90_BCD = -0.1;
 	//
-	double A_min_95_B =  0.0;
-	double A_max_95_B = -1.0;
-	double b_min_95_B =  0.1;
-	double b_max_95_B = -0.1;
-	double A_min_95_C =  0.0;
-	double A_max_95_C = -1.0;
-	double b_min_95_C =  0.1;
-	double b_max_95_C = -0.1;
-	double A_min_95_D =  0.0;
-	double A_max_95_D = -1.0;
-	double b_min_95_D =  0.1;
-	double b_max_95_D = -0.1;
 	double A_min_95_BCD =  0.0;
 	double A_max_95_BCD = -1.0;
 	double b_min_95_BCD =  0.1;
 	double b_max_95_BCD = -0.1;
 	//
 	
-	for(int j=1; j<=N_A_vals; j++)  // skip underflow and overflow bins. ... no don't.
+	for(int j=0; j<=N_A_vals; j++)  // skip underflow and overflow bins. ... no don't.
 	{
-	//	this_A = the_Amin+0.5*dA + double(j)*dA;
-	//	this_A = double(j)*dA - the_Amin+0.5*dA;
-		this_A = the_Amin-0.5*dA + double(j)*dA;
-		for(int i=1; i<=N_b_vals; i++)
+		this_A = the_Amin -0.5*dA + double(j)*dA;
+		for(int i=0; i<=N_b_vals; i++)
 		{
-		//	this_b = the_bmin+0.5*db + double(i)*db;
-		//	this_b = double(i)*db - the_bmin+0.5*db;
-			this_b = the_bmin-0.5*db + double(i)*db;
-		//	this_chi2_B     = fitmap_B->GetBinContent(i+1, j+1);
-		//	this_chi2_C     = fitmap_C->GetBinContent(i+1, j+1);
-		//	this_chi2_D     = fitmap_D->GetBinContent(i+1, j+1);
-		//	this_chi2_BCD = fitmap_BCD->GetBinContent(i+1, j+1);
-			this_chi2_B     = fitmap_B->GetBinContent(i, j);
-			this_chi2_C     = fitmap_C->GetBinContent(i, j);
-			this_chi2_D     = fitmap_D->GetBinContent(i, j);
-			this_chi2_BCD = fitmap_BCD->GetBinContent(i, j);
+			this_b = the_bmin -0.5*db + double(i)*db;  // if i=0, it should be the underflow bin.
+		//	this_chi2_B     = fitmap_B->GetBinContent(i, j);
+		//	this_chi2_C     = fitmap_C->GetBinContent(i, j);
+		//	this_chi2_D     = fitmap_D->GetBinContent(i, j);
+		//	this_chi2_BCD = fitmap_BCD->GetBinContent(i, j);
+	//		this_chi2_B     = fitmap_B->GetBinContent(fitmap_B  -> FindBin(this_b, this_A));
+	//		this_chi2_C     = fitmap_C->GetBinContent(fitmap_C  -> FindBin(this_b, this_A));
+	//		this_chi2_D     = fitmap_D->GetBinContent(fitmap_D  -> FindBin(this_b, this_A));
+			this_chi2_BCD = fitmap_BCD->GetBinContent( fitmap_BCD-> FindBin(this_b, this_A) );
+			/*
 			if(this_chi2_B <= minchi2_B+2.3 )  // 1 sigma
 			{
 				if(this_A <= A_min_1s_B) 
@@ -1147,18 +1085,19 @@ int main(int argc, char *argv[])
 					A_for_bmax_D = this_A;
 				}
 			}
+			*/
 			//
 			if(this_chi2_BCD <= minchi2_BCD+2.3 )  // 1 sigma
 			{
 				if(this_A <= A_min_1s_BCD) 
 				{
 					A_min_1s_BCD   = this_A; 
-					b_for_Amin_BCD = this_b;
+			//		b_for_Amin_BCD = this_b;
 				}
 				if(this_A >= A_max_1s_BCD) 
 				{
 					A_max_1s_BCD   = this_A;
-					b_for_Amax_BCD = this_b;
+			//		b_for_Amax_BCD = this_b;
 				}
 				if(this_b <= b_min_1s_BCD) 
 				{
@@ -1169,30 +1108,10 @@ int main(int argc, char *argv[])
 				{
 					b_max_1s_BCD   = this_b;
 					A_for_bmax_BCD = this_A;
+				//	cout << "b_max_1s_BCD = " << b_max_1s_BCD << ", this_chi2_BCD=" << this_chi2_BCD << endl;
 				}
 			}
 			// -- * -- //
-			if(this_chi2_B <= minchi2_B+4.61 )  // 90% CI
-			{
-				if(this_A < A_min_90_B)  { A_min_90_B = this_A; }
-				if(this_A > A_max_90_B)  { A_max_90_B = this_A; }
-				if(this_b < b_min_90_B)  { b_min_90_B = this_b; }
-				if(this_b > b_max_90_B)  { b_max_90_B = this_b; }
-			}
-			if(this_chi2_C <= minchi2_C+4.61 )  // 90% CI
-			{
-				if(this_A < A_min_90_C)  { A_min_90_C = this_A; }
-				if(this_A > A_max_90_C)  { A_max_90_C = this_A; }
-				if(this_b < b_min_90_C)  { b_min_90_C = this_b; }
-				if(this_b > b_max_90_C)  { b_max_90_C = this_b; }
-			}
-			if(this_chi2_D <= minchi2_D+4.61 )  // 90% CI
-			{
-				if(this_A < A_min_90_D)  { A_min_90_D = this_A; }
-				if(this_A > A_max_90_D)  { A_max_90_D = this_A; }
-				if(this_b < b_min_90_D)  { b_min_90_D = this_b; }
-				if(this_b > b_max_90_D)  { b_max_90_D = this_b; }
-			}
 			if(this_chi2_BCD <= minchi2_BCD+4.61 )  // 90% CI
 			{
 				if(this_A < A_min_90_BCD)  { A_min_90_BCD = this_A; }
@@ -1201,27 +1120,6 @@ int main(int argc, char *argv[])
 				if(this_b > b_max_90_BCD)  { b_max_90_BCD = this_b; }
 			}
 			// -- * -- //
-			if(this_chi2_B <= minchi2_B+5.99 )  // 95% CI
-			{
-				if(this_A < A_min_95_B)  { A_min_95_B = this_A; }
-				if(this_A > A_max_95_B)  { A_max_95_B = this_A; }
-				if(this_b < b_min_95_B)  { b_min_95_B = this_b; }
-				if(this_b > b_max_95_B)  { b_max_95_B = this_b; }
-			}
-			if(this_chi2_C <= minchi2_C+5.99 )  // 95% CI
-			{
-				if(this_A < A_min_95_C)  { A_min_95_C = this_A; }
-				if(this_A > A_max_95_C)  { A_max_95_C = this_A; }
-				if(this_b < b_min_95_C)  { b_min_95_C = this_b; }
-				if(this_b > b_max_95_C)  { b_max_95_C = this_b; }
-			}
-			if(this_chi2_D <= minchi2_D+5.99 )  // 95% CI
-			{
-				if(this_A < A_min_95_D)  { A_min_95_D = this_A; }
-				if(this_A > A_max_95_D)  { A_max_95_D = this_A; }
-				if(this_b < b_min_95_D)  { b_min_95_D = this_b; }
-				if(this_b > b_max_95_D)  { b_max_95_D = this_b; }
-			}
 			if(this_chi2_BCD <= minchi2_BCD+5.99 )  // 95% CI
 			{
 				if(this_A < A_min_95_BCD)  { A_min_95_BCD = this_A; }
@@ -1232,23 +1130,363 @@ int main(int argc, char *argv[])
 			//
 		}
 	}
-	cout << "Fourth and final loop (chi^2) is done." << endl;
+	cout << "Fourth loop (chi^2) is done. " << endl;
 	
 	cout << "Best Fit Results:  " << endl;
 	cout << "\tminchi2_B = " << minchi2_B << endl;
-	cout << "\tA_best_B  = " << A_best_B << ", [" << A_min_1s_B << ", " << A_max_1s_B << "]" << endl;
-	cout << "\tb_best_B  = " << b_best_B << ", [" << b_min_1s_B << ", " << b_max_1s_B << "]" << endl;
+	cout << "\tA_best_B  = " << A_best_B << endl;  //", [" << A_min_1s_B << ", " << A_max_1s_B << "]" << endl;
+	cout << "\tb_best_B  = " << b_best_B << endl;  //", [" << b_min_1s_B << ", " << b_max_1s_B << "]" << endl;
 	cout << "\tminchi2_C = " << minchi2_C << endl;
-	cout << "\tA_best_C  = " << A_best_C << ", [" << A_min_1s_C << ", " << A_max_1s_C << "]" << endl;
-	cout << "\tb_best_C  = " << b_best_C << ", [" << b_min_1s_C << ", " << b_max_1s_C << "]" << endl;
+	cout << "\tA_best_C  = " << A_best_C << endl;  //", [" << A_min_1s_C << ", " << A_max_1s_C << "]" << endl;
+	cout << "\tb_best_C  = " << b_best_C << endl;  //", [" << b_min_1s_C << ", " << b_max_1s_C << "]" << endl;
 	cout << "\tminchi2_D = " << minchi2_D << endl;
-	cout << "\tA_best_D  = " << A_best_D << ", [" << A_min_1s_D << ", " << A_max_1s_D << "]" << endl;
-	cout << "\tb_best_D  = " << b_best_D << ", [" << b_min_1s_D << ", " << b_max_1s_D << "]" << endl;
+	cout << "\tA_best_D  = " << A_best_D << endl;  //", [" << A_min_1s_D << ", " << A_max_1s_D << "]" << endl;
+	cout << "\tb_best_D  = " << b_best_D << endl;  //", [" << b_min_1s_D << ", " << b_max_1s_D << "]" << endl;
 	cout << "\tminchi2_BCD = " << minchi2_BCD << endl;
 	cout << "\tA_best_BCD  = " << A_best_BCD << ", [" << A_min_1s_BCD << ", " << A_max_1s_BCD << "]" << endl;
 	cout << "\tb_best_BCD  = " << b_best_BCD << ", [" << b_min_1s_BCD << ", " << b_max_1s_BCD << "]" << endl;
 	
 	
+	cout << "Now we'll move on to v2. " << endl;
+	
+	int N_A_vals_v2 = int( (A_size_v2)/dA_v2 ) + 1;
+	int N_b_vals_v2 = int( (b_size_v2)/db_v2 ) + 1;
+	cout << "N_A_vals_v2 = " << N_A_vals_v2 << endl;
+	cout << "N_b_vals_v2 = " << N_b_vals_v2 << endl;
+	//
+	double the_Amin_v2_r1, the_Amax_v2_r1;
+	the_Amin_v2_r1 = A_max_1s_BCD - 0.5*A_size_v2 - 0.5*dA_v2;
+	the_Amax_v2_r1 = the_Amin_v2_r1 + double(N_A_vals_v2)*dA_v2;
+	double the_bmin_v2_r1, the_bmax_v2_r1;
+	the_bmin_v2_r1 = b_min_1s_BCD - 0.5*b_size_v2 - 0.5*db_v2;
+	the_bmax_v2_r1 = the_bmin_v2_r1 + double(N_b_vals_v2)*db_v2;
+	cout << "A(v2,r1)=[" << the_Amin_v2_r1 << "," << the_Amax_v2_r1 << "];\t  dA_v2=" << dA_v2 << endl;
+	cout << "b(v2,r1)=[" << the_bmin_v2_r1 << "," << the_bmax_v2_r1 << "];\t  db_v2=" << db_v2 << endl;
+	
+	TH2D * fitmap_B_v2_r1 = new TH2D("Runset B Chi^2 Map (r1)",   "Runset B Chi^2 Map (r1)",   N_b_vals_v2, the_bmin_v2_r1, the_bmax_v2_r1, N_A_vals_v2, the_Amin_v2_r1, the_Amax_v2_r1);
+	fitmap_B_v2_r1 -> GetXaxis()-> SetTitle("b_Fierz");
+	fitmap_B_v2_r1 -> GetYaxis()-> SetTitle("A_beta");
+	fitmap_B_v2_r1 -> GetXaxis()->SetRangeUser(the_bmin_v2_r1+0.5*db_v2, the_bmax_v2_r1-0.5*db_v2);
+	fitmap_B_v2_r1 -> GetYaxis()->SetRangeUser(the_Amin_v2_r1+0.5*dA_v2, the_Amax_v2_r1-0.5*dA_v2);
+	TH2D * fitmap_C_v2_r1 = new TH2D("Runset C Chi^2 Map (r1)",   "Runset C Chi^2 Map (r1)",   N_b_vals_v2, the_bmin_v2_r1, the_bmax_v2_r1, N_A_vals_v2, the_Amin_v2_r1, the_Amax_v2_r1);
+	fitmap_C_v2_r1 -> GetXaxis()-> SetTitle("b_Fierz");
+	fitmap_C_v2_r1 -> GetYaxis()-> SetTitle("A_beta");
+	fitmap_C_v2_r1 -> GetXaxis()->SetRangeUser(the_bmin_v2_r1+0.5*db_v2, the_bmax_v2_r1-0.5*db_v2);
+	fitmap_C_v2_r1 -> GetYaxis()->SetRangeUser(the_Amin_v2_r1+0.5*dA_v2, the_Amax_v2_r1-0.5*dA_v2);
+	TH2D * fitmap_D_v2_r1 = new TH2D("Runset D Chi^2 Map (r1)",   "Runset D Chi^2 Map (r1)",   N_b_vals_v2, the_bmin_v2_r1, the_bmax_v2_r1, N_A_vals_v2, the_Amin_v2_r1, the_Amax_v2_r1);
+	fitmap_D_v2_r1 -> GetXaxis()-> SetTitle("b_Fierz");
+	fitmap_D_v2_r1 -> GetYaxis()-> SetTitle("A_beta");
+	fitmap_D_v2_r1 -> GetXaxis()->SetRangeUser(the_bmin_v2_r1+0.5*db_v2, the_bmax_v2_r1-0.5*db_v2);
+	fitmap_D_v2_r1 -> GetYaxis()->SetRangeUser(the_Amin_v2_r1+0.5*dA_v2, the_Amax_v2_r1-0.5*dA_v2);
+	TH2D * fitmap_BCD_v2_r1 = new TH2D("Runsets BCD Chi^2 Map (r1)",   "Runsets BCD Chi^2 Map (r1)",   N_b_vals_v2, the_bmin_v2_r1, the_bmax_v2_r1, N_A_vals_v2, the_Amin_v2_r1, the_Amax_v2_r1);
+	fitmap_BCD_v2_r1 -> GetXaxis()-> SetTitle("b_Fierz");
+	fitmap_BCD_v2_r1 -> GetYaxis()-> SetTitle("A_beta");
+	fitmap_BCD_v2_r1 -> GetXaxis()->SetRangeUser(the_bmin_v2_r1+0.5*db_v2, the_bmax_v2_r1-0.5*db_v2);
+	fitmap_BCD_v2_r1 -> GetYaxis()->SetRangeUser(the_Amin_v2_r1+0.5*dA_v2, the_Amax_v2_r1-0.5*dA_v2);
+	
+//	//
+	double the_Amin_v2_r2, the_Amax_v2_r2;
+	the_Amin_v2_r2 = A_best_BCD - 0.5*A_size_v2 - 0.5*dA_v2;
+	the_Amax_v2_r2 = the_Amin_v2_r2 + double(N_A_vals_v2)*dA_v2;
+	double the_bmin_v2_r2, the_bmax_v2_r2;
+	the_bmin_v2_r2 = b_best_BCD - 0.5*b_size_v2 - 0.5*db_v2;
+	the_bmax_v2_r2 = the_bmin_v2_r2 + double(N_b_vals_v2)*db_v2;
+	cout << "A(v2,r2)=[" << the_Amin_v2_r2 << "," << the_Amax_v2_r2 << "];\t  dA_v2=" << dA_v2 << endl;
+	cout << "b(v2,r2)=[" << the_bmin_v2_r2 << "," << the_bmax_v2_r2 << "];\t  db_v2=" << db_v2 << endl;
+	
+	TH2D * fitmap_B_v2_r2 = new TH2D("Runset B Chi^2 Map (r2)",   "Runset B Chi^2 Map (r2)",   N_b_vals_v2, the_bmin_v2_r2, the_bmax_v2_r2, N_A_vals_v2, the_Amin_v2_r2, the_Amax_v2_r2);
+	fitmap_B_v2_r2 -> GetXaxis()-> SetTitle("b_Fierz");
+	fitmap_B_v2_r2 -> GetYaxis()-> SetTitle("A_beta");
+	fitmap_B_v2_r2 -> GetXaxis()->SetRangeUser(the_bmin_v2_r2+0.5*db_v2, the_bmax_v2_r2-0.5*db_v2);
+	fitmap_B_v2_r2 -> GetYaxis()->SetRangeUser(the_Amin_v2_r2+0.5*dA_v2, the_Amax_v2_r2-0.5*dA_v2);
+	TH2D * fitmap_C_v2_r2 = new TH2D("Runset C Chi^2 Map (r2)",   "Runset C Chi^2 Map (r2)",   N_b_vals_v2, the_bmin_v2_r2, the_bmax_v2_r2, N_A_vals_v2, the_Amin_v2_r2, the_Amax_v2_r2);
+	fitmap_C_v2_r2 -> GetXaxis()-> SetTitle("b_Fierz");
+	fitmap_C_v2_r2 -> GetYaxis()-> SetTitle("A_beta");
+	fitmap_C_v2_r2 -> GetXaxis()->SetRangeUser(the_bmin_v2_r2+0.5*db_v2, the_bmax_v2_r2-0.5*db_v2);
+	fitmap_C_v2_r2 -> GetYaxis()->SetRangeUser(the_Amin_v2_r2+0.5*dA_v2, the_Amax_v2_r2-0.5*dA_v2);
+	TH2D * fitmap_D_v2_r2 = new TH2D("Runset D Chi^2 Map (r2)",   "Runset D Chi^2 Map (r2)",   N_b_vals_v2, the_bmin_v2_r2, the_bmax_v2_r2, N_A_vals_v2, the_Amin_v2_r2, the_Amax_v2_r2);
+	fitmap_D_v2_r2 -> GetXaxis()-> SetTitle("b_Fierz");
+	fitmap_D_v2_r2 -> GetYaxis()-> SetTitle("A_beta");
+	fitmap_D_v2_r2 -> GetXaxis()->SetRangeUser(the_bmin_v2_r2+0.5*db_v2, the_bmax_v2_r2-0.5*db_v2);
+	fitmap_D_v2_r2 -> GetYaxis()->SetRangeUser(the_Amin_v2_r2+0.5*dA_v2, the_Amax_v2_r2-0.5*dA_v2);
+	TH2D * fitmap_BCD_v2_r2 = new TH2D("Runsets BCD Chi^2 Map (r2)",   "Runsets BCD Chi^2 Map (r2)",   N_b_vals_v2, the_bmin_v2_r2, the_bmax_v2_r2, N_A_vals_v2, the_Amin_v2_r2, the_Amax_v2_r2);
+	fitmap_BCD_v2_r2 -> GetXaxis()-> SetTitle("b_Fierz");
+	fitmap_BCD_v2_r2 -> GetYaxis()-> SetTitle("A_beta");
+	fitmap_BCD_v2_r2 -> GetXaxis()->SetRangeUser(the_bmin_v2_r2+0.5*db_v2, the_bmax_v2_r2-0.5*db_v2);
+	fitmap_BCD_v2_r2 -> GetYaxis()->SetRangeUser(the_Amin_v2_r2+0.5*dA_v2, the_Amax_v2_r2-0.5*dA_v2);
+
+
+	//
+	double the_Amin_v2_r3, the_Amax_v2_r3;
+	the_Amin_v2_r3 = A_min_1s_BCD - 0.5*A_size_v2 - 0.5*dA_v2;
+	the_Amax_v2_r3 = the_Amin_v2_r3 + double(N_A_vals_v2)*dA_v2;
+	double the_bmin_v2_r3, the_bmax_v2_r3;
+	the_bmin_v2_r3 = b_max_1s_BCD - 0.5*b_size_v2 - 0.5*db_v2;
+	the_bmax_v2_r3 = the_bmin_v2_r3 + double(N_b_vals_v2)*db_v2;
+	cout << "A(v2,r3)=[" << the_Amin_v2_r3 << "," << the_Amax_v2_r3 << "];\t  dA_v2=" << dA_v2 << endl;
+	cout << "b(v2,r3)=[" << the_bmin_v2_r3 << "," << the_bmax_v2_r3 << "];\t  db_v2=" << db_v2 << endl;
+	
+	TH2D * fitmap_B_v2_r3 = new TH2D("Runset B Chi^2 Map (r3)",   "Runset B Chi^2 Map (r3)",   N_b_vals_v2, the_bmin_v2_r3, the_bmax_v2_r3, N_A_vals_v2, the_Amin_v2_r3, the_Amax_v2_r3);
+	fitmap_B_v2_r3 -> GetXaxis()-> SetTitle("b_Fierz");
+	fitmap_B_v2_r3 -> GetYaxis()-> SetTitle("A_beta");
+	fitmap_B_v2_r3 -> GetXaxis()->SetRangeUser(the_bmin_v2_r3+0.5*db_v2, the_bmax_v2_r3-0.5*db_v2);
+	fitmap_B_v2_r3 -> GetYaxis()->SetRangeUser(the_Amin_v2_r3+0.5*dA_v2, the_Amax_v2_r3-0.5*dA_v2);
+	TH2D * fitmap_C_v2_r3 = new TH2D("Runset C Chi^2 Map (r3)",   "Runset C Chi^2 Map (r3)",   N_b_vals_v2, the_bmin_v2_r3, the_bmax_v2_r3, N_A_vals_v2, the_Amin_v2_r3, the_Amax_v2_r3);
+	fitmap_C_v2_r3 -> GetXaxis()-> SetTitle("b_Fierz");
+	fitmap_C_v2_r3 -> GetYaxis()-> SetTitle("A_beta");
+	fitmap_C_v2_r3 -> GetXaxis()->SetRangeUser(the_bmin_v2_r3+0.5*db_v2, the_bmax_v2_r3-0.5*db_v2);
+	fitmap_C_v2_r3 -> GetYaxis()->SetRangeUser(the_Amin_v2_r3+0.5*dA_v2, the_Amax_v2_r3-0.5*dA_v2);
+	TH2D * fitmap_D_v2_r3 = new TH2D("Runset D Chi^2 Map (r3)",   "Runset D Chi^2 Map (r3)",   N_b_vals_v2, the_bmin_v2_r3, the_bmax_v2_r3, N_A_vals_v2, the_Amin_v2_r3, the_Amax_v2_r3);
+	fitmap_D_v2_r3 -> GetXaxis()-> SetTitle("b_Fierz");
+	fitmap_D_v2_r3 -> GetYaxis()-> SetTitle("A_beta");
+	fitmap_D_v2_r3 -> GetXaxis()->SetRangeUser(the_bmin_v2_r3+0.5*db_v2, the_bmax_v2_r3-0.5*db_v2);
+	fitmap_D_v2_r3 -> GetYaxis()->SetRangeUser(the_Amin_v2_r3+0.5*dA_v2, the_Amax_v2_r3-0.5*dA_v2);
+	TH2D * fitmap_BCD_v2_r3 = new TH2D("Runsets BCD Chi^2 Map (r3)",   "Runsets BCD Chi^2 Map (r3)",   N_b_vals_v2, the_bmin_v2_r3, the_bmax_v2_r3, N_A_vals_v2, the_Amin_v2_r3, the_Amax_v2_r3);
+	fitmap_BCD_v2_r3 -> GetXaxis()-> SetTitle("b_Fierz");
+	fitmap_BCD_v2_r3 -> GetYaxis()-> SetTitle("A_beta");
+	fitmap_BCD_v2_r3 -> GetXaxis()->SetRangeUser(the_bmin_v2_r3+0.5*db_v2, the_bmax_v2_r3-0.5*db_v2);
+	fitmap_BCD_v2_r3 -> GetYaxis()->SetRangeUser(the_Amin_v2_r3+0.5*dA_v2, the_Amax_v2_r3-0.5*dA_v2);
+	
+	//
+//	return 0;
+	
+	// Set BCD, r2:
+	cout << "Set BCD, r2:  " << endl;
+	
+//	double minchi2_BCD_v2 = minchi2_BCD;
+//	double A_best_BCD_v2=A_best_BCD;
+//	double b_best_BCD_v2=b_best_BCD;
+	for(int j=0; j<=N_A_vals_v2; j++)
+	{
+		this_A = the_Amin_v2_r2 -0.5*dA_v2 + double(j)*dA_v2;
+		if(j%10 == 0)  { cout << "j=" << j << ";\tthis_A=" << this_A << endl; }
+		//
+		for(int i=0; i<=N_b_vals_v2; i++)
+		{
+			this_b = the_bmin_v2_r2 -0.5*db_v2 + double(i)*db_v2;
+			the_toppings = pick_toppings(this_A, this_b, topping_bs_scale, topping_ss_scale, topping_bg_scale);
+			
+			if(cook_fast)
+			{
+				h_asym_B = simple_cook(the_pizza_B, the_toppings);
+				h_asym_CD = simple_cook(the_pizza_CD, the_toppings);
+			}
+			else
+			{
+				h_asym_B = cook(the_pizza_B, the_toppings);
+				h_asym_CD = cook(the_pizza_CD, the_toppings);
+			}
+			//
+			this_chi2_B = justgetthedamnchisquared(h_asym_B, h_Abeta_data_B, E_min, E_max-0.001);
+			fitmap_B_v2_r2 -> Fill(this_b, this_A, this_chi2_B);
+			
+			this_chi2_C = justgetthedamnchisquared(h_asym_CD, h_Abeta_data_C, E_min, E_max-0.001);
+			fitmap_C_v2_r2     -> Fill(this_b, this_A, this_chi2_C);
+			
+			this_chi2_D = justgetthedamnchisquared(h_asym_CD, h_Abeta_data_D, E_min, E_max-0.001);
+			fitmap_D_v2_r2     -> Fill(this_b, this_A, this_chi2_D);
+			
+			this_chi2_BCD = this_chi2_B + this_chi2_C + this_chi2_D;
+			fitmap_BCD_v2_r2   -> Fill(this_b, this_A, this_chi2_BCD);
+			
+			if(this_chi2_BCD <= minchi2_BCD)  // 1 sigma
+			{
+				minchi2_BCD = this_chi2_BCD;
+				A_best_BCD  = this_A;
+				b_best_BCD  = this_b;
+			//	h_best_B = (TH1D*)h_asym_B->Clone();
+			}
+		}
+	}
+
+//	the_toppings = pick_toppings(A_best_B, b_best_B, topping_bs_scale, topping_ss_scale, topping_bg_scale);
+//	if(cook_fast) { h_best_B = simple_cook(the_pizza_B, the_toppings); }
+//	else          { h_best_B = cook(the_pizza_B, the_toppings);        }
+	
+	
+	// Set BCD, r1:
+	cout << "Set BCD, r1:  " << endl;
+	double chi2_for_blim = 5000;
+	for(int j=0; j<=N_A_vals_v2; j++)
+	{
+		this_A = the_Amin_v2_r1 -0.5*dA_v2 + double(j)*dA_v2;
+		if(j%10 == 0)  { cout << "j=" << j << ";\tthis_A=" << this_A << endl; }
+		//
+		for(int i=0; i<=N_b_vals_v2; i++)
+		{
+			this_b = the_bmin_v2_r1 -0.5*db_v2 + double(i)*db_v2;
+			the_toppings = pick_toppings(this_A, this_b, topping_bs_scale, topping_ss_scale, topping_bg_scale);
+			
+			if(cook_fast)
+			{
+				h_asym_B  = simple_cook(the_pizza_B, the_toppings);
+				h_asym_CD = simple_cook(the_pizza_CD, the_toppings);
+			}
+			else
+			{
+				h_asym_B  = cook(the_pizza_B, the_toppings);
+				h_asym_CD = cook(the_pizza_CD, the_toppings);
+			}
+			//
+			this_chi2_B = justgetthedamnchisquared(h_asym_B, h_Abeta_data_B, E_min, E_max-0.001);
+			fitmap_B_v2_r1 -> Fill(this_b, this_A, this_chi2_B);
+			
+			this_chi2_C = justgetthedamnchisquared(h_asym_CD, h_Abeta_data_C, E_min, E_max-0.001);
+			fitmap_C_v2_r1     -> Fill(this_b, this_A, this_chi2_C);
+
+			this_chi2_D = justgetthedamnchisquared(h_asym_CD, h_Abeta_data_D, E_min, E_max-0.001);
+			fitmap_D_v2_r1     -> Fill(this_b, this_A, this_chi2_D);
+			
+			this_chi2_BCD = this_chi2_B + this_chi2_C + this_chi2_D;
+			fitmap_BCD_v2_r1   -> Fill(this_b, this_A, this_chi2_BCD);
+
+			if(this_chi2_BCD <= minchi2_BCD+2.30 )  // 1 sigma
+			{
+			//	if(this_A <= A_min_1s_BCD) 
+			//	{
+			//		A_min_1s_BCD   = this_A; 
+			//		b_for_Amin_BCD = this_b;
+			//	}
+				if(this_A >= A_max_1s_BCD) 
+				{
+					A_max_1s_BCD    = this_A;
+			//		b_for_Amax_BCD  = this_b;
+				}
+				if(this_b <= b_min_1s_BCD) 
+				{
+					b_min_1s_BCD   = this_b;
+					A_for_bmin_BCD = this_A;
+					
+					if(this_chi2_BCD <= chi2_for_blim)
+					{
+						chi2_for_blim   = this_chi2_BCD;
+						b_min_1s_BCD    = this_b;
+						A_for_bmin_BCD  = this_A;
+					}
+				}
+			//	if(this_b >= b_max_1s_BCD) 
+			//	{
+			//		b_max_1s_BCD   = this_b;
+			//		A_for_bmax_BCD = this_A;
+			//	}
+			}
+		}
+	}
+	
+	// Set BCD, r3:
+	cout << "Set BCD, r3:  " << endl;
+	chi2_for_blim = 5000;
+	for(int j=0; j<=N_A_vals_v2; j++)
+	{
+		this_A = the_Amin_v2_r3 -0.5*dA_v2 + double(j)*dA_v2;
+		if(j%10 == 0)  { cout << "j=" << j << ";\tthis_A=" << this_A << endl; }
+		//
+		for(int i=0; i<=N_b_vals_v2; i++)
+		{
+			this_b = the_bmin_v2_r3 -0.5*db_v2 + double(i)*db_v2;
+			the_toppings = pick_toppings(this_A, this_b, topping_bs_scale, topping_ss_scale, topping_bg_scale);
+			
+			if(cook_fast)
+			{
+				h_asym_B = simple_cook(the_pizza_B, the_toppings);
+				h_asym_CD = simple_cook(the_pizza_CD, the_toppings);
+			}
+			else
+			{
+				h_asym_B = cook(the_pizza_B, the_toppings);
+				h_asym_CD = cook(the_pizza_CD, the_toppings);
+			}
+			//
+			this_chi2_B = justgetthedamnchisquared(h_asym_B, h_Abeta_data_B, E_min, E_max-0.001);
+			fitmap_B_v2_r3 -> Fill(this_b, this_A, this_chi2_B);
+
+			this_chi2_C = justgetthedamnchisquared(h_asym_CD, h_Abeta_data_C, E_min, E_max-0.001);
+			fitmap_C_v2_r3     -> Fill(this_b, this_A, this_chi2_C);
+			
+			this_chi2_D = justgetthedamnchisquared(h_asym_CD, h_Abeta_data_D, E_min, E_max-0.001);
+			fitmap_D_v2_r3     -> Fill(this_b, this_A, this_chi2_D);
+			
+			this_chi2_BCD = this_chi2_B + this_chi2_C + this_chi2_D;
+			fitmap_BCD_v2_r3   -> Fill(this_b, this_A, this_chi2_BCD);
+			
+			if(this_chi2_BCD <= minchi2_BCD+2.3 )  // 1 sigma
+			{
+				if(this_A <= A_min_1s_BCD) 
+				{
+					A_min_1s_BCD = this_A; 
+			//		b_for_Amin_BCD  = this_b;
+				}
+			//	if(this_A >= A_max_1s_BCD) 
+			//	{
+			//		A_max_1s_BCD   = this_A;
+			//		b_for_Amax_BCD = this_b;
+			//	}
+			//	if(this_b <= b_min_1s_BCD) 
+			//	{
+			//		b_min_1s_BCD   = this_b;
+			//		A_for_bmin_BCD = this_A;
+			//	}
+				if(this_b >= b_max_1s_BCD) 
+				{
+				//	cout << "b_max_1s_BCD = " << b_max_1s_BCD << ", this_chi2_BCD=" << this_chi2_BCD << endl;
+					if(this_chi2_BCD <= chi2_for_blim)
+					{
+						chi2_for_blim   = this_chi2_BCD;
+						b_max_1s_BCD    = this_b;
+						A_for_bmax_BCD  = this_A;
+					}
+				}
+			}
+			
+		}
+	}
+	
+	// "Global Best" Histograms
+	the_toppings = pick_toppings(A_best_BCD, b_best_BCD, topping_bs_scale, topping_ss_scale, topping_bg_scale);
+	if(cook_fast)
+	{
+		h_globalbest_B  = simple_cook(the_pizza_B,  the_toppings);
+		h_globalbest_CD = simple_cook(the_pizza_CD, the_toppings);
+	}
+	else
+	{
+		h_globalbest_B  = cook(the_pizza_B,  the_toppings);
+		h_globalbest_CD = cook(the_pizza_CD, the_toppings);
+	}
+	TH1D* h_globalbest_C = (TH1D*)h_globalbest_CD->Clone();
+	TH1D* h_globalbest_D = (TH1D*)h_globalbest_CD->Clone();
+	
+	global_minchi2_B = justgetthedamnchisquared(h_globalbest_B, h_Abeta_data_B, E_min, E_max-0.001);
+	global_minchi2_C = justgetthedamnchisquared(h_globalbest_C, h_Abeta_data_C, E_min, E_max-0.001);
+	global_minchi2_D = justgetthedamnchisquared(h_globalbest_D, h_Abeta_data_D, E_min, E_max-0.001);
+
+	titlestring = string("BCD Best Fit for Set B -- A=")+convertDouble(A_best_BCD)+", b="+convertDouble(b_best_BCD)+";  chi^2="+convertDouble(global_minchi2_B);
+	h_globalbest_B->SetName( (titlestring).c_str() );
+	h_globalbest_B->SetTitle(h_globalbest_B->GetName());
+	titlestring = string("BCD Best Fit for Sets CD -- A=")+convertDouble(A_best_BCD)+", b="+convertDouble(b_best_BCD)+";  chi^2="+convertDouble(global_minchi2_C);
+	h_globalbest_C->SetName( (titlestring).c_str() );
+	h_globalbest_C->SetTitle(h_globalbest_C->GetName());
+	titlestring = string("BCD Best Fit for Sets CD -- A=")+convertDouble(A_best_BCD)+", b="+convertDouble(b_best_BCD)+";  chi^2="+convertDouble(global_minchi2_D);
+	h_globalbest_D->SetName( (titlestring).c_str() );
+	h_globalbest_D->SetTitle(h_globalbest_C->GetName());
+	
+	
+	
+	cout << "Updated Fit Results:  " << endl;
+//	cout << "\tminchi2_B = " << minchi2_B << endl;
+//	cout << "\tA_best_B  = " << A_best_B << ", [" << A_min_1s_B << ", " << A_max_1s_B << "]" << endl;
+//	cout << "\tb_best_B  = " << b_best_B << ", [" << b_min_1s_B << ", " << b_max_1s_B << "]" << endl;
+//	cout << "\tminchi2_C = " << minchi2_C << endl;
+//	cout << "\tA_best_C  = " << A_best_C << ", [" << A_min_1s_C << ", " << A_max_1s_C << "]" << endl;
+//	cout << "\tb_best_C  = " << b_best_C << ", [" << b_min_1s_C << ", " << b_max_1s_C << "]" << endl;
+//	cout << "\tminchi2_D = " << minchi2_D << endl;
+//	cout << "\tA_best_D  = " << A_best_D << ", [" << A_min_1s_D << ", " << A_max_1s_D << "]" << endl;
+//	cout << "\tb_best_D  = " << b_best_D << ", [" << b_min_1s_D << ", " << b_max_1s_D << "]" << endl;
+	cout << "\tminchi2_BCD = " << minchi2_BCD << endl;
+	cout << "\tA_best_BCD  = " << A_best_BCD << ", [" << A_min_1s_BCD << ", " << A_max_1s_BCD << "]" << endl;
+	cout << "\tb_best_BCD  = " << b_best_BCD << ", [" << b_min_1s_BCD << ", " << b_max_1s_BCD << "]" << endl;
+	
+	/// -- --*-- -- ///
 	double epsilon = 0.0001;
 	double contours_onesig_B[2];
 	contours_onesig_B[0] = minchi2_B + epsilon;
@@ -1262,7 +1500,13 @@ int main(int argc, char *argv[])
 	double contours_onesig_BCD[2];
 	contours_onesig_BCD[0] = minchi2_BCD + epsilon;
 	contours_onesig_BCD[1] = minchi2_BCD + 2.30;
-
+	
+//	double contours_onesig_BCD_v2[2];
+//	contours_onesig_BCD_v2[0] = minchi2_BCD_v2 + epsilon;
+//	contours_onesig_BCD_v2[1] = minchi2_BCD_v2 + 2.30;
+//	cout << "OK, contours should be set... " << endl;
+//	cout << "\tminchi2_BCD_v2 + epsilon = " << minchi2_BCD_v2 + epsilon << endl;
+//	cout << "\tminchi2_BCD_v2 + 2.30    = " << minchi2_BCD_v2 + 2.30 << endl;
 	
 	double contours_full_B[4];
 	contours_full_B[0] = minchi2_B + epsilon;
@@ -1292,59 +1536,33 @@ int main(int argc, char *argv[])
 	TLine * b_best_line_B = new TLine(b_best_B, view_ymin, b_best_B, A_best_B);
 	A_best_line_B->SetLineColor(kRed);
 	b_best_line_B->SetLineColor(kRed);
-
-	TLine * A_min_line_B = new TLine(view_xmin,  A_for_bmax_B, b_max_1s_B, A_for_bmax_B);
-	TLine * b_min_line_B = new TLine(b_min_1s_B, view_ymin,    b_min_1s_B, A_for_bmin_B);
-	A_min_line_B->SetLineColor(kRed);
-	b_min_line_B->SetLineColor(kRed);
-
-	TLine * A_max_line_B = new TLine(view_xmin,  A_for_bmin_B, b_min_1s_B, A_for_bmin_B);
-	TLine * b_max_line_B = new TLine(b_max_1s_B, view_ymin,    b_max_1s_B, A_for_bmax_B);
-	A_max_line_B->SetLineColor(kRed);
-	b_max_line_B->SetLineColor(kRed);
 	//
 	TLine * A_best_line_C = new TLine(view_xmin, A_best_C, b_best_C, A_best_C);
 	TLine * b_best_line_C = new TLine(b_best_C, view_ymin, b_best_C, A_best_C);
 	A_best_line_C->SetLineColor(kRed);
 	b_best_line_C->SetLineColor(kRed);
-
-	TLine * A_min_line_C = new TLine(view_xmin, A_for_bmax_C, b_max_1s_C, A_for_bmax_C);
-	TLine * b_min_line_C = new TLine(b_min_1s_C, view_ymin, b_min_1s_C, A_for_bmin_C);
-	A_min_line_C->SetLineColor(kRed);
-	b_min_line_C->SetLineColor(kRed);
-
-	TLine * A_max_line_C = new TLine(view_xmin,  A_for_bmin_C, b_min_1s_C, A_for_bmin_C);
-	TLine * b_max_line_C = new TLine(b_max_1s_C, view_ymin,    b_max_1s_C, A_for_bmax_C);
-	A_max_line_C->SetLineColor(kRed);
-	b_max_line_C->SetLineColor(kRed);
 	//
 	TLine * A_best_line_D = new TLine(view_xmin, A_best_D, b_best_D, A_best_D);
 	TLine * b_best_line_D = new TLine(b_best_D, view_ymin, b_best_D, A_best_D);
 	A_best_line_D->SetLineColor(kRed);
 	b_best_line_D->SetLineColor(kRed);
-
-	TLine * A_min_line_D = new TLine(view_xmin,  A_for_bmax_D, b_max_1s_D, A_for_bmax_D);
-	TLine * b_min_line_D = new TLine(b_min_1s_D, view_ymin,    b_min_1s_D, A_for_bmin_D);
-	A_min_line_D->SetLineColor(kRed);
-	b_min_line_D->SetLineColor(kRed);
-
-	TLine * A_max_line_D = new TLine(view_xmin,  A_for_bmin_D, b_min_1s_D, A_for_bmin_D);
-	TLine * b_max_line_D = new TLine(b_max_1s_D, view_ymin,    b_max_1s_D, A_for_bmax_D);
-	A_max_line_D->SetLineColor(kRed);
-	b_max_line_D->SetLineColor(kRed);
 	//
 	TLine * A_best_line_BCD = new TLine(view_xmin, A_best_BCD, b_best_BCD, A_best_BCD);
 	TLine * b_best_line_BCD = new TLine(b_best_BCD, view_ymin, b_best_BCD, A_best_BCD);
+	
+//	TLine * b_min_line_BCD = new TLine(b_min_1s_BCD, view_ymin,      b_min_1s_BCD, A_for_bmin_BCD);
+//	TLine * A_max_line_BCD = new TLine(view_xmin,    A_for_bmin_BCD, b_min_1s_BCD, A_for_bmin_BCD);
+	TLine * b_min_line_BCD = new TLine(b_min_1s_BCD, view_ymin,      b_min_1s_BCD, A_max_1s_BCD);
+	TLine * A_max_line_BCD = new TLine(view_xmin,    A_max_1s_BCD,   b_min_1s_BCD, A_max_1s_BCD);
+	
+//	TLine * b_max_line_BCD = new TLine(b_max_1s_BCD, view_ymin,      b_max_1s_BCD, A_for_bmax_BCD);
+//	TLine * A_min_line_BCD = new TLine(view_xmin,    A_for_bmax_BCD, b_max_1s_BCD, A_for_bmax_BCD);
+	TLine * b_max_line_BCD = new TLine(b_max_1s_BCD, view_ymin,      b_max_1s_BCD, A_min_1s_BCD);
+	TLine * A_min_line_BCD = new TLine(view_xmin,    A_min_1s_BCD,   b_max_1s_BCD, A_min_1s_BCD);
 	A_best_line_BCD->SetLineColor(kRed);
 	b_best_line_BCD->SetLineColor(kRed);
-
-	TLine * A_min_line_BCD = new TLine(view_xmin,    A_for_bmax_BCD, b_max_1s_BCD, A_for_bmax_BCD);
-	TLine * b_min_line_BCD = new TLine(b_min_1s_BCD, view_ymin,      b_min_1s_BCD, A_for_bmin_BCD);
 	A_min_line_BCD->SetLineColor(kRed);
 	b_min_line_BCD->SetLineColor(kRed);
-
-	TLine * A_max_line_BCD = new TLine(view_xmin,    A_for_bmin_BCD, b_min_1s_BCD, A_for_bmin_BCD);
-	TLine * b_max_line_BCD = new TLine(b_max_1s_BCD, view_ymin,      b_max_1s_BCD, A_for_bmax_BCD);
 	A_max_line_BCD->SetLineColor(kRed);
 	b_max_line_BCD->SetLineColor(kRed);
 	//
@@ -1353,13 +1571,13 @@ int main(int argc, char *argv[])
 	double asymmetry_ymax = -0.45;
 	TLine * fitrange_min_line = new TLine(E_min,  asymmetry_ymin, E_min, asymmetry_ymax);
 	TLine * fitrange_max_line = new TLine(E_max,  asymmetry_ymin, E_max, asymmetry_ymax);
-	fitrange_min_line->SetLineColor(kGray);
-	fitrange_max_line->SetLineColor(kGray);
+	fitrange_min_line->SetLineColor(kGray+2);
+	fitrange_max_line->SetLineColor(kGray+2);
 	fitrange_min_line->SetLineStyle(linestyle);
 	fitrange_max_line->SetLineStyle(linestyle);
 	double the_y1;// = gPad->GetFrame()->GetY1();
 	double the_y2;// = gPad->GetFrame()->GetY2();
-
+	//
 	
 	//
 	TH1D* fitmap_contours_B =(TH1D*)fitmap_B->Clone();
@@ -1389,6 +1607,19 @@ int main(int argc, char *argv[])
 	TH1D* fitmap_contours2_BCD =(TH1D*)fitmap_BCD->Clone();
 	fitmap_contours2_BCD -> SetContour(4,contours_full_BCD);
 	fitmap_contours2_BCD -> SetLineColor(kViolet-2);
+//	TH1D* fitmap_contours3_BCD =(TH1D*)fitmap_BCD->Clone();
+//	fitmap_contours3_BCD -> SetContour(2,contours_onesig_BCD_v2);
+//	fitmap_contours3_BCD -> SetLineColor(kRed);
+	//
+	TH1D* fitmap_contours3_BCD_v2_r1 =(TH1D*)fitmap_BCD_v2_r1->Clone("r1");
+	fitmap_contours3_BCD_v2_r1 -> SetContour(2,contours_onesig_BCD);
+	fitmap_contours3_BCD_v2_r1 -> SetLineColor(kPink-9);
+	TH1D* fitmap_contours3_BCD_v2_r2 =(TH1D*)fitmap_BCD_v2_r2->Clone("r2");
+	fitmap_contours3_BCD_v2_r2 -> SetContour(2,contours_onesig_BCD);
+	fitmap_contours3_BCD_v2_r2 -> SetLineColor(kPink-9);
+	TH1D* fitmap_contours3_BCD_v2_r3 =(TH1D*)fitmap_BCD_v2_r3->Clone("r3");
+	fitmap_contours3_BCD_v2_r3 -> SetContour(2,contours_onesig_BCD);
+	fitmap_contours3_BCD_v2_r3 -> SetLineColor(kPink-9);
 	//
 	
 	//
@@ -1397,16 +1628,16 @@ int main(int argc, char *argv[])
 	string title_2D_D = "                SetD, BS="+fake_to_string(the_toppings.BS_scale*100.0)+"\%, SS="+fake_to_string(the_toppings.SS_scale*100.0)+"\%, BG="+fake_to_string(the_toppings.BG_scale*100.0)+"\%";
 	string title_2D_BCD = "                SetsBCD, BS="+fake_to_string(the_toppings.BS_scale*100.0)+"\%, SS="+fake_to_string(the_toppings.SS_scale*100.0)+"\%, BG="+fake_to_string(the_toppings.BG_scale*100.0)+"\%";
 	//
-	string A_results_string_B = "A="+fake_to_string(A_best_B)+", ["+fake_to_string(A_min_1s_B)+", "+fake_to_string(A_max_1s_B)+"]";
-	string b_results_string_B = "b="+fake_to_string(b_best_B)+", ["+fake_to_string(b_min_1s_B)+", "+fake_to_string(b_max_1s_B)+"]";
+	string A_results_string_B = "A="+fake_to_string(A_best_B);//+", ["+fake_to_string(A_min_1s_B)+", "+fake_to_string(A_max_1s_B)+"]";
+	string b_results_string_B = "b="+fake_to_string(b_best_B);//+", ["+fake_to_string(b_min_1s_B)+", "+fake_to_string(b_max_1s_B)+"]";
 	string chimin_string_B    = "min. chi2="+fake_to_string(minchi2_B)+" [NDF=42]";
 	
-	string A_results_string_C = "A="+fake_to_string(A_best_C)+", ["+fake_to_string(A_min_1s_C)+", "+fake_to_string(A_max_1s_C)+"]";
-	string b_results_string_C = "b="+fake_to_string(b_best_C)+", ["+fake_to_string(b_min_1s_C)+", "+fake_to_string(b_max_1s_C)+"]";
+	string A_results_string_C = "A="+fake_to_string(A_best_C);//+", ["+fake_to_string(A_min_1s_C)+", "+fake_to_string(A_max_1s_C)+"]";
+	string b_results_string_C = "b="+fake_to_string(b_best_C);//+", ["+fake_to_string(b_min_1s_C)+", "+fake_to_string(b_max_1s_C)+"]";
 	string chimin_string_C    = "min. chi2="+fake_to_string(minchi2_C)+" [NDF=42]";
 	
-	string A_results_string_D = "A="+fake_to_string(A_best_D)+", ["+fake_to_string(A_min_1s_D)+", "+fake_to_string(A_max_1s_D)+"]";
-	string b_results_string_D = "b="+fake_to_string(b_best_D)+", ["+fake_to_string(b_min_1s_D)+", "+fake_to_string(b_max_1s_D)+"]";
+	string A_results_string_D = "A="+fake_to_string(A_best_D);//+", ["+fake_to_string(A_min_1s_D)+", "+fake_to_string(A_max_1s_D)+"]";
+	string b_results_string_D = "b="+fake_to_string(b_best_D);//+", ["+fake_to_string(b_min_1s_D)+", "+fake_to_string(b_max_1s_D)+"]";
 	string chimin_string_D    = "min. chi2="+fake_to_string(minchi2_D)+" [NDF=42]";
 	
 	string N_vals_string      = "pix:  "+fake_to_string(N_b_vals)+" x "+fake_to_string(N_A_vals);
@@ -1482,12 +1713,14 @@ int main(int argc, char *argv[])
 	
 	A_best_line_B -> Draw("same");
 	b_best_line_B -> Draw("same");
-	A_min_line_B -> Draw("same");
-	b_min_line_B -> Draw("same");
-	A_max_line_B -> Draw("same");
-	b_max_line_B -> Draw("same");
+//	A_min_line_B -> Draw("same");
+//	b_min_line_B -> Draw("same");
+//	A_max_line_B -> Draw("same");
+//	b_max_line_B -> Draw("same");
 	c3_B->Modified();
 	gPad->Update();
+	
+	
 	//
 	TCanvas * c3_C = new TCanvas( "c3_C", "c3_C", 100, 0, 900, 700);
 	c3_C->cd();
@@ -1507,10 +1740,10 @@ int main(int argc, char *argv[])
 	
 	A_best_line_C -> Draw("same");
 	b_best_line_C -> Draw("same");
-	A_min_line_C -> Draw("same");
-	b_min_line_C -> Draw("same");
-	A_max_line_C -> Draw("same");
-	b_max_line_C -> Draw("same");
+//	A_min_line_C -> Draw("same");
+//	b_min_line_C -> Draw("same");
+//	A_max_line_C -> Draw("same");
+//	b_max_line_C -> Draw("same");
 	c3_C->Modified();
 	gPad->Update();
 	//
@@ -1532,10 +1765,10 @@ int main(int argc, char *argv[])
 	//
 	A_best_line_D -> Draw("same");
 	b_best_line_D -> Draw("same");
-	A_min_line_D -> Draw("same");
-	b_min_line_D -> Draw("same");
-	A_max_line_D -> Draw("same");
-	b_max_line_D -> Draw("same");
+//	A_min_line_D -> Draw("same");
+//	b_min_line_D -> Draw("same");
+//	A_max_line_D -> Draw("same");
+//	b_max_line_D -> Draw("same");
 	c3_D->Modified();
 	gPad->Update();
 	//
@@ -1544,6 +1777,7 @@ int main(int argc, char *argv[])
 	fitmap_BCD -> Draw("colz");
 //	fitmap_contours_BCD ->Draw("cont3 same");
 	fitmap_contours2_BCD->Draw("cont3 same");
+//	fitmap_contours3_BCD->Draw("cont3 same");
 	
 	datalabel -> DrawText(0.10, 0.908, (A_results_string_BCD).c_str() );
 	datalabel -> DrawText(0.10, 0.928, (b_results_string_BCD).c_str() );
@@ -1554,8 +1788,8 @@ int main(int argc, char *argv[])
 	datalabel_rhs -> DrawText(0.95, 0.908, __SHORT_FORM_OF_FILE__);
 	gPad->Update();
 	
-	A_best_line_BCD -> Draw("same");
-	b_best_line_BCD -> Draw("same");
+	A_best_line_BCD-> Draw("same");
+	b_best_line_BCD-> Draw("same");
 	A_min_line_BCD -> Draw("same");
 	b_min_line_BCD -> Draw("same");
 	A_max_line_BCD -> Draw("same");
@@ -1563,6 +1797,69 @@ int main(int argc, char *argv[])
 	c3_B->Modified();
 	gPad->Update();
 	//
+	
+	
+	fitmap_BCD_v2_r1 -> GetZaxis() -> SetRangeUser(minchi2_BCD-epsilon, minchi2_BCD+5.99+epsilon);
+	fitmap_BCD_v2_r2 -> GetZaxis() -> SetRangeUser(minchi2_BCD-epsilon, minchi2_BCD+5.99+epsilon);
+	fitmap_BCD_v2_r3 -> GetZaxis() -> SetRangeUser(minchi2_BCD-epsilon, minchi2_BCD+5.99+epsilon);
+//	fitmap_BCD_v2_r1 -> SetName(title_2D_BCD.c_str());
+//	fitmap_BCD_v2_r1 -> SetTitle(title_2D_BCD.c_str());
+	
+	TCanvas * fitmapcan_BCD = new TCanvas( "fitmapcan_BCD", "fitmapcan_BCD", 100, 0, 900, 500);
+	fitmapcan_BCD->Divide(3,1);
+	fitmapcan_BCD->cd(1);
+	
+	fitmap_BCD_v2_r1 -> Draw("colz");	
+	fitmap_contours3_BCD_v2_r1 -> Draw("cont3 same");
+	b_min_line_BCD -> Draw("same");
+	A_max_line_BCD -> Draw("same");
+	fitmapcan_BCD->Modified();
+	gPad->Update();
+	
+	fitmapcan_BCD->cd(2);
+	fitmap_BCD_v2_r2 -> Draw("colz");
+	fitmap_contours3_BCD_v2_r2 -> Draw("cont3 same");
+	A_best_line_BCD-> Draw("same");
+	b_best_line_BCD-> Draw("same");
+	fitmapcan_BCD->Modified();
+	gPad->Update();
+	
+	fitmapcan_BCD->cd(3);
+	fitmap_BCD_v2_r3 -> Draw("colz");
+	fitmap_contours3_BCD_v2_r3 -> Draw("cont3 same");
+	A_min_line_BCD -> Draw("same");
+	b_max_line_BCD -> Draw("same");
+	fitmapcan_BCD->Modified();
+	gPad->Update();
+	//
+	
+	TCanvas * minican_r1 = new TCanvas( "minican_r1", "minican_r1", 100, 0, 900, 700);
+	minican_r1->cd();
+	fitmap_BCD_v2_r1           -> Draw("colz");	
+	fitmap_contours3_BCD_v2_r1 -> Draw("cont3 same");
+	b_min_line_BCD -> Draw("same");
+	A_max_line_BCD -> Draw("same");
+	minican_r1->Modified();
+	gPad->Update();
+
+	TCanvas * minican_r2 = new TCanvas( "minican_r2", "minican_r2", 100, 0, 900, 700);
+	minican_r2->cd();
+	fitmap_BCD_v2_r2 -> Draw("colz");
+	fitmap_contours3_BCD_v2_r2 -> Draw("cont3 same");
+	A_best_line_BCD-> Draw("same");
+	b_best_line_BCD-> Draw("same");
+	minican_r2->Modified();
+	gPad->Update();
+
+	TCanvas * minican_r3 = new TCanvas( "minican_r3", "minican_r3", 100, 0, 900, 700);
+	minican_r3->cd();
+	fitmap_BCD_v2_r3 -> Draw("colz");
+	fitmap_contours3_BCD_v2_r3 -> Draw("cont3 same");
+	A_min_line_BCD -> Draw("same");
+	b_max_line_BCD -> Draw("same");
+	minican_r3->Modified();
+	gPad->Update();
+	
 	
 	TH1D * residuhist_B = get_residuals(h_best_B, h_Abeta_data_B, 0, 0);
 	residuhist_B->SetLineColor(sim_color);
@@ -1603,8 +1900,8 @@ int main(int argc, char *argv[])
 //	cout << "y1 = " << the_y1 << ", y2 = " << the_y2 << endl;
 	TLine * residurangeB_line_min = new TLine(E_min,  the_y1, E_min, the_y2);
 	TLine * residurangeB_line_max = new TLine(E_max,  the_y1, E_max, the_y2);
-	residurangeB_line_min->SetLineColor(kGray);
-	residurangeB_line_max->SetLineColor(kGray);
+	residurangeB_line_min->SetLineColor(kGray+2);
+	residurangeB_line_max->SetLineColor(kGray+2);
 	residurangeB_line_min->SetLineStyle(linestyle);
 	residurangeB_line_max->SetLineStyle(linestyle);
 	residurangeB_line_min->Draw("same");
@@ -1620,9 +1917,9 @@ int main(int argc, char *argv[])
 	
 //	h_Abeta_data_B -> Draw("e1 same");
 	gPad->BuildLegend(.34,.80,.98,.92,"");
+	gPad->Update();
 	fitrange_min_line->Draw("same");
 	fitrange_max_line->Draw("same");
-	gPad->Update();
 	//
 	TCanvas * c2_C = new TCanvas( "c2_C", "c2_C", 100, 0, 900, 700);
 	h_Abeta_data_C->GetYaxis()->SetRangeUser(-0.6, -0.45);
@@ -1632,11 +1929,10 @@ int main(int argc, char *argv[])
 	gPad->Update();
 	the_y1 = gPad->GetFrame()->GetY1();
 	the_y2 = gPad->GetFrame()->GetY2();
-//	cout << "y1 = " << the_y1 << ", y2 = " << the_y2 << endl;
 	TLine * residurangeC_line_min = new TLine(E_min,  the_y1, E_min, the_y2);
 	TLine * residurangeC_line_max = new TLine(E_max,  the_y1, E_max, the_y2);
-	residurangeB_line_min->SetLineColor(kGray);
-	residurangeB_line_max->SetLineColor(kGray);
+	residurangeC_line_min->SetLineColor(kGray+2);
+	residurangeC_line_max->SetLineColor(kGray+2);
 	residurangeC_line_min->SetLineStyle(linestyle);
 	residurangeC_line_max->SetLineStyle(linestyle);
 	residurangeC_line_min->Draw("same");
@@ -1652,9 +1948,9 @@ int main(int argc, char *argv[])
 	
 //	h_Abeta_data_C -> Draw("e1 same");
 	gPad->BuildLegend(.34,.80,.98,.92,"");
+	gPad->Update();
 	fitrange_min_line->Draw("same");
 	fitrange_max_line->Draw("same");
-	gPad->Update();
 	//
 	TCanvas * c2_D = new TCanvas( "c2_D", "c2_D", 100, 0, 900, 700);
 	h_Abeta_data_D->GetYaxis()->SetRangeUser(-0.6, -0.45);
@@ -1664,11 +1960,10 @@ int main(int argc, char *argv[])
 	gPad->Update();
 	the_y1 = gPad->GetFrame()->GetY1();
 	the_y2 = gPad->GetFrame()->GetY2();
-//	cout << "y1 = " << the_y1 << ", y2 = " << the_y2 << endl;
 	TLine * residurangeD_line_min = new TLine(E_min,  the_y1, E_min, the_y2);
 	TLine * residurangeD_line_max = new TLine(E_max,  the_y1, E_max, the_y2);
-	residurangeB_line_min->SetLineColor(kGray);
-	residurangeB_line_max->SetLineColor(kGray);
+	residurangeD_line_min->SetLineColor(kGray+2);
+	residurangeD_line_max->SetLineColor(kGray+2);
 	residurangeD_line_min->SetLineStyle(linestyle);
 	residurangeD_line_max->SetLineStyle(linestyle);
 	residurangeD_line_min->Draw("same");
@@ -1683,165 +1978,11 @@ int main(int argc, char *argv[])
 	h_globalbest_D -> SetMarkerColor(h_best_D->GetLineColor());
 	h_globalbest_D -> Draw("E1 same");
 	
-
-//	h_Abeta_data_D -> Draw("e1 same");
 	gPad->BuildLegend(.34,.80,.98,.92,"");
+	gPad->Update();
 	fitrange_min_line->Draw("same");
 	fitrange_max_line->Draw("same");
-	gPad->Update();
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
-	
-	string fitresults_string = "([Abest]+[Amin]+[Amax]) + ([bbest]+[bmin]+[bmax])*x +([dA]+[db])*x^2 +([chimin]+[ndf])*x^3";
-	//
-	/*
-	TF1* frf_1s_B = new TF1("frf_1s_B", fitresults_string.c_str(),  0, 6000.0);
-	frf_1s_B->SetParameter("Abest", A_best_B);
-	frf_1s_B->SetParameter("Amin",  A_min_1s_B);
-	frf_1s_B->SetParameter("Amax",  A_max_1s_B);
-	frf_1s_B->SetParameter("bbest", b_best_B);
-	frf_1s_B->SetParameter("bmin",  b_min_1s_B);
-	frf_1s_B->SetParameter("bmax",  b_max_1s_B);
-	frf_1s_B->SetParameter("dA",    dA);
-	frf_1s_B->SetParameter("db",    db);
-	frf_1s_B->SetParameter("chimin",minchi2_B);
-	frf_1s_B->SetParameter("ndf",   42);
-	
-	TF1* frf_90_B = new TF1("frf_90_B", fitresults_string.c_str(),  0, 6000.0);
-	frf_90_B->SetParameter("Abest", A_best_B);
-	frf_90_B->SetParameter("Amin",  A_min_90_B);
-	frf_90_B->SetParameter("Amax",  A_max_90_B);
-	frf_90_B->SetParameter("bbest", b_best_B);
-	frf_90_B->SetParameter("bmin",  b_min_90_B);
-	frf_90_B->SetParameter("bmax",  b_max_90_B);
-	frf_90_B->SetParameter("dA",    dA);
-	frf_90_B->SetParameter("db",    db);
-	frf_90_B->SetParameter("chimin",minchi2_B);
-	frf_90_B->SetParameter("ndf",   42);
-
-	TF1* frf_95_B = new TF1("frf_95_B", fitresults_string.c_str(),  0, 6000.0);
-	frf_95_B->SetParameter("Abest", A_best_B);
-	frf_95_B->SetParameter("Amin",  A_min_95_B);
-	frf_95_B->SetParameter("Amax",  A_max_95_B);
-	frf_95_B->SetParameter("bbest", b_best_B);
-	frf_95_B->SetParameter("bmin",  b_min_95_B);
-	frf_95_B->SetParameter("bmax",  b_max_95_B);
-	frf_95_B->SetParameter("dA",    dA);
-	frf_95_B->SetParameter("db",    db);
-	frf_95_B->SetParameter("chimin",minchi2_B);
-	frf_95_B->SetParameter("ndf",   42);
-	
-	//
-	TF1* frf_1s_C = new TF1("frf_1s_C", fitresults_string.c_str(),  0, 6000.0);
-	frf_1s_C->SetParameter("Abest", A_best_C);
-	frf_1s_C->SetParameter("Amin",  A_min_1s_C);
-	frf_1s_C->SetParameter("Amax",  A_max_1s_C);
-	frf_1s_C->SetParameter("bbest", b_best_C);
-	frf_1s_C->SetParameter("bmin",  b_min_1s_C);
-	frf_1s_C->SetParameter("bmax",  b_max_1s_C);
-	frf_1s_C->SetParameter("dA",    dA);
-	frf_1s_C->SetParameter("db",    db);
-	frf_1s_C->SetParameter("chimin",minchi2_C);
-	frf_1s_C->SetParameter("ndf",   42);
-	
-	TF1* frf_90_C = new TF1("frf_90_C", fitresults_string.c_str(),  0, 6000.0);
-	frf_90_C->SetParameter("Abest", A_best_C);
-	frf_90_C->SetParameter("Amin",  A_min_90_C);
-	frf_90_C->SetParameter("Amax",  A_max_90_C);
-	frf_90_C->SetParameter("bbest", b_best_C);
-	frf_90_C->SetParameter("bmin",  b_min_90_C);
-	frf_90_C->SetParameter("bmax",  b_max_90_C);
-	frf_90_C->SetParameter("dA",    dA);
-	frf_90_C->SetParameter("db",    db);
-	frf_90_C->SetParameter("chimin",minchi2_C);
-	frf_90_C->SetParameter("ndf",   42);
-
-	TF1* frf_95_C = new TF1("frf_95_C", fitresults_string.c_str(),  0, 6000.0);
-	frf_95_C->SetParameter("Abest", A_best_C);
-	frf_95_C->SetParameter("Amin",  A_min_95_C);
-	frf_95_C->SetParameter("Amax",  A_max_95_C);
-	frf_95_C->SetParameter("bbest", b_best_C);
-	frf_95_C->SetParameter("bmin",  b_min_95_C);
-	frf_95_C->SetParameter("bmax",  b_min_95_C);
-	frf_95_C->SetParameter("dA",    dA);
-	frf_95_C->SetParameter("db",    db);
-	frf_95_C->SetParameter("chimin",minchi2_C);
-	frf_95_C->SetParameter("ndf",   42);
-	//
-	TF1* frf_1s_D = new TF1("frf_1s_D", fitresults_string.c_str(),  0, 6000.0);
-	frf_1s_D->SetParameter("Abest", A_best_D);
-	frf_1s_D->SetParameter("Amin",  A_min_1s_D);
-	frf_1s_D->SetParameter("Amax",  A_max_1s_D);
-	frf_1s_D->SetParameter("bbest", b_best_D);
-	frf_1s_D->SetParameter("bmin",  b_min_1s_D);
-	frf_1s_D->SetParameter("bmax",  b_max_1s_D);
-	frf_1s_D->SetParameter("dA",    dA);
-	frf_1s_D->SetParameter("db",    db);
-	frf_1s_D->SetParameter("chimin",minchi2_D);
-	frf_1s_D->SetParameter("ndf",   42);
-	
-	TF1* frf_90_D = new TF1("frf_90_D", fitresults_string.c_str(),  0, 6000.0);
-	frf_90_D->SetParameter("Abest", A_best_D);
-	frf_90_D->SetParameter("Amin",  A_min_90_D);
-	frf_90_D->SetParameter("Amax",  A_max_90_D);
-	frf_90_D->SetParameter("bbest", b_best_D);
-	frf_90_D->SetParameter("bmin",  b_min_90_D);
-	frf_90_D->SetParameter("bmax",  b_max_90_D);
-	frf_90_D->SetParameter("dA",    dA);
-	frf_90_D->SetParameter("db",    db);
-	frf_90_D->SetParameter("chimin",minchi2_D);
-	frf_90_D->SetParameter("ndf",   42);
-
-	TF1* frf_95_D = new TF1("frf_95_D", fitresults_string.c_str(),  0, 6000.0);
-	frf_95_D->SetParameter("Abest", A_best_D);
-	frf_95_D->SetParameter("Amin",  A_min_95_D);
-	frf_95_D->SetParameter("Amax",  A_max_95_D);
-	frf_95_D->SetParameter("bbest", b_best_D);
-	frf_95_D->SetParameter("bmin",  b_min_95_D);
-	frf_95_D->SetParameter("bmax",  b_max_95_D);
-	frf_95_D->SetParameter("dA",    dA);
-	frf_95_D->SetParameter("db",    db);
-	frf_95_D->SetParameter("chimin",minchi2_D);
-	frf_95_D->SetParameter("ndf",   42);
-	*/
-	//
-	TF1* frf_1s_BCD = new TF1("frf_1s_BCD", fitresults_string.c_str(),  0, 6000.0);
-	frf_1s_BCD->SetParameter("Abest", A_best_BCD);
-	frf_1s_BCD->SetParameter("Amin",  A_min_1s_BCD);
-	frf_1s_BCD->SetParameter("Amax",  A_max_1s_BCD);
-	frf_1s_BCD->SetParameter("bbest", b_best_BCD);
-	frf_1s_BCD->SetParameter("bmin",  b_min_1s_BCD);
-	frf_1s_BCD->SetParameter("bmax",  b_max_1s_BCD);
-	frf_1s_BCD->SetParameter("dA",    dA);
-	frf_1s_BCD->SetParameter("db",    db);
-	frf_1s_BCD->SetParameter("chimin",minchi2_BCD);
-	frf_1s_BCD->SetParameter("ndf",   42);
-	
-	TF1* frf_90_BCD = new TF1("frf_90_BCD", fitresults_string.c_str(),  0, 6000.0);
-	frf_90_BCD->SetParameter("Abest", A_best_BCD);
-	frf_90_BCD->SetParameter("Amin",  A_min_90_BCD);
-	frf_90_BCD->SetParameter("Amax",  A_max_90_BCD);
-	frf_90_BCD->SetParameter("bbest", b_best_BCD);
-	frf_90_BCD->SetParameter("bmin",  b_min_90_BCD);
-	frf_90_BCD->SetParameter("bmax",  b_max_90_BCD);
-	frf_90_BCD->SetParameter("dA",    dA);
-	frf_90_BCD->SetParameter("db",    db);
-	frf_90_BCD->SetParameter("chimin",minchi2_BCD);
-	frf_90_BCD->SetParameter("ndf",   42);
-
-	TF1* frf_95_BCD = new TF1("frf_95_BCD", fitresults_string.c_str(),  0, 6000.0);
-	frf_95_BCD->SetParameter("Abest", A_best_BCD);
-	frf_95_BCD->SetParameter("Amin",  A_min_90_BCD);
-	frf_95_BCD->SetParameter("Amax",  A_max_90_BCD);
-	frf_95_BCD->SetParameter("bbest", b_best_BCD);
-	frf_95_BCD->SetParameter("bmin",  b_min_90_BCD);
-	frf_95_BCD->SetParameter("bmax",  b_max_90_BCD);
-	frf_95_BCD->SetParameter("dA",    dA);
-	frf_95_BCD->SetParameter("db",    db);
-	frf_95_BCD->SetParameter("chimin",minchi2_BCD);
-	frf_95_BCD->SetParameter("ndf",   42);
-	//
-	
-	
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 	fitresults these_results = fitresults();
 	these_results.resultsfile       = outfnamestub+".root";
@@ -1857,12 +1998,17 @@ int main(int argc, char *argv[])
 	these_results.bmin = the_bmin;
 	these_results.bmax = the_bmax;
 	
-	these_results.dA = dA;
-	these_results.db = db;
-	these_results.Nvals_A = N_A_vals;
-	these_results.Nvals_b = N_b_vals;
+//	these_results.dA = dA;
+//	these_results.db = db;
+//	these_results.Nvals_A = N_A_vals;
+//	these_results.Nvals_b = N_b_vals;
+	// use the smaller step size, and the larger number of values..
+	these_results.dA = dA_v2;
+	these_results.db = db_v2;
+	these_results.Nvals_A = N_A_vals_v2;
+	these_results.Nvals_b = N_b_vals_v2;
+
 	these_results.zoomlevel = zoomlevel;
-	
 	//
 	these_results.BS_scale = the_toppings.BS_scale;
 	these_results.SS_scale = the_toppings.SS_scale;
@@ -1872,26 +2018,27 @@ int main(int argc, char *argv[])
 	these_results.bb1_maxr       = bb1_maxr;
 	these_results.bb1_Ethresh    = bb1_threshold;
 	//
-	double min_chi2, min_chi2_B, min_chi2_C, min_chi2_D;
+//	double min_chi2, min_chi2_B, min_chi2_C, min_chi2_D;
 	these_results.min_chi2   = minchi2_BCD;
-	these_results.min_chi2_B = minchi2_B;
-	these_results.min_chi2_C = minchi2_C;
-	these_results.min_chi2_D = minchi2_D;
+//	these_results.min_chi2_B = minchi2_B;
+//	these_results.min_chi2_C = minchi2_C;
+//	these_results.min_chi2_D = minchi2_D;
 	//
 	these_results.Abest_BCD = A_best_BCD;
 	these_results.bbest_BCD = b_best_BCD;
+	//
+	these_results.Amin1s_BCD = A_min_1s_BCD;
+	these_results.Amax1s_BCD = A_max_1s_BCD;
+	these_results.bmin1s_BCD = b_min_1s_BCD;
+	these_results.bmax1s_BCD = b_max_1s_BCD;
+	//
 	these_results.Abest_B = A_best_B;
 	these_results.bbest_B = b_best_B;
 	these_results.Abest_C = A_best_C;
 	these_results.bbest_C = b_best_C;
 	these_results.Abest_D = A_best_D;
 	these_results.bbest_D = b_best_D;
-	//
-	these_results.Amin1s_BCD = A_min_1s_BCD;
-	these_results.Amax1s_BCD = A_max_1s_BCD;
-	these_results.bmin1s_BCD = b_min_1s_BCD;
-	these_results.bmax1s_BCD = b_max_1s_BCD;
-	
+	/*
 	these_results.Amin1s_B = A_min_1s_B;
 	these_results.Amax1s_B = A_max_1s_B;
 	these_results.bmin1s_B = b_min_1s_B;
@@ -1906,6 +2053,7 @@ int main(int argc, char *argv[])
 	these_results.Amax1s_D = A_max_1s_D;
 	these_results.bmin1s_D = b_min_1s_D;
 	these_results.bmax1s_D = b_max_1s_D;
+	*/
 	//
 	these_results.Amin90_BCD = A_min_90_BCD;
 	these_results.Amax90_BCD = A_max_90_BCD;
@@ -1917,6 +2065,19 @@ int main(int argc, char *argv[])
 	these_results.bmin95_BCD = b_min_95_BCD;
 	these_results.bmax95_BCD = b_max_95_BCD;
 	
+	//
+//	these_results.bbest_BCD_v2  = b_best_BCD_v2;
+//	these_results.bmin1s_BCD_v2 = b_min_1s_BCD_v2;
+//	these_results.bmax1s_BCD_v2 = b_max_1s_BCD_v2;
+//	
+//	these_results.Abest_BCD_v2  = A_best_BCD_v2;
+//	these_results.Amin1s_BCD_v2 = A_min_1s_BCD_v2;
+//	these_results.Amax1s_BCD_v2 = A_max_1s_BCD_v2;
+//	
+//	these_results.min_chi2_v2   = minchi2_BCD_v2;
+	
+	these_results.Emin = E_min;
+	these_results.Emax = E_max;
 	
 	//
 	string results_filename = fitresults_path+results_file_namestub;
@@ -1933,6 +2094,10 @@ int main(int argc, char *argv[])
 	c3_C  ->Print( (fitresults_path+outfnamestub+".pdf").c_str(), "pdf");
 	c3_D  ->Print( (fitresults_path+outfnamestub+".pdf").c_str(), "pdf");
 	c3_BCD->Print( (fitresults_path+outfnamestub+".pdf").c_str(), "pdf");
+	fitmapcan_BCD->Print( (fitresults_path+outfnamestub+".pdf").c_str(), "pdf");
+	minican_r1->Print( (fitresults_path+outfnamestub+".pdf").c_str(), "pdf");
+	minican_r2->Print( (fitresults_path+outfnamestub+".pdf").c_str(), "pdf");
+	minican_r3->Print( (fitresults_path+outfnamestub+".pdf").c_str(), "pdf");
 	c2_B->Print( (fitresults_path+outfnamestub+".pdf").c_str(), "pdf");
 	c2_C->Print( (fitresults_path+outfnamestub+".pdf").c_str(), "pdf");
 	c2_D->Print( (fitresults_path+outfnamestub+".pdf").c_str(), "pdf");
@@ -1948,37 +2113,15 @@ int main(int argc, char *argv[])
 	TFile * f = new TFile( (fitresults_path+outfnamestub+".root").c_str(), "RECREATE");
 	c3_B  -> Write("",TObject::kOverwrite);
 	fitmap_B -> Write("",TObject::kOverwrite);
-	fitmap_contours_B ->Write("",TObject::kOverwrite);
-	fitmap_contours2_B->Write("",TObject::kOverwrite);
 	c3_C  -> Write("",TObject::kOverwrite);
 	fitmap_C -> Write("",TObject::kOverwrite);
-	fitmap_contours_C ->Write("",TObject::kOverwrite);
-	fitmap_contours2_C->Write("",TObject::kOverwrite);
 	c3_D  -> Write("",TObject::kOverwrite);
 	fitmap_D -> Write("",TObject::kOverwrite);
-	fitmap_contours_D ->Write("",TObject::kOverwrite);
-	fitmap_contours2_D->Write("",TObject::kOverwrite);
+	
 	c3_BCD-> Write("",TObject::kOverwrite);
 	fitmap_BCD -> Write("",TObject::kOverwrite);
-	fitmap_contours_BCD ->Write("",TObject::kOverwrite);
-	fitmap_contours2_BCD->Write("",TObject::kOverwrite);
+	fitmapcan_BCD->Write("",TObject::kOverwrite);
 	//
-	/*
-	frf_1s_B -> Write("",TObject::kOverwrite);
-	frf_90_B -> Write("",TObject::kOverwrite);
-	frf_95_B -> Write("",TObject::kOverwrite);
-	
-	frf_1s_C -> Write("",TObject::kOverwrite);
-	frf_90_C -> Write("",TObject::kOverwrite);
-	frf_95_C -> Write("",TObject::kOverwrite);
-	
-	frf_1s_D -> Write("",TObject::kOverwrite);
-	frf_90_D -> Write("",TObject::kOverwrite);
-	frf_95_D -> Write("",TObject::kOverwrite);
-	*/
-	frf_1s_BCD -> Write("",TObject::kOverwrite);
-	frf_90_BCD -> Write("",TObject::kOverwrite);
-	frf_95_BCD -> Write("",TObject::kOverwrite);
 	//
 	c2_B -> Write("",TObject::kOverwrite);
 	c2_C -> Write("",TObject::kOverwrite);
@@ -1990,12 +2133,31 @@ int main(int argc, char *argv[])
 	h_globalbest_B -> Write("",TObject::kOverwrite);
 	h_globalbest_C -> Write("",TObject::kOverwrite);
 	h_globalbest_D -> Write("",TObject::kOverwrite);
+	//
+	minican_r1 -> Write("",TObject::kOverwrite);
+	fitmap_BCD_v2_r1 -> Write("",TObject::kOverwrite);
+	fitmap_contours3_BCD_v2_r1 -> Write("",TObject::kOverwrite);
+//	fitmap_B_v2_r1 -> Write("",TObject::kOverwrite);
+//	fitmap_C_v2_r1 -> Write("",TObject::kOverwrite);
+//	fitmap_D_v2_r1 -> Write("",TObject::kOverwrite);
+	minican_r2 -> Write("",TObject::kOverwrite);
+	fitmap_BCD_v2_r2 -> Write("",TObject::kOverwrite);
+	fitmap_contours3_BCD_v2_r2 -> Write("",TObject::kOverwrite);
+//	fitmap_B_v2_r2 -> Write("",TObject::kOverwrite);
+//	fitmap_C_v2_r2 -> Write("",TObject::kOverwrite);
+//	fitmap_D_v2_r2 -> Write("",TObject::kOverwrite);
+	minican_r3 -> Write("",TObject::kOverwrite);
+	fitmap_BCD_v2_r3 -> Write("",TObject::kOverwrite);
+	fitmap_contours3_BCD_v2_r3 -> Write("",TObject::kOverwrite);
+//	fitmap_B_v2_r3 -> Write("",TObject::kOverwrite);
+//	fitmap_C_v2_r3 -> Write("",TObject::kOverwrite);
+//	fitmap_D_v2_r3 -> Write("",TObject::kOverwrite);
 	
 	f->Close();
 	
 	
-	// export it as an ascii file:
-	AsciiExport(fitresults_path+outfnamestub);
+//	// export it as an ascii file:
+//	AsciiExport(fitresults_path+outfnamestub);
 	
 	
 //	cout << "Running the rootapp." << endl;
