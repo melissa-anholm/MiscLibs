@@ -25,3 +25,5 @@ FitMap_for_trinat01/Fitter/*.a
 FitMap_for_trinat01/Fitter/Makefile
 FitMap_for_trinat01/Fitter/doasym
 FitMap_for_trinat01/Fitter/cmake_install.cmake
+FitMap_for_trinat01/Data_Asyms/*.root
+FitMap_for_trinat01/Pizzas/*.root
