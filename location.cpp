@@ -68,6 +68,8 @@ string hexpath_wisely = "/Users/anholm/Packages/MiscLibs/ReTuple/HexCal";  // He
 string fitresults_path_wisely = "/Users/anholm/Packages/MiscLibs/FitMap_for_trinat01/Results/";
 string pizza_path_wisely      = "/Users/anholm/Packages/MiscLibs/FitMap_for_trinat01/Pizzas/";
 string JustPlotA_path_wisely  = "/Users/anholm/Packages/MiscLibs/FitMap_for_trinat01/Data_Asyms/";
+string SimpleMC_path_wisely   = "/Users/anholm/Desktop/Anal-Ysis/Holstein/build/Output/";
+
 //
 string br_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Recoils_2014/";
 string be_path_fifteen = "/Users/spiffyzha/Desktop/Anal-Ysis/Blinded_Electrons_2014/";
@@ -156,6 +158,7 @@ string fitresults_path;
 string pizza_path;
 string JustPlotA_path;
 
+string SimpleMC_path;
 //
 
 // A horrible kludge!
@@ -224,6 +227,8 @@ bool setup_location()
 		fitresults_path = fitresults_path_wisely;
 		pizza_path      = pizza_path_wisely;
 		JustPlotA_path  = JustPlotA_path_wisely;
+		SimpleMC_path   = SimpleMC_path_wisely;
+		
 		
 		return true;
 	}

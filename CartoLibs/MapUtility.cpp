@@ -1347,7 +1347,7 @@ void MapSetup::LoadSimpleFromTree(TChain * the_tree, int N_rebin_hists)
 	return;
 } // LoadSimpleFromTree
 
-void MapSetup::LoadFromTree(TChain * the_tree, int N_rebin_hists)  // default N_rebin_hists=1 if called with no argument.
+void MapSetup::LoadFromTree(TChain * the_tree, int N_rebin_hists, bool use_multi, bool use_B)  // default N_rebin_hists=1, use_multi=false, and use_B=true if called without arguments. 
 {
 	cout << "Called MapSetup::LoadFromTree(...) with N_rebin_hists=" << N_rebin_hists << endl;
 	
@@ -1562,8 +1562,24 @@ void MapSetup::LoadFromTree(TChain * the_tree, int N_rebin_hists)  // default N_
 	
 	Double_t ScintT;
 	Double_t ScintB;
-	the_tree -> SetBranchAddress("upper_scint_E", &ScintT);
-	the_tree -> SetBranchAddress("lower_scint_E", &ScintB);
+	if(!use_multi)
+	{
+		the_tree -> SetBranchAddress("upper_scint_E", &ScintT);
+		the_tree -> SetBranchAddress("lower_scint_E", &ScintB);
+	}
+	else
+	{
+		if(use_B)
+		{
+			the_tree -> SetBranchAddress("upper_scint_E_B", &ScintT);
+			the_tree -> SetBranchAddress("lower_scint_E_B", &ScintB);
+		}
+		else
+		{
+			the_tree -> SetBranchAddress("upper_scint_E_CD", &ScintT);
+			the_tree -> SetBranchAddress("lower_scint_E_CD", &ScintB);
+		}
+	}
 	
 	// BB1s:  
 	vector<double> * bb1_t_x = 0;
@@ -1596,6 +1612,11 @@ void MapSetup::LoadFromTree(TChain * the_tree, int N_rebin_hists)  // default N_
 	
 	int n_hits_t = 0;
 	int n_hits_b = 0;
+	if(use_multi)
+	{
+		the_tree -> SetBranchAddress("N_hits_bb1_t_50", &n_hits_t);
+		the_tree -> SetBranchAddress("N_hits_bb1_b_50", &n_hits_b);
+	}
 	
 	int nentries = the_tree->GetEntries();
 	cout << "nentries = " << nentries << endl;
@@ -1605,8 +1626,11 @@ void MapSetup::LoadFromTree(TChain * the_tree, int N_rebin_hists)  // default N_
 		the_tree -> GetEntry(i);
 		if( (i % 100000) == 0) { cout << "Reached entry "<< i << endl; }
 		
-		n_hits_t = bb1_t_r->size();
-		n_hits_b = bb1_b_r->size();
+		if(!use_multi)
+		{
+			n_hits_t = bb1_t_r->size();
+			n_hits_b = bb1_b_r->size();
+		}
 		
 		// * // // // * // // // * // // // * // 
 	//	th2_num_Eout_v_Ein_tp = (TH2D*)f->Get("Numerical E_measured vs E_generated, Top(+)");
@@ -2172,6 +2196,11 @@ void MapSetup::LoadFromTree(TChain * the_tree, int N_rebin_hists)  // default N_
 	}
 	//
 	return;
+}
+
+void MapSetup::LoadFromMultiTree(TChain * the_tree, int N_rebin_hists, bool use_B)  // default N_rebin_hists=1 and use_B=true if called with no argument.
+{
+	LoadFromTree(the_tree, N_rebin_hists, true, use_B);
 }
 
 void MapSetup::CloneToFile(TFile * f, int verbose, bool leaveopen)

@@ -1306,7 +1306,7 @@ int main(int argc, char *argv[])
 	
 	// Set BCD, r1:
 	cout << "Set BCD, r1:  " << endl;
-	double chi2_for_blim = 5000;
+//	double chi2_for_blim = 5000;
 	for(int j=0; j<=N_A_vals_v2; j++)
 	{
 		this_A = the_Amin_v2_r1 -0.5*dA_v2 + double(j)*dA_v2;
@@ -1347,22 +1347,22 @@ int main(int argc, char *argv[])
 			//		A_min_1s_BCD   = this_A; 
 			//		b_for_Amin_BCD = this_b;
 			//	}
-				if(this_A >= A_max_1s_BCD) 
+				if(this_A > A_max_1s_BCD) 
 				{
 					A_max_1s_BCD    = this_A;
 			//		b_for_Amax_BCD  = this_b;
 				}
-				if(this_b <= b_min_1s_BCD) 
+				if(this_b < b_min_1s_BCD) 
 				{
 					b_min_1s_BCD   = this_b;
 					A_for_bmin_BCD = this_A;
 					
-					if(this_chi2_BCD <= chi2_for_blim)
-					{
-						chi2_for_blim   = this_chi2_BCD;
-						b_min_1s_BCD    = this_b;
-						A_for_bmin_BCD  = this_A;
-					}
+				//	if(this_chi2_BCD <= chi2_for_blim)
+				//	{
+				//		chi2_for_blim   = this_chi2_BCD;
+				//		b_min_1s_BCD    = this_b;
+				//		A_for_bmin_BCD  = this_A;
+				//	}
 				}
 			//	if(this_b >= b_max_1s_BCD) 
 			//	{
@@ -1375,7 +1375,7 @@ int main(int argc, char *argv[])
 	
 	// Set BCD, r3:
 	cout << "Set BCD, r3:  " << endl;
-	chi2_for_blim = 5000;
+//	chi2_for_blim = 5000;
 	for(int j=0; j<=N_A_vals_v2; j++)
 	{
 		this_A = the_Amin_v2_r3 -0.5*dA_v2 + double(j)*dA_v2;
@@ -1411,7 +1411,7 @@ int main(int argc, char *argv[])
 			
 			if(this_chi2_BCD <= minchi2_BCD+2.3 )  // 1 sigma
 			{
-				if(this_A <= A_min_1s_BCD) 
+				if(this_A < A_min_1s_BCD) 
 				{
 					A_min_1s_BCD = this_A; 
 			//		b_for_Amin_BCD  = this_b;
@@ -1426,15 +1426,15 @@ int main(int argc, char *argv[])
 			//		b_min_1s_BCD   = this_b;
 			//		A_for_bmin_BCD = this_A;
 			//	}
-				if(this_b >= b_max_1s_BCD) 
+				if(this_b > b_max_1s_BCD) 
 				{
 				//	cout << "b_max_1s_BCD = " << b_max_1s_BCD << ", this_chi2_BCD=" << this_chi2_BCD << endl;
-					if(this_chi2_BCD <= chi2_for_blim)
-					{
-						chi2_for_blim   = this_chi2_BCD;
+				//	if(this_chi2_BCD <= chi2_for_blim)
+				//	{
+				//		chi2_for_blim   = this_chi2_BCD;
 						b_max_1s_BCD    = this_b;
 						A_for_bmax_BCD  = this_A;
-					}
+				//	}
 				}
 			}
 			

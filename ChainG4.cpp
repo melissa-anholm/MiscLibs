@@ -428,7 +428,7 @@ TChain * get_chain_from_runlist(int argc, char* argv[], TTree * MetaTree) // thi
 
 
 string get_g4_multifriend_name(int runno, int threshold_index, double sigma_cut)
-{	
+{
 	string fname;
 	std::stringstream ss;
 	ss.str( std::string() );
@@ -681,6 +681,15 @@ TChain * get_chain_from_monoenergy(double the_energy, bool verbose=true) // requ
 	TChain * the_chain = get_chain_from_runlist(the_runset);
 	return the_chain;
 }
+TChain * get_mulitchain_from_monoenergy(double the_energy, bool verbose=true) // requires:  summed runs.  energy in MeV.
+{
+	if(verbose) { cout << "Fetching the monoenergetic chain:  " << the_energy << " MeV" << endl; }
+	//
+	vector<int> the_runset = get_summed_monoenergetic_runlist(the_energy, false);  // not *that* verbose!
+	TChain * the_chain = get_multichain_from_runlist(the_runset, 0, 3.0);  // threshold_index=0, sigma_cut=3.0.
+	return the_chain;
+}
+
 
 TChain * get_chain_from_gS(double g_S) // requires:  summed runs.  energy in MeV.  only full spectrum.  all polarizations.
 {

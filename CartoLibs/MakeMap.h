@@ -120,11 +120,25 @@ void makesave_maphist(string namestub, double the_monoenergy)
 	delete my_new_map;
 }
 
+void makesave_multi_maphist(string namestub, double the_monoenergy)
+{
+	MapSetup * my_new_map = new MapSetup();
+	TChain * TreeChain = get_mulitchain_from_monoenergy(the_monoenergy, true);
+//	my_new_map -> LoadFromTree(TreeChain);
+	bool use_B=true;
+	my_new_map -> LoadFromMultiTree(TreeChain, 1, use_B);
+	my_new_map -> AdjustTheColors();
+	//
+	my_new_map -> save_to_file( make_mapname_from_monoenergy(namestub, the_monoenergy) );
+	delete my_new_map;
+}
+
 void makesave_allthemaphists(string namestub, bool skipsome)
 {
 	for(int i=0; i<the_energyset.size(); i++)
 	{
 		int energy = the_energyset.at(i).the_int;
+		cout << "Considering E=" << energy << endl;
 		if(skipsome)  // these are the ones we'll skip:
 		{
 			if( energy==5000 ) { continue; }  // skip this energy
@@ -147,7 +161,8 @@ void makesave_allthemaphists(string namestub, bool skipsome)
 			if( energy== 250 ) { continue; }  // skip this energy 
 			if( energy== -10 ) { continue; }  // skip this energy  
 		}
-		makesave_maphist(namestub, the_energyset.at(i).the_double);
+	//	makesave_maphist(namestub, the_energyset.at(i).the_double);
+		makesave_multi_maphist(namestub, the_energyset.at(i).the_double);
 	}
 //	makesave_fullspectrum_maphist("map_out_full");
 }
@@ -1016,18 +1031,6 @@ void makesave_normfuncs(TFile * f)
 //	cout << "Finished makesave_normfuncs(...)" << endl;
 	return;
 }
-/*
-void makesave_normfuncs_to_mapout_files()
-{
-	TFile * f;
-	for(int i=the_energyset.size()-1; i>=1; i--)  // count down instead.  but skip full spectrum.
-	{
-		f = new TFile( make_mapname_from_monoenergy(the_energyset.at(i).the_double).c_str() ); 
-		makesave_normfuncs(f);
-	}
-	cout << "makesave_normfuncs_to_mapout_files()" << endl;
-}
-*/
 
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 // Look through a file and save all canvases into a PDF format.

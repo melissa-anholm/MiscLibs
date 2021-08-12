@@ -50,7 +50,8 @@ public:
 		{ map_filename = string("map_out.root"); };
 	~MapSetup();
 	
-	void LoadFromTree(TChain * the_tree, int N_rebin_hists=1);
+	void LoadFromTree(TChain * the_tree, int N_rebin_hists=1, bool use_multi=false, bool use_B=true);
+	void LoadFromMultiTree(TChain * the_tree, int N_rebin_hists=1, bool use_B=true);
 	void LoadSimpleFromTree(TChain * the_tree, int N_rebin_hists=1);
 	
 	void LoadFromFile(string filename_);

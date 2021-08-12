@@ -5,6 +5,7 @@
 
 #include "ChainData.cpp"
 #include "ChainG4.cpp"
+#include "ChainSimple.cpp"
 
 
 extern string int_to_string(int thisint);

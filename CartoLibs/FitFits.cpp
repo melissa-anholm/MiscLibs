@@ -72,6 +72,8 @@ public:
 	};
 	void initialize(int N)
 	{
+		cout << "Called set_of_fitfits::initialize(" << N << ")." << endl;
+		//
 		integration_min = 200.0;
 		integration_max = 6000.0;
 		
@@ -826,6 +828,7 @@ public:
 	};
 	void do_reconstructions_tp(TH1D * h_naive)
 	{
+		cout << "h_naive->GetNbinsX() = " << h_naive->GetNbinsX() << endl;
 		h_reconstructed_pdf_tp    = reconstruct_tp_from_pdf(h_naive);
 		reconstruct_tp_from_cdf(h_naive);
 	//	cout << "adding back TP energy:" << endl;
@@ -974,10 +977,12 @@ public:
 	};
 	
 	//  -- * --  //
-	TH1D * reconstruct_tp_from_pdf(TH1D * h_naive)  // put in the histogram un-rebinned !
+	TH1D * reconstruct_tp_from_pdf(TH1D * h_naive)  // put in the histogram un-rebinned !  ... or not.
 	{
 		TH1D * h_in = (TH1D*)h_naive->Clone();
-		h_in->Rebin(N_rebin);
+	//	h_in->Rebin(N_rebin);
+	//	cout << "h_in->GetNbinsX() = " << h_in->GetNbinsX() << endl;
+		
 		TH1D* h_reconstructed = CreateHist( string("PDF Reconstructed Upper Energy(+)"), string("Mapping_Ebeta"), int(h_pdf_out_color), N_rebin);
 		
 		double E_in_keV, other_E;
@@ -996,10 +1001,10 @@ public:
 		}
 		return h_reconstructed;  // tp
 	};
-	TH1D * reconstruct_bp_from_pdf(TH1D * h_naive)  // put in the histogram un-rebinned !
+	TH1D * reconstruct_bp_from_pdf(TH1D * h_naive)  // put in the histogram un-rebinned !  ... or not.
 	{
 		TH1D * h_in = (TH1D*)h_naive->Clone();
-		h_in->Rebin(N_rebin);
+	//	h_in->Rebin(N_rebin);
 		TH1D* h_reconstructed = CreateHist( string("PDF Reconstructed Lower Energy(+)"), string("Mapping_Ebeta"), int(h_pdf_out_color), N_rebin);
 		
 		double E_in_keV, other_E;
@@ -1018,10 +1023,10 @@ public:
 		}
 		return h_reconstructed;  // bp
 	};
-	TH1D * reconstruct_tm_from_pdf(TH1D * h_naive)  // put in the histogram un-rebinned !
+	TH1D * reconstruct_tm_from_pdf(TH1D * h_naive)  // put in the histogram un-rebinned !  ... or not.
 	{
 		TH1D * h_in = (TH1D*)h_naive->Clone();
-		h_in->Rebin(N_rebin);
+	//	h_in->Rebin(N_rebin);
 		TH1D* h_reconstructed = CreateHist( string("PDF Reconstructed Upper Energy(-)"), string("Mapping_Ebeta"), int(h_pdf_out_color), N_rebin);
 		
 		double E_in_keV, other_E;
@@ -1040,10 +1045,10 @@ public:
 		}
 		return h_reconstructed;  // tm
 	};
-	TH1D * reconstruct_bm_from_pdf(TH1D * h_naive)  // put in the histogram un-rebinned !
+	TH1D * reconstruct_bm_from_pdf(TH1D * h_naive)  // put in the histogram un-rebinned !  ... or not.
 	{
 		TH1D * h_in = (TH1D*)h_naive->Clone();
-		h_in->Rebin(N_rebin);
+	//	h_in->Rebin(N_rebin);
 		TH1D* h_reconstructed = CreateHist( string("PDF Reconstructed Lower Energy(-)"), string("Mapping_Ebeta"), int(h_pdf_out_color), N_rebin);
 		
 		double E_in_keV, other_E;
@@ -1063,10 +1068,11 @@ public:
 		return h_reconstructed;  // bm
 	};
 	
-	void reconstruct_tp_from_cdf(TH1D * h_naive, int use_seed=0)  // put in the histogram un-rebinned !
+	void reconstruct_tp_from_cdf(TH1D * h_naive, int use_seed=0)  // put in the histogram un-rebinned !  ... or not.
 	{
 		TH1D * h_in = (TH1D*)h_naive->Clone();
-		h_in->Rebin(N_rebin);
+	//	cout << "h_in->GetNbinsX() = " << h_in->GetNbinsX() << endl;
+	//	h_in->Rebin(N_rebin);
 		TH1D* h_reconstructed_h = CreateHist( string("CDF Reconstructed Upper Energy(+)"), string("Mapping_Ebeta"), int(h_cdf_out_color), N_rebin);
 		TH1D* h_reconstructed_ih = CreateHist( string("DirectIntegrated CDF Reconstructed Upper Energy(+)"), string("Mapping_Ebeta"), int(ih_cdf_out_color), N_rebin);
 		
@@ -1120,10 +1126,10 @@ public:
 		h_reconstructed_h_cdf_tp  = h_reconstructed_h;
 		h_reconstructed_ih_cdf_tp = h_reconstructed_ih;
 	};
-	void reconstruct_tm_from_cdf(TH1D * h_naive, int use_seed=0)  // put in the histogram un-rebinned !
+	void reconstruct_tm_from_cdf(TH1D * h_naive, int use_seed=0)  // put in the histogram un-rebinned !  ... or not.
 	{
 		TH1D * h_in = (TH1D*)h_naive->Clone();
-		h_in->Rebin(N_rebin);
+	//	h_in->Rebin(N_rebin);
 		TH1D* h_reconstructed_h = CreateHist( string("CDF Reconstructed Upper Energy(-)"), string("Mapping_Ebeta"), int(h_cdf_out_color), N_rebin);
 		TH1D* h_reconstructed_ih = CreateHist( string("DirectIntegrated CDF Reconstructed Upper Energy(-)"), string("Mapping_Ebeta"), int(ih_cdf_out_color), N_rebin);
 		
@@ -1177,10 +1183,10 @@ public:
 		h_reconstructed_h_cdf_tm  = h_reconstructed_h;
 		h_reconstructed_ih_cdf_tm = h_reconstructed_ih;
 	};
-	void reconstruct_bp_from_cdf(TH1D * h_naive, int use_seed=0)  // put in the histogram un-rebinned !
+	void reconstruct_bp_from_cdf(TH1D * h_naive, int use_seed=0)  // put in the histogram un-rebinned !  ... or not.
 	{
 		TH1D * h_in = (TH1D*)h_naive->Clone();
-		h_in->Rebin(N_rebin);
+	//	h_in->Rebin(N_rebin);
 		TH1D* h_reconstructed_h = CreateHist( string("CDF Reconstructed Lower Energy(+)"), string("Mapping_Ebeta"), int(h_cdf_out_color), N_rebin);
 		TH1D* h_reconstructed_ih = CreateHist( string("DirectIntegrated CDF Reconstructed Lower Energy(+)"), string("Mapping_Ebeta"), int(ih_cdf_out_color), N_rebin);
 		
@@ -1234,10 +1240,10 @@ public:
 		h_reconstructed_h_cdf_bp  = h_reconstructed_h;
 		h_reconstructed_ih_cdf_bp = h_reconstructed_ih;
 	};
-	void reconstruct_bm_from_cdf(TH1D * h_naive, int use_seed=0)  // put in the histogram un-rebinned !
+	void reconstruct_bm_from_cdf(TH1D * h_naive, int use_seed=0)  // put in the histogram un-rebinned !  ... or not.
 	{
 		TH1D * h_in = (TH1D*)h_naive->Clone();
-		h_in->Rebin(N_rebin);
+	//	h_in->Rebin(N_rebin);
 		TH1D* h_reconstructed_h = CreateHist( string("CDF Reconstructed Lower Energy(-)"), string("Mapping_Ebeta"), int(h_cdf_out_color), N_rebin);
 		TH1D* h_reconstructed_ih = CreateHist( string("DirectIntegrated CDF Reconstructed Lower Energy(-)"), string("Mapping_Ebeta"), int(ih_cdf_out_color), N_rebin);
 		
