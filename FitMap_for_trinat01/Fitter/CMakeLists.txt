@@ -36,7 +36,8 @@ add_library (graph_extras $ENV{MISC_INCLUDE_DIR}/GraphExtras.cpp)
 #Linking the Executable ================
 #add_executable (doasym AsymCompare11.cpp)  # Last *simple-only* mapping.
 #add_executable (doasym AsymCompare12.cpp)  # Zooms in to interesting areas.
-add_executable (doasym AsymCompare13.cpp)  # 
+#add_executable (doasym AsymCompare13.cpp)  # 
+add_executable (doasym AsymCompare13_comparewithsim.cpp)  # 
 
 #link this library with everything that is needed
 #to pop up a windows with the plots at the end

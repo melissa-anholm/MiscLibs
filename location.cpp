@@ -261,6 +261,34 @@ bool setup_location()
 		
 		return true;
 	}
+	else if(strcmp(this_location, "trinat03")==0)
+	{
+		cout << "Location is trinat03." << endl;
+		//
+	//	br_path = br_path_trinat01;
+	//	be_path = be_path_trinat01;
+	//	bf_path = bf_path_trinat01;
+	//	
+	//	ur_path = ur_path_trinat01;
+	//	ue_path = ue_path_trinat01;
+	//	uf_path = uf_path_trinat01;
+		
+		g4_path  = "/trinat01/pool/trinat/Output_from_trinat03/";
+	//	g4f_path = g4_path+"Friends/";
+		metadata_name = g4_path+"MetaData.txt";
+		
+	//	mf_datapath = mf_datapath_trinat01;
+	//	mf_g4path   = mf_g4path_trinat01;
+	//	
+	//	bb1_prefix = bb1_prefix_trinat01;
+	//	hexpath = hexpath_trinat01;
+	//	asymtree_path = uf_path+"AsymTree/";
+	//	
+	//	fitresults_path = fitresults_path_trinat01;
+	//	pizza_path      = pizza_path_trinat01;
+	//	JustPlotA_path  = JustPlotA_path_trinat01;
+		return true;
+	}
 	else
 	{
 		cout << "Did not recognize your location." << endl;

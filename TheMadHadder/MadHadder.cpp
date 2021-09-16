@@ -21,7 +21,8 @@ using std::stringstream;
 
 #include "treeql_replacement.cpp"
 #include "location.cpp"
-#include "ChainG4.cpp"
+//#include "ChainG4.cpp"
+#include "MetaChain.cpp"
 
 int extrafilenum = 10000;
 
@@ -43,7 +44,19 @@ struct lineinfo
 };
 
 //
-string int_to_string(int);
+//string int_to_string(int);
+string int_to_string(int this_int)
+{
+	string this_string;
+	std::stringstream ss;
+	ss.str( std::string() );
+	ss.clear();
+	
+	ss << this_int;
+	this_string = ss.str();
+	return this_string;
+}
+
 int can_hadd(int, int);
 int can_hadd(int, int, bool);
 int can_hadd(string, int, string, int, string);
@@ -95,6 +108,8 @@ int main(int argc, char *argv[])
 //
 hadder_runlist check_hadd_multi()
 {
+//	cout << "Called check_hadd_multi()." << endl;
+	
 	int verbose = 0;
 	TTree * MetaTree = load_metadata_tree(metadata_name);
 //	cout << "Loaded up MetaTree." << endl;
@@ -272,17 +287,6 @@ string generate_hadd_command(int newrunno, vector<int> runlist, double total_mon
 // ======================== // ======================== // ======================== //
 // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- // --- //
 
-string int_to_string(int this_int)
-{
-	string this_string;
-	std::stringstream ss;
-	ss.str( std::string() );
-	ss.clear();
-	
-	ss << this_int;
-	this_string = ss.str();
-	return this_string;
-}
 
 //
 int can_hadd(int run1, int run2)
@@ -299,6 +303,8 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	int verbose = 0;
 //	Run/I:Filename/C:has_been_summed/I:Efield/D:Rho/D:EventsGenerated/I:EventsSaved/I:SaveEventTypes/C:Polarization/D:Alignment/D:MinCosTheta/D:Efield_Uniformity/O:StepperType/I:StepperName/C:StepMax_mm/D:PhysicsListName/C:is_a_sum/I:Trap_x_mm/D:Trap_y_mm/D:Trap_z_mm/D:Trap_sigma_x/D:Trap_sigma_y/D:Trap_sigma_z/D:Temperature/D:ExpandBeforePolarized_s/D:OP_CycleTime_s/D:SailVelocity_x_mm_per_ms/D:SailVelocity_y_mm_per_ms/D:SailVelocity_z_mm_per_ms/D:ChargeState/I
 //	Run/I:Filename/C:has_been_summed/I:is_a_sum/I:SaveEventTypes/C:matches_runset/C:EventsGenerated/I:EventsSaved/I:MinCosTheta/D:Efield/D:Mz/D:Mz2/D:Mz3/D:StepperType/I:StepperName/C:StepMin_mm/D:PhysicsListName/C:Trap_x_i_mm/D:Trap_y_i_mm/D:Trap_z_i_mm/D:Trap_sigma_x_i_mm/D:Trap_sigma_y_i_mm/D:Trap_sigma_z_i_mm/D:Trap_x_f_mm/D:Trap_y_f_mm/D:Trap_z_f_mm/D:Trap_sigma_x_f_mm/D:Trap_sigma_y_f_mm/D:Trap_sigma_z_f_mm/D:ExpandBeforePolarized_ms/D:OP_CycleTime_ms/D:Polarization/D:Alignment/D:g_V/D:g_A/D:g_S/D:g_T/D:EventGenerator/C:MonoEnergy_MeV/D
+//	Run/I:Filename/C:has_been_summed/I:is_a_sum/I:SaveEventTypes/C:matches_runset/C:EventsGenerated/I:EventsSaved/I:MinCosTheta/D:Efield/D:Mz/D:Mz2/D:Mz3/D:StepperType/I:StepperName/C:StepMin_mm/D:PhysicsListName/C:Trap_x_i_mm/D:Trap_y_i_mm/D:Trap_z_i_mm/D:Trap_sigma_x_i_mm/D:Trap_sigma_y_i_mm/D:Trap_sigma_z_i_mm/D:Trap_x_f_mm/D:Trap_y_f_mm/D:Trap_z_f_mm/D:Trap_sigma_x_f_mm/D:Trap_sigma_y_f_mm/D:Trap_sigma_z_f_mm/D:ExpandBeforePolarized_ms/D:OP_CycleTime_ms/D:Polarization/D:Alignment/D:g_V/D:g_A/D:g_S/D:g_T/D:EventGenerator/C:MonoEnergy_MeV/D:Mirror_T_thickness_mm/D:Mirror_B_thickness_mm/D:Be_T_thickness_mm/D:Be_B_thickness_mm/D:DSSD_T_thickness_mm/D:DSSD_B_thickness_mm/D
+	
 	if(verbose>1)
 	{
 		cout << "File 1:  " << filename1 << endl;
@@ -475,7 +481,33 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	double OP_cycletime1, OP_cycletime2;
 	MetaTree1 -> SetBranchAddress("OP_CycleTime_ms",   &OP_cycletime1);
 	MetaTree2 -> SetBranchAddress("OP_CycleTime_ms",   &OP_cycletime2);
-
+	
+	
+	
+	double Mirror_T_thickness_mm_1, Mirror_T_thickness_mm_2;
+	double Mirror_B_thickness_mm_1, Mirror_B_thickness_mm_2;
+	double Be_T_thickness_mm_1, Be_T_thickness_mm_2;
+	double Be_B_thickness_mm_1, Be_B_thickness_mm_2;
+	double DSSD_T_thickness_mm_1, DSSD_T_thickness_mm_2;
+	double DSSD_B_thickness_mm_1, DSSD_B_thickness_mm_2;
+	
+	MetaTree1 -> SetBranchAddress("Mirror_T_thickness_mm",   &Mirror_T_thickness_mm_1);
+	MetaTree2 -> SetBranchAddress("Mirror_T_thickness_mm",   &Mirror_T_thickness_mm_2);
+	MetaTree1 -> SetBranchAddress("Mirror_B_thickness_mm",   &Mirror_B_thickness_mm_1);
+	MetaTree2 -> SetBranchAddress("Mirror_B_thickness_mm",   &Mirror_B_thickness_mm_2);
+	
+	MetaTree1 -> SetBranchAddress("Be_T_thickness_mm",   &Be_T_thickness_mm_1);
+	MetaTree2 -> SetBranchAddress("Be_T_thickness_mm",   &Be_T_thickness_mm_2);
+	MetaTree1 -> SetBranchAddress("Be_B_thickness_mm",   &Be_B_thickness_mm_1);
+	MetaTree2 -> SetBranchAddress("Be_B_thickness_mm",   &Be_B_thickness_mm_2);
+	
+	MetaTree1 -> SetBranchAddress("DSSD_T_thickness_mm",   &DSSD_T_thickness_mm_1);
+	MetaTree2 -> SetBranchAddress("DSSD_T_thickness_mm",   &DSSD_T_thickness_mm_2);
+	MetaTree1 -> SetBranchAddress("DSSD_B_thickness_mm",   &DSSD_B_thickness_mm_1);
+	MetaTree2 -> SetBranchAddress("DSSD_B_thickness_mm",   &DSSD_B_thickness_mm_2);
+	
+	
+	
 	char this_matchedrunset1[256];
 	char this_matchedrunset2[256];
 	MetaTree1 -> SetBranchAddress("matches_runset",     &this_matchedrunset1);
@@ -535,6 +567,19 @@ int can_hadd(string filename1, int run1, string filename2, int run2, string file
 	//
 	if( expansiontime1 != expansiontime2) {match = false;}
 	if( OP_cycletime1  != OP_cycletime2)  {match = false;}
+	//
+	if( Mirror_T_thickness_mm_1 != Mirror_T_thickness_mm_2) {match = false;}
+	if( Mirror_B_thickness_mm_1 != Mirror_B_thickness_mm_2) {match = false;}
+	if( Be_T_thickness_mm_1     != Be_T_thickness_mm_2)     {match = false;}
+	if( Be_B_thickness_mm_1     != Be_B_thickness_mm_2)     {match = false;}
+	if( DSSD_T_thickness_mm_1   != DSSD_T_thickness_mm_2)   {match = false;}
+	if( DSSD_B_thickness_mm_1   != DSSD_B_thickness_mm_2)   {match = false;}
+
+//	cout << endl;
+//	cout << "Mirror_T_thickness_mm_1 = " << Mirror_T_thickness_mm_1 << ";\tMirror_T_thickness_mm_2 = " << Mirror_T_thickness_mm_2 << endl;
+//	cout << "Mirror_B_thickness_mm_1 = " << Mirror_B_thickness_mm_1 << ";\tMirror_B_thickness_mm_2 = " << Mirror_B_thickness_mm_2 << endl;
+	
+	//
 	if( strcmp(this_matchedrunset1,this_matchedrunset2) !=0 ) {match=false;}
 	
 	if (match && verbose>0)
