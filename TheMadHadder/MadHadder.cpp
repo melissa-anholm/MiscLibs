@@ -21,7 +21,7 @@ using std::stringstream;
 
 #include "treeql_replacement.cpp"
 #include "location.cpp"
-#include "ChainG4.cpp"
+#include "MetaChain.cpp"
 
 int extrafilenum = 10000;
 
